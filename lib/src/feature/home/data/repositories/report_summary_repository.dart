@@ -15,7 +15,11 @@ abstract class ReportSummaryRepository {
   /// 서버로부터 과제 목록을 조회합니다.
   ///
   /// [authorization] 헤더에 Bearer 토큰을 포함하여 요청해야 합니다.
+<<<<<<< HEAD
   @GET("/v1/courses")
+=======
+  @GET("/api/report")
+>>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })

@@ -10,8 +10,13 @@ part 'login_request_dto.g.dart';
 @freezed
 abstract class LoginRequestDto with _$LoginRequestDto {
   const factory LoginRequestDto({
+<<<<<<< HEAD
     /// 로그인 사용자명
     @Default("") String username,
+=======
+    /// 사용자 아이디
+    @Default("") String userId,
+>>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
 
     /// 사용자 비밀번호
     @Default("") String password,

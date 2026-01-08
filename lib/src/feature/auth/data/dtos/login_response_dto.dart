@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'login_response_dto.freezed.dart';
 part 'login_response_dto.g.dart';
 
+<<<<<<< HEAD
 /// 로그인 API의 최상위 응답 DTO(ApiResponseLoginResponse)입니다.
 @freezed
 abstract class LoginResponseDto with _$LoginResponseDto {
@@ -11,6 +12,14 @@ abstract class LoginResponseDto with _$LoginResponseDto {
     LoginDataDto? data,
     ApiErrorDto? error,
     String? timestamp,
+=======
+/// 로그인 성공 시 서버로부터 반환되는 응답 DTO입니다.
+@freezed
+abstract class LoginResponseDto with _$LoginResponseDto {
+  const factory LoginResponseDto({
+    /// 인증에 성공하여 발급된 액세스 토큰 (JWT 등)
+    required String accessToken,
+>>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
   }) = _LoginResponseDto;
 
   factory LoginResponseDto.fromJson(Map<String, dynamic> json) =>

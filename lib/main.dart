@@ -14,11 +14,15 @@ import 'package:a_and_i_report_web_server/firebase_options.dart';
 /// 웹 환경에서의 깔끔한 URL 처리를 위해 [usePathUrlStrategy]를 설정하고,
 /// Riverpod 상태 관리를 위한 [ProviderScope]로 앱을 감싸서 실행합니다.
 /// [Logger]를 옵저버로 등록하여 상태 변경 로그를 확인합니다.
+<<<<<<< HEAD
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+=======
+void main() {
+>>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
   usePathUrlStrategy();
   runApp(ProviderScope(observers: [Logger()], child: const MyApp()));
 }
@@ -27,7 +31,11 @@ Future<void> main() async {
 ///
 /// [MaterialApp.router]를 사용하여 [goRouterProvider]에서 정의된 라우팅 설정을 적용합니다.
 /// 앱 전반에 걸친 테마([theme])와 디버그 배너 설정을 관리합니다.
+<<<<<<< HEAD
 class MyApp extends ConsumerStatefulWidget {
+=======
+class MyApp extends ConsumerWidget {
+>>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
   const MyApp({super.key});
 
   @override
