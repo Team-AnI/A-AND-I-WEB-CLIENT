@@ -2,11 +2,7 @@ name: Deploy to Firebase Hosting on merge
 on:
   push:
     tags:
-<<<<<<< HEAD
       - 'v[0-9]+.[0-9]+.[0-9]+*'
-=======
-      - 'v.*.*.*'
->>>>>>> 02c8b9c (ci: Change Firebase Hosting deployment trigger to tags (v.X.Y.Z))
 
 jobs:
   build_and_deploy:
