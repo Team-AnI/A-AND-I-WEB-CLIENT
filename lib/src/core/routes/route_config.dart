@@ -30,18 +30,16 @@ part 'route_config.g.dart';
 /// **리다이렉션 규칙:**
 /// - 로그인되지 않은 사용자가 보호된 페이지(`/report` 등)에 접근하면 `/sign-in`으로 이동합니다.
 /// - 이미 로그인된 사용자가 로그인 페이지(`/sign-in`)에 접근하면 `/report`로 이동합니다.
-<<<<<<< HEAD
 /// - `/promotion` 페이지는 로그인 여부와 관계없이 접근 가능합니다.
-=======
->>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
+/// - `/promotion` 페이지는 로그인 여부와 관계없이 접근 가능합니다.
 ///
 /// **정의된 라우트:**
 /// - `/`: 루트 경로. 인증 상태에 따라 `/report` 또는 `/sign-in`으로 리다이렉트합니다.
 /// - `/sign-in`: 로그인 화면 ([LoginUI]).
-<<<<<<< HEAD
 /// - `/report`: 과제 목록 화면 ([ReportListView]).
 ///   - `/report/:id`: 과제 상세 화면 ([ReportDetailUI]).
 /// - `/promotion`: 홍보 포스터 화면 ([PromotionPage]).
+///
 ///
 class _RiverpodRefreshNotifier extends ChangeNotifier {
   _RiverpodRefreshNotifier(Ref ref) {
@@ -50,10 +48,6 @@ class _RiverpodRefreshNotifier extends ChangeNotifier {
   }
 }
 
-=======
-/// - `/report`: 과제 목록 화면 ([HomeUI]).
-///   - `/report/:id`: 과제 상세 화면 ([ReportDetailUI]).
->>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
 @riverpod
 GoRouter goRouter(Ref ref) {
   final authState = ref.watch(authViewModelProvider);
@@ -179,6 +173,10 @@ GoRouter goRouter(Ref ref) {
           html.document.title = "내 강좌 | A&I";
           return NoTransitionPage(child: const CourseListView());
         },
+      ),
+      GoRoute(
+        path: '/promotion',
+        builder: (context, state) => const PromotionPage(),
       ),
       GoRoute(
         path: '/report',

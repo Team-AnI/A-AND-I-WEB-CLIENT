@@ -41,7 +41,8 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
                     width: 600,
                     height: 600,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E3A8A).withOpacity(0.2), // blue-900
+                      color:
+                          const Color(0xFF1E3A8A).withOpacity(0.2), // blue-900
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -309,7 +310,9 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
         ),
       ],
       child: SizedBox(
-        height: isMobile ? 160 : 180, // Approximate height for each section to allow spacing
+        height: isMobile
+            ? 160
+            : 180, // Approximate height for each section to allow spacing
         child: Row(
           children: [
             if (isLeft) ...[
