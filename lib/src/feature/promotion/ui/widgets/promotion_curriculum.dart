@@ -18,8 +18,55 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
   bool isCalled = false;
 
   @override
+  State<PromotionCurriculum> createState() => _PromotionCurriculumState();
+}
+
+class _PromotionCurriculumState extends State<PromotionCurriculum> {
+  int _currentPage = 0;
+  late final PageController _pageController;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+    _startAutoSwipe();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startAutoSwipe() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_currentPage < 2) {
+        _currentPage++;
+      } else {
+        _currentPage = 0;
+      }
+
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  void _stopAutoSwipe() {
+    _timer?.cancel();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
+    final isTablet = MediaQuery.of(context).size.width <= 1200;
 
     return Container(
       width: double.infinity,

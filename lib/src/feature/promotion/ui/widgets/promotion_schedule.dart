@@ -385,35 +385,35 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(isMobile ? 8 : 12),
           decoration: BoxDecoration(
             color: (color ?? Colors.white).withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
             icon,
-            size: 20,
+            size: isMobile ? 16 : 20,
             color: color ?? Colors.white70,
           ),
         ),
-        const SizedBox(width: 20),
+        SizedBox(width: isMobile ? 12 : 20),
         SizedBox(
-          width: 100,
+          width: isMobile ? 80 : 100,
           child: Text(
             date,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: isMobile ? 14 : 18,
               fontWeight: FontWeight.bold,
               color: color ?? Colors.white70,
             ),
           ),
         ),
-        const SizedBox(width: 20),
+        SizedBox(width: isMobile ? 12 : 20),
         Expanded(
           child: Text(
             content,
-            style: const TextStyle(
-              fontSize: 18,
+            style: TextStyle(
+              fontSize: isMobile ? 14 : 18,
               color: Colors.white60,
             ),
           ),
