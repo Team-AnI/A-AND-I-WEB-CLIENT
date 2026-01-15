@@ -375,6 +375,52 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
 
     return timelineStep;
   }
+
+  Widget _buildTimelineItem({
+    required String date,
+    required String content,
+    required IconData icon,
+    Color? color,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: (color ?? Colors.white).withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: color ?? Colors.white70,
+          ),
+        ),
+        const SizedBox(width: 20),
+        SizedBox(
+          width: 100,
+          child: Text(
+            date,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color ?? Colors.white70,
+            ),
+          ),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          child: Text(
+            content,
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.white60,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class StarFieldPainter extends CustomPainter {
