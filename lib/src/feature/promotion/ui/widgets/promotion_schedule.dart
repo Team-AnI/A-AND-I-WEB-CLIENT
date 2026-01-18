@@ -387,13 +387,13 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
         Container(
           padding: EdgeInsets.all(isMobile ? 8 : 12),
           decoration: BoxDecoration(
-            color: (color ?? Colors.white).withValues(alpha: 0.1),
+            color: Colors.black87,
             shape: BoxShape.circle,
           ),
           child: Icon(
             icon,
             size: isMobile ? 16 : 20,
-            color: color ?? Colors.white70,
+            color: Color(0xff9929EA),
           ),
         ),
         SizedBox(width: isMobile ? 12 : 20),
