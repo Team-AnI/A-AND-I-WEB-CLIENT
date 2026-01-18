@@ -65,8 +65,8 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = ResponsiveLayout.isMobile(context);
-    final isTablet = MediaQuery.of(context).size.width <= 1200;
+    final isMobile = ResponsiveLayout.isTablet(context);
+    // final isTablet = MediaQuery.of(context).size.width <= 1200;
 
     return Container(
       width: double.infinity,
