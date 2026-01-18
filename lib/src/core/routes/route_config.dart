@@ -176,6 +176,7 @@ GoRouter goRouter(Ref ref) {
       ),
       GoRoute(
         path: '/promotion',
+        name: "2026 팀 A&I 모집안내",
         builder: (context, state) => const PromotionPage(),
       ),
       GoRoute(
