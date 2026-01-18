@@ -413,9 +413,9 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
           child: Text(
             content,
             style: TextStyle(
-              fontSize: isMobile ? 14 : 18,
-              color: Colors.white60,
-            ),
+                fontSize: isMobile ? 14 : 18,
+                color: Colors.white60,
+                fontWeight: FontWeight.w600),
           ),
         ),
       ],
