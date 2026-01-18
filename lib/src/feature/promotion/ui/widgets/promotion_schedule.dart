@@ -256,6 +256,7 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
                         child: const PromotionBottomBar(),
                       ),
                     ),
+                  ),
 
                     const SizedBox(height: 24),
 
