@@ -8,7 +8,8 @@ class PromotionHero extends ConsumerWidget {
   const PromotionHero({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget @override
+  build(BuildContext context, WidgetRef ref) {
     precacheImage(
         const AssetImage(
           "assets/intro_bg.webp",
