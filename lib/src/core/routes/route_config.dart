@@ -187,7 +187,7 @@ GoRouter goRouter(Ref ref) {
         name: "자주 묻는 질문 | A&I",
         builder: (context, state) {
           html.document.title = "자주 묻는 질문 | A&I";
-          return const FAQPage();
+          return const FAQLightPage();
         },
       ),
       GoRoute(
