@@ -183,6 +183,14 @@ GoRouter goRouter(Ref ref) {
         },
       ),
       GoRoute(
+        path: '/faq',
+        name: "자주 묻는 질문 | A&I",
+        builder: (context, state) {
+          html.document.title = "자주 묻는 질문 | A&I";
+          return const FAQPage();
+        },
+      ),
+      GoRoute(
         path: '/report',
         name: "멘토링 | A&I",
         pageBuilder: (context, state) {

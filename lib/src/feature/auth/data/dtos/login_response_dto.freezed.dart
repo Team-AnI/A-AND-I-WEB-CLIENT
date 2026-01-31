@@ -309,6 +309,7 @@ class _LoginResponseDto implements LoginResponseDto {
   factory _LoginResponseDto.fromJson(Map<String, dynamic> json) =>
       _$LoginResponseDtoFromJson(json);
 
+  /// 인증에 성공하여 발급된 액세스 토큰 (JWT 등)
   @override
   final bool success;
   @override
