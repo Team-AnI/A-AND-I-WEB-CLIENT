@@ -177,17 +177,17 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: '/promotion',
         name: "2026 팀 A&I 모집안내",
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           html.document.title = "2026 팀 A&I 모집안내";
-          return const PromotionPage();
+          return NoTransitionPage(child: const PromotionPage());
         },
       ),
       GoRoute(
         path: '/faq',
         name: "자주 묻는 질문 | A&I",
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           html.document.title = "자주 묻는 질문 | A&I";
-          return const FAQLightPage();
+          return NoTransitionPage(child: const FAQLightPage());
         },
       ),
       GoRoute(
