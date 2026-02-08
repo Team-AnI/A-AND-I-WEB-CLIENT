@@ -24,8 +24,7 @@ class PromotionBottomBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: useOptimizedBackground
             ? Colors.black.withOpacity(0.9) // 최적화: 진한 배경
-            : Colors.black
-                .withOpacity(0.8), // 기본: 반투명 (Blur 효과용)
+            : Colors.black.withOpacity(0.8), // 기본: 반투명 (Blur 효과용)
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: const Color(0xFF3B82F6).withOpacity(0.3),
