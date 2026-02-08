@@ -1,3 +1,6 @@
+
+
+
 import 'package:flutter/foundation.dart';
 import 'package:a_and_i_report_web_server/src/feature/promotion/ui/widgets/promotion_bottom_bar.dart';
 import 'package:a_and_i_report_web_server/src/core/widgets/animate_on_visible.dart';
@@ -447,10 +450,25 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
           ),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: 600.ms, delay: Duration(milliseconds: 500 + delay))
-        .moveX(begin: 30, end: 0);
+    );
+
+    return AnimateOnVisible(
+      uniqueKey: 'timeline_$date',
+      delay: Duration(milliseconds: 500 + delay),
+      effects: [
+        FadeEffect(
+          delay: Duration(milliseconds: 500 + delay),
+          duration: 600.ms,
+        ),
+        MoveEffect(
+          delay: Duration(milliseconds: 500 + delay),
+          duration: 600.ms,
+          begin: const Offset(30, 0),
+          end: Offset.zero,
+        ),
+      ],
+      child: timelineStep,
+    );
   }
 }
 
