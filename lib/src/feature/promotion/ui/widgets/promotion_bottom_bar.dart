@@ -69,7 +69,41 @@ class PromotionBottomBar extends StatelessWidget {
                   .shimmer(delay: 1500.ms, duration: 1000.ms),
             ],
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // Important for floating bar
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "A&I 4기 모집 중",
+                        style: TextStyle(
+                          fontSize: isMobile ? 18 : 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "함께 성장할 동료를 찾습니다",
+                        style: TextStyle(
+                          fontSize: isMobile ? 12 : 14,
+                          color: Colors.white60,
+                        ),
+                      ),
+                    ],
+                  ),
+                  ApplyButtonView()
+                      .animate()
+                      .shimmer(delay: 1500.ms, duration: 1000.ms),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
 
