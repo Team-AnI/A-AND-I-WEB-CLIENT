@@ -136,9 +136,21 @@ class _PromotionPageState extends ConsumerState<PromotionPage> {
                 ),
               ),
             ),
-          ),
-        ],
+            SizedBox(
+              height: screenHeight,
+              child: const PromotionMentors(),
+            ),
+            SizedBox(
+              height: screenHeight,
+              child: const PromotionCurriculum(),
+            ),
+            SizedBox(
+              height: screenHeight,
+              child: const PromotionSchedule(),
+            ),
+          ],
+        ),
       ),
-    );
+    )
   }
 }
