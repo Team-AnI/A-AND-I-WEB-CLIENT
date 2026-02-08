@@ -29,7 +29,7 @@ class PromotionHero extends ConsumerWidget {
               // colorFilter: ColorFilter.mode(
               //     Color(0xff000000).withAlpha(150), BlendMode.darken),
               image: AssetImage(
-                "assets/intro_bg.webp",
+                "assets/intro_bg.png",
               ),
               fit: BoxFit.cover)),
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 40),

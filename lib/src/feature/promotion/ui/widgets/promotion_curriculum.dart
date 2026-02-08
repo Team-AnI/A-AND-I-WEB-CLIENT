@@ -22,21 +22,12 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
 }
 
 class _PromotionCurriculumState extends State<PromotionCurriculum> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  bool isCalled = false;
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = ResponsiveLayout.isTablet(context);
-    // final isTablet = MediaQuery.of(context).size.width <= 1200;
-    bool isCalled = false;
+    final isMobile = ResponsiveLayout.isMobile(context);
+
     return Container(
       width: double.infinity,
       // height: double.infinity,

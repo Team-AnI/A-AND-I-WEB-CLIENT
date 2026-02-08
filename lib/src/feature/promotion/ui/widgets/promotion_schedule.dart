@@ -383,44 +383,74 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
     required IconData icon,
     Color? color,
   }) {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(isMobile ? 8 : 12),
-          decoration: BoxDecoration(
-            color: Colors.black87,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: isMobile ? 16 : 20,
-            color: Color(0xff9929EA),
-          ),
-        ),
-        SizedBox(width: isMobile ? 12 : 20),
-        SizedBox(
-          width: isMobile ? 80 : 100,
-          child: Text(
-            date,
-            style: TextStyle(
-              fontSize: isMobile ? 14 : 18,
-              fontWeight: FontWeight.bold,
-              color: color ?? Colors.white70,
+    return Container(
+      margin: EdgeInsets.only(bottom: isLast ? 0 : 32),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Icon Box
+          Container(
+            width: isMobile ? 56 : 72,
+            height: isMobile ? 56 : 72,
+            decoration: BoxDecoration(
+              color: const Color(0xFF000000), // Black background to hide line
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFF3B82F6),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3B82F6).withOpacity(0.3),
+                  blurRadius: 12,
+                ),
+              ],
+            ),
+            child: Icon(
+              icon,
+              size: isMobile ? 24 : 32,
+              color: const Color(0xFF3B82F6),
             ),
           ),
-        ),
-        SizedBox(width: isMobile ? 12 : 20),
-        Expanded(
-          child: Text(
-            content,
-            style: TextStyle(
-                fontSize: isMobile ? 14 : 18,
-                color: Colors.white60,
-                fontWeight: FontWeight.w600),
+
+          SizedBox(width: isMobile ? 20 : 32),
+
+          // Content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    date,
+                    style: TextStyle(
+                      fontSize: isMobile ? 12 : 14,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF3B82F6),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    content,
+                    style: TextStyle(
+                      fontSize: isMobile ? 16 : 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 600.ms, delay: Duration(milliseconds: 500 + delay))
+        .moveX(begin: 30, end: 0);
   }
 }
 
