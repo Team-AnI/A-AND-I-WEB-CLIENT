@@ -191,7 +191,6 @@ class _PromotionMentorsState extends State<PromotionMentors>
                       ),
                     ),
                   ),
-                  ),
                 ),
               ],
             ),
