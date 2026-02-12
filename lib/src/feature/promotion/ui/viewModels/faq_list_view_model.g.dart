@@ -1,29 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'report_list_view_model.dart';
+part of 'faq_list_view_model.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$reportListViewModelHash() =>
-    r'7ed5a7a4dcfde6772e27a9d68a4ef3c89bc75f14';
+String _$faqListViewModelHash() => r'33dfc4f26e0f708626280b6f619a63aa0c308b4e';
 
-/// 과제 목록 뷰 모델
-///
-/// Copied from [ReportListViewModel].
-@ProviderFor(ReportListViewModel)
-final reportListViewModelProvider = AutoDisposeAsyncNotifierProvider<
-    ReportListViewModel, ReportListState>.internal(
-  ReportListViewModel.new,
-  name: r'reportListViewModelProvider',
+/// See also [FaqListViewModel].
+@ProviderFor(FaqListViewModel)
+final faqListViewModelProvider =
+    AutoDisposeNotifierProvider<FaqListViewModel, FaqListViewState>.internal(
+  FaqListViewModel.new,
+  name: r'faqListViewModelProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$reportListViewModelHash,
+      : _$faqListViewModelHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$ReportListViewModel = AutoDisposeAsyncNotifier<ReportListState>;
+typedef _$FaqListViewModel = AutoDisposeNotifier<FaqListViewState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -14,6 +14,7 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$LoginResponseDto {
+  /// 인증에 성공하여 발급된 액세스 토큰 (JWT 등)
   String get accessToken;
 
   /// Create a copy of LoginResponseDto
@@ -243,6 +244,7 @@ class _LoginResponseDto implements LoginResponseDto {
   factory _LoginResponseDto.fromJson(Map<String, dynamic> json) =>
       _$LoginResponseDtoFromJson(json);
 
+  /// 인증에 성공하여 발급된 액세스 토큰 (JWT 등)
   @override
   final String accessToken;
 

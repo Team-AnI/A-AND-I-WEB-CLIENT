@@ -1,156 +1,401 @@
+import 'package:a_and_i_report_web_server/src/core/widgets/responsive_layout.dart';
+import 'package:a_and_i_report_web_server/src/core/widgets/animate_on_visible.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
-class PromotionCurriculum extends StatelessWidget {
-  const PromotionCurriculum({super.key});
+class PromotionCurriculum extends StatefulWidget {
+  const PromotionCurriculum({
+    super.key,
+  });
+
+  @override
+  State<PromotionCurriculum> createState() => _PromotionCurriculumState();
+}
+
+class _PromotionCurriculumState extends State<PromotionCurriculum> {
+  bool isCalled = false;
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveLayout.isMobile(context);
+
     return Container(
       width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 105, horizontal: 42), // 1.75x
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1400),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                '앞으로 여정에서 함께 배울 내용을 소개합니다!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 50, // 1.75x
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+      // height: double.infinity,
+      color: Colors.black, // bg-black
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Blurred Blobs (Blue Glows)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Transform.translate(
+              offset: const Offset(300, -300),
+              child: RepaintBoundary(
+                child: ImageFiltered(
+                  imageFilter: ui.ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+                  child: Container(
+                    width: 600,
+                    height: 600,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E3A8A).withOpacity(0.2), // blue-900
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 88),
-
-              // 1차 과정
-              _buildCurriculumStage(
-                context,
-                '1차 과정: 코딩 입문 및 기초',
-                '코딩을 몰라도 열정만 있다면 참여할 수 있습니다!',
-                [
-                  '코딩 문법 입문: 코드를 몰라도 학습 원동력을 가질 수 있도록 도와드립니다!',
-                  '기초 알고리즘: 정해진 문제 상황을 이해하고 풀이할 수 있는 방법을 학습합니다!',
-                ],
-                Colors.blue.shade600,
-              ),
-              const SizedBox(height: 70),
-
-              // 2차 과정
-              _buildCurriculumStage(
-                context,
-                '2차 과정: 심화 분야 학습 (택1)',
-                '아래 내용 중 본인이 배우고 싶은 내용에 대해 자세하게 알려드립니다!',
-                [
-                  'Flutter 과정 (Dart + Flutter)\n   - Flutter를 이용한 크로스플랫폼 앱 제작\n   - MVVM 패턴, 상태관리(Provider, BLoC) 적용\n   - 클라우드 서비스, REST API 활용',
-                  'Spring boot 과정 (Kotlin + Spring Boot)\n   - Spring boot 기반 서버 개발\n   - MVC 패턴 이해 및 적용\n   - AWS + Docker, Docker-Compose, Github Action 배포',
-                  'AI 과정 (PyTorch)\n   - 최신 AI 핵심 원리 학습\n   - 실제 프로젝트 적용 가능한 AI 구현',
-                ],
-                Colors.green.shade600,
-              ),
-              const SizedBox(height: 70),
-
-              // 3차 과정
-              _buildCurriculumStage(
-                context,
-                '3차 과정: 팀 프로젝트',
-                '각 분야를 학습한 여러분들이 같은 팀이 되어 최고의 프로젝트를 만듭니다!',
-                [
-                  '개발 경험이 풍부한 멘토진이 팀 프로젝트가 완성될 수 있도록 도와드립니다.',
-                ],
-                Colors.purple.shade600,
-              ),
-            ],
+            ),
           ),
+
+          // Main Content
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 60,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200), // max-w-6xl
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Header
+                    AnimateOnVisible(
+                      uniqueKey: 'curriculum_title',
+                      child: Text(
+                        'A&I 4기 커리큘럼',
+                        style: TextStyle(
+                          fontSize: isMobile ? 24 : 58,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xff3B83F6),
+                          letterSpacing: -1.0, // tracking-tight
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    AnimateOnVisible(
+                      uniqueKey: 'curriculum_subtitle',
+                      delay: 200.ms,
+                      child: Text(
+                        '멘토진이 설계한 성장의 로드맵을 한 눈에 확인하세요.',
+                        style: TextStyle(
+                          fontSize: isMobile ? 16 : 30,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: -1.0, // tracking
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    const SizedBox(height: 60),
+
+                    // Roadmap Container
+                    ConstrainedBox(
+                      constraints:
+                          const BoxConstraints(maxWidth: 1024), // max-w-5xl
+                      child: IntrinsicHeight(
+                        child: Stack(
+                          alignment: Alignment.topCenter,
+                          children: [
+                            // Center Line
+                            Positioned(
+                              top: 32,
+                              bottom: 32,
+                              child: Container(
+                                width: 3,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      const Color(0xFF3B82F6), // blue-500
+                                      const Color(0xFF3B82F6),
+                                      Colors.transparent,
+                                    ],
+                                    stops: const [0.0, 0.15, 0.85, 1.0],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF3B82F6)
+                                          .withOpacity(0.6),
+                                      blurRadius: 12,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Items
+                            Column(
+                              children: [
+                                _buildRoadmapItem(
+                                  isLeft: true,
+                                  icon: Icons.terminal,
+                                  tag: 'Foundation',
+                                  title: '프로그래밍 기초',
+                                  items: [
+                                    '프로그래밍 핵심 문법',
+                                    '기초 설계 및 구현',
+                                  ],
+                                  isMobile: isMobile,
+                                ),
+                                _buildRoadmapItem(
+                                  isLeft: false,
+                                  icon: Icons.storage, // Database
+                                  tag: 'CS Deep Dive',
+                                  title: '심화 컴퓨터 공학',
+                                  items: [
+                                    '개발자 필수 CS 지식',
+                                    '아키텍처/디자인 패턴',
+                                  ],
+                                  isMobile: isMobile,
+                                ),
+                                _buildRoadmapItem(
+                                  isLeft: true,
+                                  icon: Icons.layers,
+                                  tag: 'Framework',
+                                  title: '프레임워크',
+                                  items: [
+                                    'Flutter / Spring Boot',
+                                    'AI 주도 개발 활용 능력',
+                                  ],
+                                  isMobile: isMobile,
+                                ),
+                                _buildRoadmapItem(
+                                  isLeft: false,
+                                  icon: Icons.groups,
+                                  tag: 'Team Project',
+                                  title: '팀 프로젝트',
+                                  items: [
+                                    '애자일 방식의 프로젝트',
+                                    '멘토주도 코드 리뷰',
+                                  ],
+                                  isMobile: isMobile,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoadmapItem({
+    required bool isLeft,
+    required IconData icon,
+    required String tag,
+    required String title,
+    required List<String> items,
+    required bool isMobile,
+  }) {
+    // If mobile, we might want to stack things differently, but for now maintaining the alternating structure
+    // as it creates the connected line effect. On very small screens, this might need adjustment.
+
+    final content = Expanded(
+      child: Column(
+        crossAxisAlignment:
+            isLeft ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          // Glass Icon Box
+          Container(
+            width: 40,
+            height: 40,
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B82F6).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: const Color(0xFF3B82F6).withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Icon(icon, color: const Color(0xFF3B82F6), size: 24),
+          ),
+
+          // Tag
+          Text(
+            tag.toUpperCase(),
+            style: TextStyle(
+              fontSize: isMobile ? 9 : 15, // text-[9px] approx
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF3B82F6),
+              letterSpacing: 1.5, // tracking-widest
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+
+          // Title
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: isMobile ? 16 : 25,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              height: 1.4,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+
+          const SizedBox(height: 6),
+
+          // List Items
+          ...items.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  mainAxisAlignment:
+                      isLeft ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  children: [
+                    if (!isLeft) ...[
+                      _buildBlueDot(),
+                      const SizedBox(width: 8),
+                    ],
+                    Flexible(
+                      child: Text(
+                        item,
+                        style: TextStyle(
+                          fontSize: isMobile ? 13 : 20, // text-xs
+                          color: Color(0xffffffff), // zinc-400
+                          height: 1.4,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ),
+                    if (isLeft) ...[
+                      const SizedBox(width: 8),
+                      _buildBlueDot(),
+                    ],
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+
+    final spacer = Expanded(child: Container());
+
+    final horizontalSpacing = isMobile ? 24.0 : 48.0;
+
+    return AnimateOnVisible(
+      uniqueKey: 'roadmap_$tag',
+      delay: 200.ms,
+      effects: [
+        FadeEffect(delay: 200.ms, duration: 600.ms),
+        SlideEffect(
+          delay: 200.ms,
+          begin: const Offset(0, 0.2),
+          end: Offset.zero,
+          duration: 600.ms,
+          curve: Curves.easeOutQuad,
+        ),
+      ],
+      child: SizedBox(
+        height: isMobile ? 160 : 180, // Approximate height for each section to allow spacing
+        child: Row(
+          children: [
+            if (isLeft) ...[
+              content,
+              SizedBox(width: horizontalSpacing), // pr-12 equivalent spacing
+            ] else ...[
+              spacer,
+              SizedBox(width: horizontalSpacing),
+            ],
+
+            // Center Node
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                // The central line is drawn by the parent stack, this is just the node
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.black, width: 3),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0xFF3B82F6),
+                          blurRadius: 8,
+                          spreadRadius: 0),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            if (!isLeft) ...[
+              SizedBox(width: horizontalSpacing), // pl-12
+              content,
+            ] else ...[
+              SizedBox(width: horizontalSpacing),
+              spacer,
+            ],
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildCurriculumStage(
-    BuildContext context,
-    String title,
-    String description,
-    List<String> items,
-    Color color,
-  ) {
-    // 아이콘 + SizedBox 너비 = 49 + 21 = 70.
-    // 설명과 항목의 시작점을 이 위치에 맞춥니다.
-    const double _contentIndent = 70.0;
-
+  Widget _buildBlueDot() {
     return Container(
-      padding: const EdgeInsets.all(42),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(35),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // 텍스트 블록 자체는 왼쪽 정렬
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start, // 아이콘과 텍스트 상단 정렬
-            children: [
-              Icon(Icons.check_circle, color: color, size: 49),
-              const SizedBox(width: 21),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 35,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-          Padding(
-            padding: const EdgeInsets.only(left: _contentIndent), // 시작점 맞춤
-            child: Text(
-              description,
-              style: const TextStyle(
-                  fontSize: 28,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(height: 28),
-          Column( // 항목들을 Column으로 묶어서 패딩 일괄 적용
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: items.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(left: _contentIndent, bottom: 14.0), // 시작점 맞춤
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('• ',
-                        style: TextStyle(fontSize: 28, color: Colors.black54)),
-                    Expanded(
-                      child: Text(
-                        item,
-                        style:
-                            const TextStyle(fontSize: 26, color: Colors.black54),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ).toList(),
-          ),
-        ],
+      width: 5,
+      height: 5,
+      decoration: const BoxDecoration(
+        color: Color(0xFF3B82F6),
+        shape: BoxShape.circle,
       ),
     );
   }
+}
+
+class StarFieldPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(42); // Fixed seed for consistent stars
+
+    // Small stars
+    final smallStarPaint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < 50; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height;
+      canvas.drawCircle(Offset(x, y), 0.5, smallStarPaint);
+    }
+
+    // Medium stars
+    final mediumStarPaint = Paint()
+      ..color = Colors.white.withOpacity(0.5)
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < 20; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height;
+      canvas.drawCircle(Offset(x, y), 1.0, mediumStarPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
