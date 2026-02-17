@@ -27,6 +27,8 @@ class HomeTopBarSection extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
     final isTablet = width >= 768 && width < 1200;
+    final isDesktop = width >= 1200;
+    final showMenu = !isDesktop;
     final horizontal = isMobile ? 20.0 : (isTablet ? 28.0 : 48.0);
     final barHeight = isMobile ? 72.0 : (isTablet ? 76.0 : 80.0);
     final logoWidth = isMobile ? 42.0 : (isTablet ? 46.0 : 50.0);
@@ -43,7 +45,7 @@ class HomeTopBarSection extends StatelessWidget {
                 LogoImage(
                   width: logoWidth,
                 ),
-                if (!isMobile) ...[
+                if (isDesktop) ...[
                   const Spacer(),
                   HomeTopBarNavButton(text: '동아리 소개', onTap: onGoIntro),
                   const SizedBox(width: 18),
@@ -77,44 +79,152 @@ class HomeTopBarSection extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                     ],
-                    isLoggedIn
-                        ? OutlinedButton.icon(
-                            onPressed: onLogout,
-                            icon: const Icon(Icons.logout, size: 14),
-                            label: const Text('로그아웃'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: HomeTheme.textMain,
-                              side: BorderSide(
-                                color: Colors.black.withValues(alpha: 0.08),
-                              ),
-                              backgroundColor:
-                                  Colors.black.withValues(alpha: 0.03),
-                              textStyle: TextStyle(
-                                fontSize: isMobile ? 11 : 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 10 : 12,
-                                vertical: isMobile ? 8 : 9,
-                              ),
-                            ),
-                          )
-                        : FilledButton(
-                            onPressed: onLogin,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: HomeTheme.primary,
-                              foregroundColor: Colors.white,
-                              textStyle: TextStyle(
-                                fontSize: isMobile ? 11 : 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 12 : 14,
-                                vertical: isMobile ? 8 : 9,
-                              ),
-                            ),
-                            child: const Text('로그인'),
+                    if (showMenu)
+                      PopupMenuButton<String>(
+                        tooltip: '메뉴',
+                        color: Colors.white,
+                        surfaceTintColor: Colors.white,
+                        elevation: 10,
+                        shadowColor: Colors.black.withValues(alpha: 0.12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(
+                            color: Colors.black.withValues(alpha: 0.08),
                           ),
+                        ),
+                        offset: const Offset(0, 8),
+                        onSelected: (value) async {
+                          if (value == 'intro') {
+                            onGoIntro();
+                            return;
+                          }
+                          if (value == 'study') {
+                            onGoEducation();
+                            return;
+                          }
+                          if (value == 'blog') {
+                            onGoPosts();
+                            return;
+                          }
+                          if (value == 'login') {
+                            onLogin();
+                            return;
+                          }
+                          if (value == 'logout') {
+                            await onLogout();
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem<String>(
+                            value: 'intro',
+                            child: Text(
+                              '동아리 소개',
+                              style: TextStyle(
+                                color: HomeTheme.textMain,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'study',
+                            child: Text(
+                              '스터디',
+                              style: TextStyle(
+                                color: HomeTheme.textMain,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'blog',
+                            child: Text(
+                              '블로그',
+                              style: TextStyle(
+                                color: HomeTheme.textMain,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          PopupMenuDivider(
+                            height: 12,
+                            color: Colors.black.withValues(alpha: 0.08),
+                          ),
+                          PopupMenuItem<String>(
+                            value: isLoggedIn ? 'logout' : 'login',
+                            child: Text(
+                              isLoggedIn ? '로그아웃' : '로그인',
+                              style: TextStyle(
+                                color: isLoggedIn
+                                    ? HomeTheme.textMain
+                                    : HomeTheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(11),
+                            border: Border.all(
+                              color: Colors.black.withValues(alpha: 0.08),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.06),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.menu_rounded,
+                            size: 20,
+                            color: HomeTheme.textMain,
+                          ),
+                        ),
+                      )
+                    else
+                      (isLoggedIn
+                          ? OutlinedButton.icon(
+                              onPressed: onLogout,
+                              icon: const Icon(Icons.logout, size: 14),
+                              label: const Text('로그아웃'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: HomeTheme.textMain,
+                                side: BorderSide(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                ),
+                                backgroundColor:
+                                    Colors.black.withValues(alpha: 0.03),
+                                textStyle: TextStyle(
+                                  fontSize: isMobile ? 11 : 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 10 : 12,
+                                  vertical: isMobile ? 8 : 9,
+                                ),
+                              ),
+                            )
+                          : FilledButton(
+                              onPressed: onLogin,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: HomeTheme.primary,
+                                foregroundColor: Colors.white,
+                                textStyle: TextStyle(
+                                  fontSize: isMobile ? 11 : 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 12 : 14,
+                                  vertical: isMobile ? 8 : 9,
+                                ),
+                              ),
+                              child: const Text('로그인'),
+                            )),
                   ],
                 ),
               ],

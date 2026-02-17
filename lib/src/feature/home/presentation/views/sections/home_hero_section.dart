@@ -32,43 +32,7 @@ class _HomeHeroSectionState extends ConsumerState<HomeHeroSection> {
     final heroTextContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 10 : 12,
-            vertical: isMobile ? 5 : 6,
-          ),
-          decoration: BoxDecoration(
-            color: HomeTheme.primary.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: HomeTheme.primary.withValues(alpha: 0.20),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: HomeTheme.primary,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'DEVELOPER CLUB',
-                style: TextStyle(
-                  color: HomeTheme.primary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: isMobile ? 14 : 20),
+        SizedBox(height: isMobile ? 24 : 40),
         _typingDone
             ? Text(
                 '함께 만들고\n함께 성장하는\n개발 동아리',
@@ -144,7 +108,8 @@ class _HomeHeroSectionState extends ConsumerState<HomeHeroSection> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1280),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(horizontal, topPadding, horizontal, bottomPadding),
+          padding: EdgeInsets.fromLTRB(
+              horizontal, topPadding, horizontal, bottomPadding),
           child: stacked
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
