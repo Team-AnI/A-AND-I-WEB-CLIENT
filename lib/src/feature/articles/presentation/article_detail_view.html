@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>A&amp;I | Article Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#16439c",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        .prose p {
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+            color: #374151;
+        }
+    </style>
+</head>
+<body class="bg-white text-[#111827] font-display antialiased">
+<!-- Reading Progress Bar -->
+<div class="fixed top-0 left-0 w-full h-1 z-50 bg-gray-100">
+<div class="h-full bg-primary" style="width: 35%;"></div>
+</div>
+<div class="relative flex min-h-screen w-full flex-col bg-white">
+<!-- Header / Navigation -->
+<header class="w-full max-w-[800px] mx-auto px-6 py-8 flex items-center justify-between">
+<div class="flex items-center gap-2 group cursor-pointer">
+<div class="text-primary">
+<svg class="w-6 h-6" fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold tracking-tighter">A&amp;I</h2>
+</div>
+<nav class="flex gap-6">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Articles</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">About</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Contact</a>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-[800px] mx-auto px-6 pb-24">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-sm text-gray-500 mb-8 pt-4">
+<a class="hover:text-primary" href="#">Home</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary" href="#">Articles</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-gray-900 font-medium">Research Detail</span>
+</nav>
+<!-- Article Header -->
+<article>
+<header class="mb-12">
+<h1 class="text-4xl md:text-5xl font-bold leading-[1.15] tracking-tight mb-8">
+                        The Future of Artificial Intelligence in Modern Education
+                    </h1>
+<div class="flex items-center justify-between border-y border-gray-100 py-6">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-gray-100 overflow-hidden bg-cover bg-center" data-alt="Monochrome portrait of a research team member" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAWFq9lPWsg9e3Li97_9Op0Yqt70TD8MKOpPSdQgTyJSZNVjiYWqH-Xt0qUBYhnaf57PMMvKqI1U64pXs7B5lYIdaFFYGcu-BKEkRhWaqoeCr1WMFC2ioxPpicU6dHY0FVcPyqsSKDMk6VPUbf_74Az0z0wDM4-3bCSuqwub7NzHY77AHGLXlfG1gRJCNyuHow6EOr-0xaTc9roLbU9gQiUYkngs-zcFRoyM-1GtYL04FW-0QMRuEdvF-PIIRiljHCwxfi5iaXn_8');">
+</div>
+<div>
+<p class="font-semibold text-sm">By A&amp;I Research Team</p>
+<p class="text-xs text-gray-500 uppercase tracking-widest mt-0.5">October 24, 2023</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-3 py-1 bg-primary text-white text-[10px] font-bold tracking-widest rounded-full uppercase">Research</span>
+<div class="flex size-6 items-center justify-center"><div class="size-2 rounded-full bg-green-500"></div></div>
+</div>
+</div>
+</header>
+<!-- Article Content -->
+<div class="prose max-w-none text-lg leading-relaxed text-gray-800">
+<p class="text-xl text-gray-600 font-light mb-10 leading-relaxed italic">
+                        Explore how adaptive learning algorithms and generative models are reshaping the pedagogical landscape for the next generation of scholars.
+                    </p>
+<p>
+                        As we stand at the precipice of a new era in educational technology, artificial intelligence is no longer a distant promise but a present reality. The integration of large language models and machine learning into the classroom is creating unprecedented opportunities for personalized learning at scale.
+                    </p>
+<div class="my-12 bg-gray-50 p-1 border-l-4 border-primary rounded-r-lg">
+<div class="bg-white p-8">
+<h2 class="mt-0">Core Objectives of A&amp;I Integration</h2>
+<ul class="space-y-4 mt-6">
+<li class="flex gap-3">
+<span class="text-primary font-bold">01.</span>
+<span>Personalized curriculum pacing tailored to individual student cognitive loads.</span>
+</li>
+<li class="flex gap-3">
+<span class="text-primary font-bold">02.</span>
+<span>Automated administrative tasks allowing educators to focus on mentorship.</span>
+</li>
+<li class="flex gap-3">
+<span class="text-primary font-bold">03.</span>
+<span>Real-time feedback loops for both learners and institutional researchers.</span>
+</li>
+</ul>
+</div>
+</div>
+<h2>The Shift Toward Adaptive Systems</h2>
+<p>
+                        Adaptive learning systems utilize data-driven insights to adjust the difficulty and style of content delivered to a student. This ensures that a learner is neither bored by content that is too simple nor overwhelmed by material that is too advanced.
+                    </p>
+<div class="my-10">
+<div class="aspect-video w-full bg-gray-100 rounded-xl overflow-hidden mb-3 relative group">
+<div class="absolute inset-0 flex items-center justify-center bg-gray-200/50">
+<span class="material-symbols-outlined text-gray-400 text-6xl">analytics</span>
+</div>
+<img alt="Data Visualization" class="w-full h-full object-cover mix-blend-multiply opacity-80" data-alt="Abstract monochrome visualization of educational data patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9eUBYzLfkcAl1Ev93Z-NxjLSBRfRKn2xGrwDkNJlEAw1mdj5ilL8WaupJ8sffpCJBCa6gPCGXbuXcrspgjnlxDq8mXyvnzJ1YNofX_aLREev8axJ6Fzwsl84AUmcRMVTv1JYH-r-fuu9Ba5Ua2F1vxuu5ScWCeY5fFjYpLQjxf8cSCp0AjGKxVgv65ahrl9I5ix33-FNnu9RYw72TNWclKTpAvMxd8JCBeRQtX1K-iJKfsIZBMoHPHRC_vCgoJ-ruzhLGBPUHhlA"/>
+</div>
+<p class="text-sm text-center text-gray-500 italic">Figure 1.1: Data flow in centralized adaptive learning architectures.</p>
+</div>
+<p>
+                        Our research indicates that institutions implementing these systems have seen a 24% increase in student engagement metrics. However, the ethical considerations of data privacy and algorithmic bias remain paramount in our ongoing investigations.
+                    </p>
+<h2 class="mt-12">Implementation Example</h2>
+<p>Below is a simplified conceptual model for a student progress tracking function within our proposed A&amp;I framework:</p>
+<pre class="bg-gray-900 text-gray-100 p-6 rounded-lg text-sm overflow-x-auto my-8 font-mono leading-relaxed"><span class="text-primary/70"># Adaptive Feedback Logic</span>
+def calculate_next_module(student_data):
+    performance_score = student_data.get('avg_score')
+    time_spent = student_data.get('session_minutes')
+    
+    if performance_score &gt; 0.85 and time_spent &lt; 30:
+        return "Advanced_Synthesis_A1"
+    elif performance_score &lt; 0.60:
+        return "Review_Fundamentals_B2"
+    
+    return "Standard_Path_C1"</pre>
+<p>
+                        In conclusion, the future of AI in education is not about replacing the human element, but augmenting it. By leveraging these tools, we can create more inclusive, efficient, and inspiring educational environments for everyone.
+                    </p>
+</div>
+<!-- Article Footer / Navigation -->
+<footer class="mt-20 pt-10 border-t border-gray-100 flex flex-col items-center gap-12">
+<a class="group flex items-center gap-2 text-gray-600 hover:text-primary transition-colors font-medium" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
+                        목록으로 돌아가기
+                    </a>
+<div class="flex flex-col items-center gap-4 opacity-40">
+<div class="size-8">
+<svg fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"></path>
+</svg>
+</div>
+<p class="text-[10px] tracking-[0.3em] font-bold uppercase">A&amp;I Educational Research</p>
+<p class="text-[10px] text-gray-500 font-medium">© 2023 A&amp;I Club. All rights reserved.</p>
+</div>
+</footer>
+</article>
+</main>
+</div>
+</body></html>

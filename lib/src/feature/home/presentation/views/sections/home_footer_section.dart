@@ -1,4 +1,3 @@
-import 'package:a_and_i_report_web_server/src/core/widgets/logo.dart';
 import 'package:a_and_i_report_web_server/src/core/widgets/logo_image.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,12 @@ class HomeFooterSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final horizontal = width >= 1200 ? 48.0 : 24.0;
+    final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final horizontal = isMobile ? 20.0 : (isTablet ? 28.0 : 48.0);
+    final topPadding = isMobile ? 24.0 : 32.0;
+    final bottomPadding = isMobile ? 30.0 : 40.0;
+    final logoWidth = isMobile ? 40.0 : (isTablet ? 46.0 : 50.0);
 
     return Container(
       width: double.infinity,
@@ -23,30 +27,22 @@ class HomeFooterSection extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1280),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(horizontal, 32, horizontal, 40),
+            padding: EdgeInsets.fromLTRB(
+                horizontal, topPadding, horizontal, bottomPadding),
             child: Wrap(
-              runSpacing: 18,
-              spacing: 24,
+              runSpacing: isMobile ? 14 : 18,
+              spacing: isMobile ? 18 : 24,
               crossAxisAlignment: WrapCrossAlignment.center,
               alignment: WrapAlignment.spaceBetween,
               children: [
-                const LogoImage(
-                  width: 50,
-                ),
-                const Wrap(
-                  spacing: 16,
-                  runSpacing: 10,
-                  children: [
-                    HomeFooterLink(text: '개인정보 처리방침'),
-                    HomeFooterLink(text: '이용약관'),
-                    HomeFooterLink(text: '문의하기'),
-                  ],
+                LogoImage(
+                  width: logoWidth,
                 ),
                 Text(
                   '© 2026 A&I. All rights reserved.',
                   style: TextStyle(
                     color: HomeTheme.textMuted.withValues(alpha: 0.7),
-                    fontSize: 12,
+                    fontSize: isMobile ? 11 : 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

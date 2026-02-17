@@ -7,63 +7,106 @@ class HomeLatestPostsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final horizontal = width >= 1200 ? 48.0 : 24.0;
+    final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final horizontal = isMobile ? 20.0 : (isTablet ? 28.0 : 48.0);
+    final titleFont = isMobile ? 28.0 : (isTablet ? 31.0 : 34.0);
+    final subtitleFont = isMobile ? 14.0 : 15.0;
+    final topPadding = isMobile ? 8.0 : 24.0;
+    final bottomPadding = isMobile ? 44.0 : 64.0;
+    final showHeaderRow = !isMobile;
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1280),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(horizontal, 24, horizontal, 64),
+          padding: EdgeInsets.fromLTRB(horizontal, topPadding, horizontal, bottomPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '동아리 소식',
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                            color: HomeTheme.textMain,
+              if (showHeaderRow)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '동아리 소식',
+                            style: TextStyle(
+                              fontSize: titleFont,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                              color: HomeTheme.textMain,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          '학생 운영 스터디와 프로젝트 진행 소식을 확인해보세요.',
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: HomeTheme.textMuted,
+                          const SizedBox(height: 8),
+                          Text(
+                            '학생 운영 스터디와 프로젝트 진행 소식을 확인해보세요.',
+                            style: TextStyle(
+                              fontSize: subtitleFont,
+                              color: HomeTheme.textMuted,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () {},
-                    iconAlignment: IconAlignment.end,
-                    label: const Text('전체 보기'),
-                    icon: const Icon(Icons.chevron_right),
-                    style: TextButton.styleFrom(
-                      foregroundColor: HomeTheme.primary,
-                      textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                    TextButton.icon(
+                      onPressed: () {},
+                      iconAlignment: IconAlignment.end,
+                      label: const Text('전체 보기'),
+                      icon: const Icon(Icons.chevron_right),
+                      style: TextButton.styleFrom(
+                        foregroundColor: HomeTheme.primary,
+                        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                  ],
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '동아리 소식',
+                      style: TextStyle(
+                        fontSize: titleFont,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        color: HomeTheme.textMain,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '학생 운영 스터디와 프로젝트 진행 소식을 확인해보세요.',
+                      style: TextStyle(
+                        fontSize: subtitleFont,
+                        color: HomeTheme.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () {},
+                      iconAlignment: IconAlignment.end,
+                      label: const Text('전체 보기'),
+                      icon: const Icon(Icons.chevron_right),
+                      style: TextButton.styleFrom(
+                        foregroundColor: HomeTheme.primary,
+                        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
+              SizedBox(height: isMobile ? 14 : 24),
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: width >= 1100 ? 3 : (width >= 700 ? 2 : 1),
-                  crossAxisSpacing: 18,
-                  mainAxisSpacing: 18,
-                  childAspectRatio: width >= 700 ? 0.98 : 1.10,
+                  crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
+                  crossAxisSpacing: isMobile ? 14 : 18,
+                  mainAxisSpacing: isMobile ? 14 : 18,
+                  childAspectRatio: isMobile ? 1.18 : (isTablet ? 1.02 : 0.98),
                 ),
                 itemCount: homePostCards.length,
                 itemBuilder: (context, index) {
@@ -88,6 +131,12 @@ class HomePostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final titleFont = isMobile ? 20.0 : (isTablet ? 20.0 : 21.0);
+    final summaryFont = isMobile ? 13.0 : 14.0;
+
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () {},
@@ -104,11 +153,12 @@ class HomePostCard extends StatelessWidget {
               ),
               child: Center(
                 child: Icon(post.icon,
-                    size: 76, color: Colors.black.withValues(alpha: 0.10)),
+                    size: isMobile ? 62 : 76,
+                    color: Colors.black.withValues(alpha: 0.10)),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isMobile ? 10 : 12),
           Row(
             children: [
               Text(
@@ -143,21 +193,21 @@ class HomePostCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             post.title,
-            style: const TextStyle(
+            style: TextStyle(
               color: HomeTheme.textMain,
-              fontSize: 21,
+              fontSize: titleFont,
               fontWeight: FontWeight.w800,
               height: 1.2,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isMobile ? 6 : 8),
           Text(
             post.summary,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               color: HomeTheme.textMuted,
-              fontSize: 14,
+              fontSize: summaryFont,
               height: 1.5,
             ),
           ),

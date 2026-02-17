@@ -21,7 +21,16 @@ class ArticleListView extends ConsumerWidget {
     final userState = ref.watch(userViewModelProvider);
     final nickname = userState.nickname ?? '동아리원';
     final width = MediaQuery.of(context).size.width;
-    final horizontal = width >= 1200 ? 48.0 : 24.0;
+    final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final horizontal = isMobile ? 20.0 : (isTablet ? 28.0 : 48.0);
+    final maxWidth = isMobile ? 640.0 : (isTablet ? 840.0 : 960.0);
+    final titleFontSize = isMobile ? 34.0 : (isTablet ? 40.0 : 46.0);
+    final subtitleFontSize = isMobile ? 15.0 : (isTablet ? 16.0 : 18.0);
+    final topPadding = isMobile ? 44.0 : (isTablet ? 54.0 : 64.0);
+    final bottomPadding = isMobile ? 56.0 : (isTablet ? 64.0 : 72.0);
+    final sectionSpacing = isMobile ? 28.0 : 36.0;
+    final cardGap = isMobile ? 20.0 : 24.0;
 
     return Scaffold(
       backgroundColor: HomeTheme.background,
@@ -53,45 +62,51 @@ class ArticleListView extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 960),
+                constraints: BoxConstraints(maxWidth: maxWidth),
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(horizontal, 64, horizontal, 72),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontal,
+                    topPadding,
+                    horizontal,
+                    bottomPadding,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         '게시글',
                         style: TextStyle(
-                          fontSize: 46,
+                          fontSize: titleFontSize,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -1.1,
                           color: HomeTheme.textMain,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      const Text(
+                      SizedBox(height: isMobile ? 8 : 12),
+                      Text(
                         'A&I 커뮤니티의 최신 기술 동향, 연구 결과 및 활동 소식을 확인하세요.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: subtitleFontSize,
                           height: 1.6,
                           color: HomeTheme.textMuted,
                         ),
                       ),
-                      const SizedBox(height: 36),
+                      SizedBox(height: sectionSpacing),
                       Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
+                        spacing: isMobile ? 6 : 8,
+                        runSpacing: isMobile ? 6 : 8,
                         alignment: WrapAlignment.center,
                         children: const [
-                          _CategoryChip(text: '전체', selected: true),
-                          _CategoryChip(text: '기술 블로그'),
-                          _CategoryChip(text: '공지사항'),
-                          _CategoryChip(text: '활동 후기'),
+                          CategoryChipView(text: '전체', selected: true),
+                          CategoryChipView(text: '기술 블로그'),
+                          CategoryChipView(text: '공지사항'),
+                          CategoryChipView(text: '활동 후기'),
                         ],
                       ),
-                      const SizedBox(height: 44),
-                      const _ArticleCard(
+                      SizedBox(height: isMobile ? 34 : 44),
+                      const ArticleCardView(
+                        id: '1',
                         category: 'ARCHITECTURE',
                         date: '2023년 10월 24일',
                         title: 'LLM 아키텍처 탐구: 효율적인 추론을 향한 진화',
@@ -101,8 +116,9 @@ class ArticleListView extends ConsumerWidget {
                         comments: '12',
                         icon: Icons.hub,
                       ),
-                      const SizedBox(height: 24),
-                      const _ArticleCard(
+                      SizedBox(height: cardGap),
+                      const ArticleCardView(
+                        id: '2',
                         category: 'RESEARCH',
                         date: '2023년 10월 20일',
                         title: '신경망의 미래: 차세대 딥러닝 패러다임',
@@ -112,8 +128,9 @@ class ArticleListView extends ConsumerWidget {
                         comments: '8',
                         icon: Icons.data_object,
                       ),
-                      const SizedBox(height: 24),
-                      const _ArticleCard(
+                      SizedBox(height: cardGap),
+                      const ArticleCardView(
+                        id: '3',
                         category: 'PRACTICES',
                         date: '2023년 10월 15일',
                         title: '데이터 과학 베스트 프랙티스: 안정적인 파이프라인 구축',
@@ -123,8 +140,9 @@ class ArticleListView extends ConsumerWidget {
                         comments: '24',
                         icon: Icons.storage,
                       ),
-                      const SizedBox(height: 24),
-                      const _ArticleCard(
+                      SizedBox(height: cardGap),
+                      const ArticleCardView(
+                        id: '4',
                         category: 'COMMUNITY',
                         date: '2023년 10월 10일',
                         title: '2023 하계 해커톤 활동 후기',
@@ -149,8 +167,8 @@ class ArticleListView extends ConsumerWidget {
   }
 }
 
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
+class CategoryChipView extends StatelessWidget {
+  const CategoryChipView({
     required this.text,
     this.selected = false,
   });
@@ -160,8 +178,13 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 13 : 16,
+        vertical: isMobile ? 8 : 10,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
         color: selected ? HomeTheme.textMain : Colors.black.withValues(alpha: 0.05),
@@ -170,7 +193,7 @@ class _CategoryChip extends StatelessWidget {
         text,
         style: TextStyle(
           color: selected ? Colors.white : HomeTheme.textMuted,
-          fontSize: 14,
+          fontSize: isMobile ? 13 : 14,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -178,8 +201,9 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-class _ArticleCard extends StatelessWidget {
-  const _ArticleCard({
+class ArticleCardView extends StatelessWidget {
+  const ArticleCardView({
+    required this.id,
     required this.category,
     required this.date,
     required this.title,
@@ -189,6 +213,7 @@ class _ArticleCard extends StatelessWidget {
     required this.icon,
   });
 
+  final String id;
   final String category;
   final String date;
   final String title;
@@ -200,8 +225,88 @@ class _ArticleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final stacked = width < 760;
-    final content = Column(
+    final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final stacked = isMobile;
+    final previewWidth = isTablet ? 210.0 : 240.0;
+    final previewHeight = isMobile ? 168.0 : 150.0;
+    return InkWell(
+      onTap: () => context.go('/articles/$id'),
+      borderRadius: BorderRadius.circular(16),
+      child: Flex(
+        direction: stacked ? Axis.vertical : Axis.horizontal,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: stacked ? double.infinity : previewWidth,
+            height: previewHeight,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+            ),
+            child: Center(
+              child: Icon(
+                icon,
+                size: 56,
+                color: Colors.black.withValues(alpha: 0.14),
+              ),
+            ),
+          ),
+          SizedBox(width: stacked ? 0 : 20, height: stacked ? 14 : 0),
+          if (stacked)
+            ArticleCardContentView(
+              category: category,
+              date: date,
+              title: title,
+              summary: summary,
+              views: views,
+              comments: comments,
+            )
+          else
+            Expanded(
+              child: ArticleCardContentView(
+                category: category,
+                date: date,
+                title: title,
+                summary: summary,
+                views: views,
+                comments: comments,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class ArticleCardContentView extends StatelessWidget {
+  const ArticleCardContentView({
+    super.key,
+    required this.category,
+    required this.date,
+    required this.title,
+    required this.summary,
+    required this.views,
+    required this.comments,
+  });
+
+  final String category;
+  final String date;
+  final String title;
+  final String summary;
+  final String views;
+  final String comments;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final titleFont = isMobile ? 22.0 : (isTablet ? 24.0 : 27.0);
+    final bodyFont = isMobile ? 13.0 : 14.0;
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
@@ -219,7 +324,7 @@ class _ArticleCard extends StatelessWidget {
                 category,
                 style: const TextStyle(
                   color: HomeTheme.primary,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
                 ),
@@ -237,42 +342,42 @@ class _ArticleCard extends StatelessWidget {
               date,
               style: const TextStyle(
                 color: HomeTheme.textMuted,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: isMobile ? 8 : 10),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             color: HomeTheme.textMain,
-            fontSize: 27,
+            fontSize: titleFont,
             fontWeight: FontWeight.w800,
             height: 1.25,
             letterSpacing: -0.4,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: isMobile ? 8 : 10),
         Text(
           summary,
-          style: const TextStyle(
+          style: TextStyle(
             color: HomeTheme.textMuted,
-            fontSize: 14,
+            fontSize: bodyFont,
             height: 1.6,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: isMobile ? 8 : 10),
         Row(
           children: [
             Icon(Icons.visibility, size: 16, color: HomeTheme.textMuted),
             const SizedBox(width: 4),
             Text(
               views,
-              style: const TextStyle(
+              style: TextStyle(
                 color: HomeTheme.textMuted,
-                fontSize: 12,
+                fontSize: isMobile ? 11 : 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -281,44 +386,15 @@ class _ArticleCard extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               comments,
-              style: const TextStyle(
+              style: TextStyle(
                 color: HomeTheme.textMuted,
-                fontSize: 12,
+                fontSize: isMobile ? 11 : 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
       ],
-    );
-
-    return InkWell(
-      onTap: () {},
-      borderRadius: BorderRadius.circular(16),
-      child: Flex(
-        direction: stacked ? Axis.vertical : Axis.horizontal,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: stacked ? double.infinity : 240,
-            height: 150,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-            ),
-            child: Center(
-              child: Icon(
-                icon,
-                size: 56,
-                color: Colors.black.withValues(alpha: 0.14),
-              ),
-            ),
-          ),
-          SizedBox(width: stacked ? 0 : 24, height: stacked ? 16 : 0),
-          if (stacked) content else Expanded(child: content),
-        ],
-      ),
     );
   }
 }

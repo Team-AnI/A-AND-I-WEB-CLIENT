@@ -10,15 +10,26 @@ class LoginView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final cardWidth = width < 560 ? width - 40 : 420.0;
+    final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final cardWidth = isMobile ? width - 40 : (isTablet ? 460.0 : 500.0);
+    final verticalPadding = isMobile ? 24.0 : 30.0;
+    final horizontalPadding = isMobile ? 22.0 : 30.0;
+    final logoWidth = isMobile ? 120.0 : (isTablet ? 140.0 : 150.0);
+    final minHeight = isMobile ? 380.0 : (isTablet ? 420.0 : 430.0);
 
     return Container(
       width: cardWidth,
-      constraints: const BoxConstraints(minHeight: 430),
-      padding: const EdgeInsets.fromLTRB(30, 30, 30, 24),
+      constraints: BoxConstraints(minHeight: minHeight),
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        verticalPadding,
+        horizontalPadding,
+        isMobile ? 20 : 24,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isMobile ? 14 : 16),
         border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
@@ -33,12 +44,12 @@ class LoginView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            width: 150,
+            width: logoWidth,
             child: Image.asset("assets/logo.webp"),
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: isMobile ? 16 : 22),
           const LoginTextFieldView(),
-          const SizedBox(height: 14),
+          SizedBox(height: isMobile ? 12 : 14),
           const LoginButtonView(),
           const SizedBox(height: 10),
           const ErrorMessageView(),

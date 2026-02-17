@@ -15,69 +15,117 @@ class HomeCtaSection extends ConsumerWidget {
     }
 
     final width = MediaQuery.of(context).size.width;
-    final horizontal = width >= 1200 ? 48.0 : 24.0;
-    final verticalLayout = width < 820;
+    final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final horizontal = isMobile ? 20.0 : (isTablet ? 28.0 : 48.0);
+    final verticalLayout = width < 1024;
+    final titleFont = isMobile ? 24.0 : (isTablet ? 27.0 : 30.0);
+    final bodyFont = isMobile ? 14.0 : 15.0;
+    final sectionBottom = isMobile ? 44.0 : 72.0;
+    final boxPadding = isMobile ? 18.0 : (isTablet ? 22.0 : 28.0);
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1280),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(horizontal, 0, horizontal, 72),
+          padding: EdgeInsets.fromLTRB(horizontal, 0, horizontal, sectionBottom),
           child: Container(
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
             ),
-            padding: const EdgeInsets.all(28),
-            child: Flex(
-              direction: verticalLayout ? Axis.vertical : Axis.horizontal,
-              crossAxisAlignment: verticalLayout
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.center,
-              children: [
-                const Expanded(
-                  child: Column(
+            padding: EdgeInsets.all(boxPadding),
+            child: verticalLayout
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '이번 학기, 같이 개발할 팀원을 찾고 있나요?',
                         style: TextStyle(
                           color: HomeTheme.textMain,
-                          fontSize: 30,
+                          fontSize: titleFont,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.4,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: isMobile ? 6 : 8),
                       Text(
                         '초심자도 환영합니다. 스터디부터 사이드 프로젝트까지, 함께 실력을 쌓을 수 있는 팀 문화를 경험해보세요.',
                         style: TextStyle(
                           color: HomeTheme.textMuted,
-                          fontSize: 15,
+                          fontSize: bodyFont,
                           height: 1.55,
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _launchApplyForm,
+                        icon: const Icon(Icons.school, size: 18),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: HomeTheme.primary,
+                          foregroundColor: Colors.white,
+                          textStyle: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: isMobile ? 14 : 15,
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 16 : 22,
+                            vertical: isMobile ? 13 : 16,
+                          ),
+                        ),
+                        label: const Text('A&I 참여하기'),
+                      ),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '이번 학기, 같이 개발할 팀원을 찾고 있나요?',
+                              style: TextStyle(
+                                color: HomeTheme.textMain,
+                                fontSize: titleFont,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                            SizedBox(height: isMobile ? 6 : 8),
+                            Text(
+                              '초심자도 환영합니다. 스터디부터 사이드 프로젝트까지, 함께 실력을 쌓을 수 있는 팀 문화를 경험해보세요.',
+                              style: TextStyle(
+                                color: HomeTheme.textMuted,
+                                fontSize: bodyFont,
+                                height: 1.55,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      FilledButton.icon(
+                        onPressed: _launchApplyForm,
+                        icon: const Icon(Icons.school, size: 18),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: HomeTheme.primary,
+                          foregroundColor: Colors.white,
+                          textStyle: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: isMobile ? 14 : 15,
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 16 : 22,
+                            vertical: isMobile ? 13 : 16,
+                          ),
+                        ),
+                        label: const Text('A&I 참여하기'),
+                      ),
                     ],
                   ),
-                ),
-                SizedBox(
-                    width: verticalLayout ? 0 : 16,
-                    height: verticalLayout ? 16 : 0),
-                FilledButton.icon(
-                  onPressed: _launchApplyForm,
-                  icon: const Icon(Icons.school, size: 18),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: HomeTheme.primary,
-                    foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontWeight: FontWeight.w700),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 22, vertical: 16),
-                  ),
-                  label: const Text('A&I 참여하기'),
-                ),
-              ],
-            ),
           ),
         ),
       ),
