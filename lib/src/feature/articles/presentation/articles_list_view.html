@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>A&amp;I - 게시글</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans+KR:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#2b7cee",
+                "background-light": "#ffffff",
+                "text-main": "#1a1a1a",
+                "text-muted": "#666666",
+              },
+              fontFamily: {
+                "display": ["Space Grotesk", "Noto Sans KR", "sans-serif"],
+                "sans": ["Noto Sans KR", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+          font-family: 'Noto Sans KR', sans-serif;
+        }
+        .font-display {
+          font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif;
+        }
+        .text-contrast {
+          color: #1a1a1a;
+        }
+        .border-subtle {
+          border-color: rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-background-light text-text-main antialiased">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 w-full border-b border-black/5 bg-white/80 backdrop-blur-md">
+<div class="mx-auto max-w-7xl px-6 lg:px-12">
+<div class="flex h-20 items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined text-2xl">neurology</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-text-main font-display">A&amp;I</h1>
+</div>
+<nav class="hidden md:flex items-center gap-10">
+<a class="text-sm font-medium text-text-muted hover:text-primary transition-colors" href="#">소개</a>
+<a class="text-sm font-medium text-text-muted hover:text-primary transition-colors" href="#">교육</a>
+<a class="text-sm font-medium text-primary transition-colors" href="#">게시글</a>
+</nav>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3 pr-4 border-r border-black/10">
+<div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">person</span>
+</div>
+<span class="text-sm font-medium text-text-main">User123</span>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-black/5 hover:bg-black/10 text-text-main text-xs font-bold transition-all border border-black/5">
+<span class="material-symbols-outlined text-sm">logout</span>
+<span>로그아웃</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1">
+<section class="pt-16 pb-12 px-6 lg:px-12 mx-auto max-w-4xl text-center">
+<h2 class="text-4xl lg:text-5xl font-bold tracking-tight text-text-main mb-4 font-display">게시글</h2>
+<p class="text-lg text-text-muted max-w-2xl mx-auto">
+                A&amp;I 커뮤니티의 최신 기술 동향, 연구 결과 및 활동 소식을 확인하세요.
+            </p>
+</section>
+<section class="px-6 lg:px-12 mx-auto max-w-4xl mb-12">
+<div class="flex flex-wrap items-center justify-center gap-2 border-b border-black/5 pb-8">
+<button class="px-5 py-2 rounded-full bg-text-main text-white text-sm font-medium">전체</button>
+<button class="px-5 py-2 rounded-full bg-black/5 text-text-muted hover:bg-black/10 transition-colors text-sm font-medium">기술 블로그</button>
+<button class="px-5 py-2 rounded-full bg-black/5 text-text-muted hover:bg-black/10 transition-colors text-sm font-medium">공지사항</button>
+<button class="px-5 py-2 rounded-full bg-black/5 text-text-muted hover:bg-black/10 transition-colors text-sm font-medium">활동 후기</button>
+</div>
+</section>
+<section class="px-6 lg:px-12 mx-auto max-w-4xl mb-24">
+<div class="flex flex-col gap-12">
+<article class="group flex flex-col md:flex-row gap-8 items-start cursor-pointer">
+<div class="w-full md:w-64 shrink-0 overflow-hidden rounded-xl bg-slate-50 aspect-[16/10] border border-black/5">
+<div class="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 p-8 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+<span class="material-symbols-outlined text-black/10 text-6xl">hub</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3 text-xs font-bold text-primary uppercase tracking-widest">
+<span class="bg-primary/5 px-2 py-0.5 rounded">ARCHITECTURE</span>
+<span class="h-1 w-1 rounded-full bg-black/10"></span>
+<span class="text-text-muted">2023년 10월 24일</span>
+</div>
+<h3 class="text-2xl font-bold text-text-main group-hover:text-primary transition-colors leading-tight">LLM 아키텍처 탐구: 효율적인 추론을 향한 진화</h3>
+<p class="text-text-muted text-sm leading-relaxed line-clamp-2">
+                            최신 대규모 언어 모델 구조와 효율적인 추론을 향한 진화 과정을 심도 있게 다룹니다. 성능 저하 없이 연산량을 줄이기 위한 양자화 및 최적화 기법을 분석합니다.
+                        </p>
+<div class="flex items-center gap-2 mt-1 text-xs font-semibold text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span> 1,240</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 12</span>
+</div>
+</div>
+</article>
+<article class="group flex flex-col md:flex-row gap-8 items-start cursor-pointer">
+<div class="w-full md:w-64 shrink-0 overflow-hidden rounded-xl bg-slate-50 aspect-[16/10] border border-black/5">
+<div class="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 p-8 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+<span class="material-symbols-outlined text-black/10 text-6xl">data_object</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3 text-xs font-bold text-primary uppercase tracking-widest">
+<span class="bg-primary/5 px-2 py-0.5 rounded">RESEARCH</span>
+<span class="h-1 w-1 rounded-full bg-black/10"></span>
+<span class="text-text-muted">2023년 10월 20일</span>
+</div>
+<h3 class="text-2xl font-bold text-text-main group-hover:text-primary transition-colors leading-tight">신경망의 미래: 차세대 딥러닝 패러다임</h3>
+<p class="text-text-muted text-sm leading-relaxed line-clamp-2">
+                            프로덕션 환경에서 더욱 효율적이고 확장 가능한 신경망 아키텍처로의 전환을 분석합니다. 단순 노드 확장을 넘어선 동적 아키텍처의 가능성을 탐색합니다.
+                        </p>
+<div class="flex items-center gap-2 mt-1 text-xs font-semibold text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span> 980</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 8</span>
+</div>
+</div>
+</article>
+<article class="group flex flex-col md:flex-row gap-8 items-start cursor-pointer">
+<div class="w-full md:w-64 shrink-0 overflow-hidden rounded-xl bg-slate-50 aspect-[16/10] border border-black/5">
+<div class="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 p-8 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+<span class="material-symbols-outlined text-black/10 text-6xl">database</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3 text-xs font-bold text-primary uppercase tracking-widest">
+<span class="bg-primary/5 px-2 py-0.5 rounded">PRACTICES</span>
+<span class="h-1 w-1 rounded-full bg-black/10"></span>
+<span class="text-text-muted">2023년 10월 15일</span>
+</div>
+<h3 class="text-2xl font-bold text-text-main group-hover:text-primary transition-colors leading-tight">데이터 과학 베스트 프랙티스: 안정적인 파이프라인 구축</h3>
+<p class="text-text-muted text-sm leading-relaxed line-clamp-2">
+                            고품질 데이터 파이프라인 유지 및 대규모 프로젝트의 재현성 확보를 위한 필수 전략입니다. 데이터 버전 관리와 자동화된 테스트의 중요성을 다룹니다.
+                        </p>
+<div class="flex items-center gap-2 mt-1 text-xs font-semibold text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span> 2,150</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 24</span>
+</div>
+</div>
+</article>
+<article class="group flex flex-col md:flex-row gap-8 items-start cursor-pointer">
+<div class="w-full md:w-64 shrink-0 overflow-hidden rounded-xl bg-slate-50 aspect-[16/10] border border-black/5">
+<div class="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 p-8 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+<span class="material-symbols-outlined text-black/10 text-6xl">groups</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3 text-xs font-bold text-primary uppercase tracking-widest">
+<span class="bg-primary/5 px-2 py-0.5 rounded">COMMUNITY</span>
+<span class="h-1 w-1 rounded-full bg-black/10"></span>
+<span class="text-text-muted">2023년 10월 10일</span>
+</div>
+<h3 class="text-2xl font-bold text-text-main group-hover:text-primary transition-colors leading-tight">2023 하계 해커톤 활동 후기</h3>
+<p class="text-text-muted text-sm leading-relaxed line-clamp-2">
+                            치열했던 48시간의 기록. A&amp;I 멤버들이 함께 모여 실전 인공지능 문제를 해결했던 해커톤의 생생한 현장을 공유합니다.
+                        </p>
+<div class="flex items-center gap-2 mt-1 text-xs font-semibold text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span> 850</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 15</span>
+</div>
+</div>
+</article>
+</div>
+<div class="mt-20 flex justify-center items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-black/5 text-text-muted hover:bg-black/5 transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-black/5 text-text-muted hover:bg-black/5 transition-colors">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-black/5 text-text-muted hover:bg-black/5 transition-colors">3</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-black/5 text-text-muted hover:bg-black/5 transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</section>
+</main>
+<footer class="mt-auto border-t border-black/5 py-12 px-6 lg:px-12 bg-slate-50/50">
+<div class="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="h-6 w-6 rounded bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm">neurology</span>
+</div>
+<span class="text-sm font-bold text-text-main uppercase tracking-widest font-display">A&amp;I CLUB</span>
+</div>
+<div class="flex gap-8">
+<a class="text-xs font-medium text-text-muted hover:text-text-main transition-colors uppercase tracking-widest" href="#">개인정보 처리방침</a>
+<a class="text-xs font-medium text-text-muted hover:text-text-main transition-colors uppercase tracking-widest" href="#">이용약관</a>
+<a class="text-xs font-medium text-text-muted hover:text-text-main transition-colors uppercase tracking-widest" href="#">문의하기</a>
+</div>
+<p class="text-xs text-text-muted/60 font-medium">
+                © 2023 A&amp;I 커뮤니티. All rights reserved.
+            </p>
+</div>
+</footer>
+</div>
+
+</body></html>

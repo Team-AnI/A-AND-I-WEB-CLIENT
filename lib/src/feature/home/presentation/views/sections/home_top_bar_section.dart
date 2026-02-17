@@ -47,7 +47,7 @@ class HomeTopBarSection extends StatelessWidget {
                   const SizedBox(width: 18),
                   HomeTopBarNavButton(text: '스터디', onTap: onGoEducation),
                   const SizedBox(width: 18),
-                  HomeTopBarNavButton(text: '프로젝트', onTap: onGoPosts),
+                  HomeTopBarNavButton(text: '블로그', onTap: onGoPosts),
                   const Spacer(),
                 ] else
                   const Spacer(),
