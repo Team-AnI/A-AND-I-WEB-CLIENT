@@ -76,7 +76,7 @@ GoRouter goRouter(Ref ref) {
         name: "A&I",
         pageBuilder: (context, state) {
           html.document.title = "A&I";
-          return NoTransitionPage(child: const PromotionPage());
+          return NoTransitionPage(child: const HomePage());
         },
       ),
       GoRoute(
