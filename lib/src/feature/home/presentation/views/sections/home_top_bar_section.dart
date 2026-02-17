@@ -57,7 +57,7 @@ class HomeTopBarSection extends StatelessWidget {
                   const Spacer(),
                 Row(
                   children: [
-                    if (isLoggedIn) ...[
+                    if (isLoggedIn && !showMenu) ...[
                       Container(
                         width: 32,
                         height: 32,
@@ -115,6 +115,38 @@ class HomeTopBarSection extends StatelessWidget {
                           }
                         },
                         itemBuilder: (context) => [
+                          if (isLoggedIn) ...[
+                            PopupMenuItem<String>(
+                              enabled: false,
+                              height: 52,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    nickname,
+                                    style: const TextStyle(
+                                      color: HomeTheme.textMain,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  Text(
+                                    '로그인됨',
+                                    style: TextStyle(
+                                      color: HomeTheme.textMuted.withValues(alpha: 0.8),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            PopupMenuDivider(
+                              height: 10,
+                              color: Colors.black.withValues(alpha: 0.08),
+                            ),
+                          ],
                           const PopupMenuItem<String>(
                             value: 'intro',
                             child: Text(
