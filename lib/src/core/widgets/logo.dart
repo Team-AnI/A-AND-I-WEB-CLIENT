@@ -3,23 +3,33 @@ import 'package:flutter/material.dart';
 
 /// 사이트 로고 위젯
 class Logo extends StatelessWidget {
-  const Logo({super.key});
+  const Logo({
+    super.key,
+    this.size,
+    this.padding = const EdgeInsets.symmetric(vertical: 22.5),
+    this.borderRadius = 24,
+  });
+
+  final double? size;
+  final EdgeInsetsGeometry padding;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
-    final double width = ResponsiveLayout.isMobile(context) ? 90 : 120;
+    final double width =
+        size ?? (ResponsiveLayout.isMobile(context) ? 90 : 120);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 22.5),
+      padding: padding,
       child: Container(
           padding: const EdgeInsets.all(10.0),
           width: width,
           height: width,
           decoration: BoxDecoration(
               color: const Color(0xffffffff),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(borderRadius),
               boxShadow: [
                 BoxShadow(
-                    color: const Color(0xff000000).withOpacity(0.25),
+                    color: const Color(0xff000000).withValues(alpha: 0.25),
                     offset: const Offset(0, 1),
                     blurRadius: 4,
                     spreadRadius: 0)

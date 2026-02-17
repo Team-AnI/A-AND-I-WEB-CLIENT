@@ -1,4 +1,6 @@
 import 'package:a_and_i_report_web_server/src/feature/home/home_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_detail_view.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_list_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/promotion/ui/faq_light_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -76,7 +78,7 @@ GoRouter goRouter(Ref ref) {
         name: "A&I",
         pageBuilder: (context, state) {
           html.document.title = "A&I";
-          return NoTransitionPage(child: const PromotionPage());
+          return NoTransitionPage(child: const HomePage());
         },
       ),
       GoRoute(
@@ -104,6 +106,26 @@ GoRouter goRouter(Ref ref) {
         },
       ),
       GoRoute(
+        path: '/articles',
+        name: "블로그 | A&I",
+        pageBuilder: (context, state) {
+          html.document.title = "블로그 | A&I";
+          return NoTransitionPage(child: const ArticleListView());
+        },
+        routes: [
+          GoRoute(
+            path: ':id',
+            pageBuilder: (context, state) {
+              final id = state.pathParameters['id']!;
+              html.document.title = "블로그 상세 | A&I";
+              return NoTransitionPage(
+                child: ArticleDetailView(id: id),
+              );
+            },
+          ),
+        ],
+      ),
+      GoRoute(
         path: '/report',
         name: "멘토링 | A&I",
         pageBuilder: (context, state) {
@@ -113,11 +135,17 @@ GoRouter goRouter(Ref ref) {
         routes: [
           GoRoute(
             path: ':id',
-            pageBuilder: (context, state) => NoTransitionPage(
-              child: ReportDetailUI(
-                id: state.pathParameters['id']!,
-              ),
-            ),
+            pageBuilder: (context, state) {
+              final endAtMs = state.uri.queryParameters['endAt'];
+              return NoTransitionPage(
+                child: ReportDetailUI(
+                  id: state.pathParameters['id']!,
+                  endAt: endAtMs != null
+                      ? DateTime.fromMillisecondsSinceEpoch(int.parse(endAtMs))
+                      : null,
+                ),
+              );
+            },
           ),
         ],
       ),
