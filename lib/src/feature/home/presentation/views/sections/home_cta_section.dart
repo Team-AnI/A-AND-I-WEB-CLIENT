@@ -1,12 +1,19 @@
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
+import 'package:a_and_i_report_web_server/src/feature/promotion/ui/viewModels/apply_view.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class HomeCtaSection extends StatelessWidget {
+class HomeCtaSection extends ConsumerWidget {
   const HomeCtaSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isRecruiting = ref.watch(applyViewProvider);
+    if (!isRecruiting) {
+      return const SizedBox.shrink();
+    }
+
     final width = MediaQuery.of(context).size.width;
     final horizontal = width >= 1200 ? 48.0 : 24.0;
     final verticalLayout = width < 820;
@@ -58,7 +65,7 @@ class HomeCtaSection extends StatelessWidget {
                     width: verticalLayout ? 0 : 16,
                     height: verticalLayout ? 16 : 0),
                 FilledButton.icon(
-                  onPressed: () => context.go('/report'),
+                  onPressed: _launchApplyForm,
                   icon: const Icon(Icons.school, size: 18),
                   style: FilledButton.styleFrom(
                     backgroundColor: HomeTheme.primary,
@@ -67,7 +74,7 @@ class HomeCtaSection extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 22, vertical: 16),
                   ),
-                  label: const Text('스터디 참여하기'),
+                  label: const Text('A&I 참여하기'),
                 ),
               ],
             ),
@@ -75,5 +82,12 @@ class HomeCtaSection extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _launchApplyForm() async {
+    final uri = Uri.parse(
+      'https://docs.google.com/forms/d/e/1FAIpQLSdIXB0FxwJaQw6f-vpf5mYBxNMlJs2PII_0UQo31n3As2PgyA/viewform?usp=header',
+    );
+    await launchUrl(uri);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/login_ui_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/login_ui_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -16,38 +17,84 @@ class LoginTextFieldView extends HookConsumerWidget {
       children: [
         TextField(
           controller: accountController,
-          cursorColor: const Color(0xff000000),
-          decoration: const InputDecoration(
-            focusColor: Color(0xff000000),
+          cursorColor: HomeTheme.primary,
+          style: const TextStyle(
+            color: HomeTheme.textMain,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.black.withValues(alpha: 0.02),
             prefixIcon: Icon(
               Icons.account_circle_outlined,
-              color: Color(0xff000000),
+              color: HomeTheme.textMuted,
             ),
             hintText: "계정",
-            focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(width: 2, color: Color(0xff000000))),
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(width: 2, color: Color(0xffd9d9d9))),
+            hintStyle: const TextStyle(
+              color: HomeTheme.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                width: 1.4,
+                color: HomeTheme.primary.withValues(alpha: 0.65),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                width: 1.0,
+                color: Colors.black.withValues(alpha: 0.08),
+              ),
+            ),
           ),
           onChanged: (userId) {
             final event = UserAccountInput(userId: userId);
             loginUiViewModel.onEvent(event);
           },
         ),
+        const SizedBox(height: 12),
         TextField(
           controller: passwordController,
-          cursorColor: const Color(0xff000000),
+          cursorColor: HomeTheme.primary,
+          style: const TextStyle(
+            color: HomeTheme.textMain,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
           obscureText: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.black.withValues(alpha: 0.02),
             prefixIcon: Icon(
               Icons.lock,
-              color: Color(0xff000000),
+              color: HomeTheme.textMuted,
             ),
             hintText: "비밀번호",
-            focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(width: 2, color: Color(0xff000000))),
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(width: 2, color: Color(0xffd9d9d9))),
+            hintStyle: const TextStyle(
+              color: HomeTheme.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                width: 1.4,
+                color: HomeTheme.primary.withValues(alpha: 0.65),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                width: 1.0,
+                color: Colors.black.withValues(alpha: 0.08),
+              ),
+            ),
           ),
           onChanged: (password) {
             final event = UserPasswordInput(password: password);

@@ -5,8 +5,8 @@ import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_vi
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/login_ui_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/login_ui_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/login_ui_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class LoginButtonView extends ConsumerWidget {
@@ -17,38 +17,44 @@ class LoginButtonView extends ConsumerWidget {
     final loginUiState = ref.watch(loginUiViewModelProvider);
     final loginUiViewModel = ref.read(loginUiViewModelProvider.notifier);
     final authViewModel = ref.read(authViewModelProvider.notifier);
+    final canSubmit = loginUiState is Idle &&
+        loginUiState.userId.trim().isNotEmpty &&
+        loginUiState.password.isNotEmpty;
 
-    return InkWell(
-      onTap: () async {
-        /// 버튼 탭 시
-        /// 로그인 진행
-        if (loginUiState is Idle) {
-          try {
-            final account = loginUiState.userId;
-            final password = loginUiState.password;
-            loginUiViewModel.onEvent(Login());
-            await authViewModel
-                .onEvent(SignIn(account: account, password: password));
-          } catch (e) {
-            log(e.toString());
-            loginUiViewModel.onEvent(LoginFail(errorMsg: e.toString()));
-          }
-        }
-      },
-      child: Container(
-        alignment: Alignment.center,
-        width: double.maxFinite,
-        height: 60,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: const Color(0xff373737)),
-        child: const Text(
-          "로그인",
-          style: TextStyle(
-              color: Color(0xffffffff),
-              fontSize: 20,
-              fontWeight: FontWeight.w600),
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: FilledButton(
+        onPressed: canSubmit
+            ? () async {
+                if (loginUiState is Idle) {
+                  try {
+                    final account = loginUiState.userId;
+                    final password = loginUiState.password;
+                    loginUiViewModel.onEvent(Login());
+                    await authViewModel
+                        .onEvent(SignIn(account: account, password: password));
+                  } catch (e) {
+                    log(e.toString());
+                    loginUiViewModel.onEvent(LoginFail(errorMsg: e.toString()));
+                  }
+                }
+              }
+            : null,
+        style: FilledButton.styleFrom(
+          backgroundColor: HomeTheme.primary,
+          disabledBackgroundColor: HomeTheme.primary.withValues(alpha: 0.35),
+          foregroundColor: Colors.white,
+          disabledForegroundColor: Colors.white,
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
+        child: const Text("로그인"),
       ),
     );
   }
