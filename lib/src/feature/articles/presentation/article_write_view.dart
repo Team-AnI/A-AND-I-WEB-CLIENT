@@ -182,7 +182,7 @@ class ArticleWriteViewState extends State<ArticleWriteView> {
                       ),
                       const SizedBox(width: 10),
                       FilledButton(
-                        onPressed: () {},
+                        onPressed: () => context.go('/articles/confirm'),
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF111827),
                           foregroundColor: Colors.white,

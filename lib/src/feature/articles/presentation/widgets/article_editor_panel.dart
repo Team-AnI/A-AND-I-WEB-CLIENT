@@ -35,6 +35,8 @@ class ArticleEditorPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
+    final isTablet = width >= 768 && width < 1200;
+    final showTopExit = isMobile || isTablet;
     final horizontalPadding = isMobile ? 20.0 : (width < 1200 ? 28.0 : 40.0);
     final verticalPadding = isMobile ? 20.0 : (width < 1200 ? 28.0 : 38.0);
 
@@ -52,6 +54,30 @@ class ArticleEditorPanel extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (showTopExit)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: TextButton.icon(
+                          onPressed: onExit,
+                          style: TextButton.styleFrom(
+                            foregroundColor: HomeTheme.textMuted,
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.arrow_back, size: 19),
+                          label: const Text(
+                            '나가기',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   TextField(
                     controller: titleController,
                     style: TextStyle(
@@ -156,37 +182,38 @@ class ArticleEditorPanel extends StatelessWidget {
               ),
             ),
           ),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: 14,
-            ),
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Color(0xFFF3F4F6)),
+          if (!showTopExit)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: 14,
               ),
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: onExit,
-                style: TextButton.styleFrom(
-                  foregroundColor: HomeTheme.textMuted,
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Color(0xFFF3F4F6)),
                 ),
-                icon: const Icon(Icons.arrow_back, size: 19),
-                label: const Text(
-                  '나가기',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: onExit,
+                  style: TextButton.styleFrom(
+                    foregroundColor: HomeTheme.textMuted,
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: const Icon(Icons.arrow_back, size: 19),
+                  label: const Text(
+                    '나가기',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

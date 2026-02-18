@@ -1,4 +1,5 @@
 import 'package:a_and_i_report_web_server/src/feature/home/home_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_confirm_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_detail_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_list_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_write_view.dart';
@@ -119,6 +120,13 @@ GoRouter goRouter(Ref ref) {
             pageBuilder: (context, state) {
               html.document.title = "블로그 작성 | A&I";
               return NoTransitionPage(child: const ArticleWriteView());
+            },
+          ),
+          GoRoute(
+            path: 'confirm',
+            pageBuilder: (context, state) {
+              html.document.title = "블로그 출간 설정 | A&I";
+              return NoTransitionPage(child: const ArticleConfirmView());
             },
           ),
           GoRoute(
