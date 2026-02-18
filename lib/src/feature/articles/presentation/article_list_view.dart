@@ -18,6 +18,7 @@ class ArticleListView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
+    final canShowWriteButton = isLoggedIn;
     final userState = ref.watch(userViewModelProvider);
     final nickname = userState.nickname ?? '동아리원';
     final width = MediaQuery.of(context).size.width;
@@ -92,6 +93,16 @@ class ArticleListView extends ConsumerWidget {
                           color: HomeTheme.textMuted,
                         ),
                       ),
+                      SizedBox(height: isMobile ? 16 : 20),
+                      if (canShowWriteButton)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton.icon(
+                            onPressed: () => context.go('/articles/write'),
+                            icon: const Icon(Icons.edit, size: 18),
+                            label: const Text('블로그 글 작성'),
+                          ),
+                        ),
                       SizedBox(height: sectionSpacing),
                       Wrap(
                         spacing: isMobile ? 6 : 8,
