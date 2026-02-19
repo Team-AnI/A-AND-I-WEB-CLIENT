@@ -9,6 +9,7 @@ import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/se
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/sections/home_top_bar_section.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/presentation/widgets/user_management_field_label.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/presentation/widgets/user_management_section_title.dart';
+import 'package:a_and_i_report_web_server/src/feature/user/presentation/widgets/user_profile_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -98,48 +99,7 @@ class UserManagermentView extends ConsumerWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Stack(
-                            children: [
-                              Container(
-                                width: 96,
-                                height: 96,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(
-                                    color: Colors.black.withValues(alpha: 0.06),
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.account_circle,
-                                  size: 64,
-                                  color: Color(0xFFCBD5E1),
-                                ),
-                              ),
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(999),
-                                    border: Border.all(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.10),
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    Icons.photo_camera_outlined,
-                                    size: 16,
-                                    color: HomeTheme.textMuted
-                                        .withValues(alpha: 0.8),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          const UserProfileImagePicker(),
                           const SizedBox(width: 20),
                           Expanded(
                             child: Column(
