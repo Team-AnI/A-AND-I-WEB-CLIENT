@@ -40,6 +40,7 @@ class HomePage extends ConsumerWidget {
               onGoIntro: () => context.go("/promotion"),
               onGoEducation: () => context.go('/report'),
               onGoPosts: () => context.go('/articles'),
+              onGoMyAccount: () => context.go('/my-account'),
               onLogin: () => context.go('/sign-in'),
               onLogout: () async {
                 await ref

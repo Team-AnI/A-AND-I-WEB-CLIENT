@@ -49,6 +49,7 @@ class ArticleListView extends ConsumerWidget {
               onGoIntro: () => context.go('/promotion'),
               onGoEducation: () => context.go('/report'),
               onGoPosts: () => context.go('/articles'),
+              onGoMyAccount: () => context.go('/my-account'),
               onLogin: () => context.go('/sign-in'),
               onLogout: () async {
                 await ref
@@ -198,7 +199,9 @@ class CategoryChipView extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: selected ? HomeTheme.textMain : Colors.black.withValues(alpha: 0.05),
+        color: selected
+            ? HomeTheme.textMain
+            : Colors.black.withValues(alpha: 0.05),
       ),
       child: Text(
         text,

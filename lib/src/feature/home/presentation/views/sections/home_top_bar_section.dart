@@ -10,6 +10,7 @@ class HomeTopBarSection extends StatelessWidget {
     required this.onGoIntro,
     required this.onGoEducation,
     required this.onGoPosts,
+    required this.onGoMyAccount,
     required this.onLogin,
     required this.onLogout,
   });
@@ -19,6 +20,7 @@ class HomeTopBarSection extends StatelessWidget {
   final VoidCallback onGoIntro;
   final VoidCallback onGoEducation;
   final VoidCallback onGoPosts;
+  final VoidCallback onGoMyAccount;
   final VoidCallback onLogin;
   final Future<void> Function() onLogout;
 
@@ -58,23 +60,38 @@ class HomeTopBarSection extends StatelessWidget {
                 Row(
                   children: [
                     if (isLoggedIn && !showMenu) ...[
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: HomeTheme.primary.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Icon(Icons.person,
-                            color: HomeTheme.primary, size: 18),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        nickname,
-                        style: TextStyle(
-                          fontSize: isMobile ? 12 : 13,
-                          fontWeight: FontWeight.w600,
-                          color: HomeTheme.textMain,
+                      InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: onGoMyAccount,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color:
+                                      HomeTheme.primary.withValues(alpha: 0.10),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Icon(Icons.person,
+                                    color: HomeTheme.primary, size: 18),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                nickname,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 12 : 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: HomeTheme.textMain,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -106,6 +123,10 @@ class HomeTopBarSection extends StatelessWidget {
                             onGoPosts();
                             return;
                           }
+                          if (value == 'account') {
+                            onGoMyAccount();
+                            return;
+                          }
                           if (value == 'login') {
                             onLogin();
                             return;
@@ -134,7 +155,8 @@ class HomeTopBarSection extends StatelessWidget {
                                   Text(
                                     '로그인됨',
                                     style: TextStyle(
-                                      color: HomeTheme.textMuted.withValues(alpha: 0.8),
+                                      color: HomeTheme.textMuted
+                                          .withValues(alpha: 0.8),
                                       fontWeight: FontWeight.w600,
                                       fontSize: 11,
                                     ),
@@ -177,6 +199,17 @@ class HomeTopBarSection extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (isLoggedIn)
+                            const PopupMenuItem<String>(
+                              value: 'account',
+                              child: Text(
+                                '내 계정',
+                                style: TextStyle(
+                                  color: HomeTheme.textMain,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           PopupMenuDivider(
                             height: 12,
                             color: Colors.black.withValues(alpha: 0.08),
