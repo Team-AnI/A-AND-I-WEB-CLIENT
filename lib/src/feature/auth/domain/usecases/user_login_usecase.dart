@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_request_dto.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_response_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
 
 /// 사용자 로그인을 처리하는 UseCase 구현체입니다.
@@ -21,7 +22,7 @@ final class UserLoginUsecaseImpl implements UserLoginUsecase {
   /// 이미 로그인되어 있는 경우 예외를 발생시킵니다.
   /// 네트워크 오류 등 실패 시 예외를 던집니다.
   @override
-  Future<void> call(LoginRequestDto dto) async {
+  Future<LoginResponseDto> call(LoginRequestDto dto) async {
     final token = await authRepository.getToken();
     if (token != null) throw Exception("이미 로그인 됨");
     try {
@@ -32,6 +33,7 @@ final class UserLoginUsecaseImpl implements UserLoginUsecase {
       final newAccessToken = response.data!.accessToken;
 
       await authRepository.saveToken(newAccessToken);
+      return response;
     } catch (e) {
       log(e.toString());
       throw Exception("서버와의 통신이 원할하지 않습니다.");
@@ -41,5 +43,5 @@ final class UserLoginUsecaseImpl implements UserLoginUsecase {
 
 /// 사용자 로그인을 처리하는 UseCase 인터페이스입니다.
 abstract class UserLoginUsecase {
-  Future<void> call(LoginRequestDto dto);
+  Future<LoginResponseDto> call(LoginRequestDto dto);
 }

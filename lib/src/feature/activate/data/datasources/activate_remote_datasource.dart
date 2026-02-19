@@ -16,7 +16,7 @@ class ActivateRemoteDatasource {
   final String _baseUrl;
 
   Future<void> activate(ActivateRequestDto request) async {
-    const endpoints = <String>['/v1/auth/activate', '/activate'];
+    const endpoints = <String>['/activate', '/v1/auth/activate'];
     for (var i = 0; i < endpoints.length; i++) {
       final endpoint = endpoints[i];
       final isLastEndpoint = i == endpoints.length - 1;

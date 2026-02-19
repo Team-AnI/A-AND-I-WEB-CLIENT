@@ -1,11 +1,14 @@
 import 'dart:developer';
 
+import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/providers/get_user_access_token_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/providers/delete_user_access_token_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/providers/user_login_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_event.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_view_model.g.dart';
@@ -54,9 +57,25 @@ class AuthViewModel extends _$AuthViewModel {
     switch (event) {
       case SignIn():
         try {
-          final dto =
-              LoginRequestDto(username: event.account, password: event.password);
-          await ref.read(userLoginUsecaseProvider).call(dto);
+          final dto = LoginRequestDto(
+              username: event.account, password: event.password);
+          final response = await ref.read(userLoginUsecaseProvider).call(dto);
+          final user = response.data?.user;
+          if (user != null) {
+            await ref.read(userViewModelProvider.notifier).onEvent(
+                  UserViewEvent.myInfoFetched(
+                    user: User(
+                      id: user.id,
+                      nickname: user.username,
+                      role: user.role,
+                    ),
+                  ),
+                );
+          } else {
+            await ref
+                .read(userViewModelProvider.notifier)
+                .onEvent(const UserViewEvent.syncFromToken());
+          }
           state = state.copyWith(status: AuthenticationStatus.authenticated);
         } catch (e) {
           state = state.copyWith(status: AuthenticationStatus.unauthenticated);
