@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/remote/remote_auth_datasource.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_response_dto.dart';
@@ -36,5 +39,36 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> deleteToken() async {
     await localAuthRepository.deleteUserToken();
+  }
+
+  @override
+  Future<void> saveCachedUser(User user) async {
+    await localAuthRepository.saveCachedUserJson(
+      jsonEncode(user.toJson()),
+    );
+  }
+
+  @override
+  Future<User?> getCachedUser() async {
+    final jsonString = await localAuthRepository.getCachedUserJson();
+    if (jsonString == null || jsonString.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) {
+        return null;
+      }
+      return User.fromJson(decoded);
+    } catch (_) {
+      await localAuthRepository.deleteCachedUserJson();
+      return null;
+    }
+  }
+
+  @override
+  Future<void> deleteCachedUser() async {
+    await localAuthRepository.deleteCachedUserJson();
   }
 }

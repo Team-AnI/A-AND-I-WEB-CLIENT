@@ -265,6 +265,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
     final topBarNickname = userState.nickname ?? '동아리원';
+    final topBarProfileImageUrl = userState.profileImageUrl;
 
     synchronizeNicknameFromState(userState.nickname);
 
@@ -288,6 +289,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
             titleSpacing: 0,
             title: HomeTopBarSection(
               nickname: topBarNickname,
+              profileImageUrl: topBarProfileImageUrl,
               isLoggedIn: isLoggedIn,
               onGoIntro: () => context.go('/promotion'),
               onGoEducation: () => context.go('/report'),

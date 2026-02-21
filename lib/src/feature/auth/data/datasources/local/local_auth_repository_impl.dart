@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/local/local_auth_datasource.dart';
 import 'package:web/web.dart';
 
 final class LocalAuthDatasourceImpl implements LocalAuthDatasource {
   static const _tokenKey = 'access-token';
+  static const _cachedUserKey = 'cached-user';
 
   /// 로컬 스토리지에 jwt 저장
   ///
@@ -26,5 +29,31 @@ final class LocalAuthDatasourceImpl implements LocalAuthDatasource {
   @override
   Future<void> deleteUserToken() async {
     window.sessionStorage.removeItem(_tokenKey);
+  }
+
+  @override
+  Future<String?> getCachedUserJson() async {
+    final encoded = window.sessionStorage.getItem(_cachedUserKey);
+    if (encoded == null || encoded.isEmpty) {
+      return null;
+    }
+
+    try {
+      return utf8.decode(base64Decode(encoded));
+    } catch (_) {
+      window.sessionStorage.removeItem(_cachedUserKey);
+      return null;
+    }
+  }
+
+  @override
+  Future<void> saveCachedUserJson(String userJson) async {
+    final encoded = base64Encode(utf8.encode(userJson));
+    window.sessionStorage.setItem(_cachedUserKey, encoded);
+  }
+
+  @override
+  Future<void> deleteCachedUserJson() async {
+    window.sessionStorage.removeItem(_cachedUserKey);
   }
 }

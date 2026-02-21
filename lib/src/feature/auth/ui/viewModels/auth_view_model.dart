@@ -84,6 +84,9 @@ class AuthViewModel extends _$AuthViewModel {
         break;
       case SignOut():
         await ref.read(deleteUserAccessTokenUsecaseProvider).call();
+        await ref
+            .read(userViewModelProvider.notifier)
+            .onEvent(const UserViewEvent.clear());
         state = state.copyWith(status: AuthenticationStatus.unauthenticated);
         break;
     }
