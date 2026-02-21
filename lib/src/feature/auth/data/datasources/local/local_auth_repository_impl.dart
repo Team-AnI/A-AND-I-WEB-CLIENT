@@ -12,7 +12,7 @@ final class LocalAuthDatasourceImpl implements LocalAuthDatasource {
   ///
   @override
   Future<void> saveUserToken(String token) async {
-    window.sessionStorage.setItem(_tokenKey, token);
+    window.localStorage.setItem(_tokenKey, token);
   }
 
   /// 로컬 스토리지로부터 jwt 읽어오기
@@ -20,7 +20,7 @@ final class LocalAuthDatasourceImpl implements LocalAuthDatasource {
   ///
   @override
   Future<String?> getUserToken() async {
-    return window.sessionStorage.getItem(_tokenKey);
+    return window.localStorage.getItem(_tokenKey);
   }
 
   /// 로컬 스토리지로부터 jwt 삭제
@@ -28,12 +28,12 @@ final class LocalAuthDatasourceImpl implements LocalAuthDatasource {
   ///
   @override
   Future<void> deleteUserToken() async {
-    window.sessionStorage.removeItem(_tokenKey);
+    window.localStorage.removeItem(_tokenKey);
   }
 
   @override
   Future<String?> getCachedUserJson() async {
-    final encoded = window.sessionStorage.getItem(_cachedUserKey);
+    final encoded = window.localStorage.getItem(_cachedUserKey);
     if (encoded == null || encoded.isEmpty) {
       return null;
     }
@@ -41,7 +41,7 @@ final class LocalAuthDatasourceImpl implements LocalAuthDatasource {
     try {
       return utf8.decode(base64Decode(encoded));
     } catch (_) {
-      window.sessionStorage.removeItem(_cachedUserKey);
+      window.localStorage.removeItem(_cachedUserKey);
       return null;
     }
   }
@@ -49,11 +49,11 @@ final class LocalAuthDatasourceImpl implements LocalAuthDatasource {
   @override
   Future<void> saveCachedUserJson(String userJson) async {
     final encoded = base64Encode(utf8.encode(userJson));
-    window.sessionStorage.setItem(_cachedUserKey, encoded);
+    window.localStorage.setItem(_cachedUserKey, encoded);
   }
 
   @override
   Future<void> deleteCachedUserJson() async {
-    window.sessionStorage.removeItem(_cachedUserKey);
+    window.localStorage.removeItem(_cachedUserKey);
   }
 }
