@@ -20,18 +20,21 @@ class UserProfileRemoteDatasource {
   final String _baseUrl;
 
   /// `/v1/me` 내 정보 수정 API를 호출한다.
-  Future<User> updateMyProfile({
+  Future<User?> updateMyProfile({
     required String authorization,
-    required String nickname,
+    String? nickname,
     Uint8List? profileImageBytes,
     String? profileImageFileName,
     String? profileImageMimeType,
     String? password,
   }) async {
     try {
-      final formDataMap = <String, dynamic>{
-        'nickname': nickname,
-      };
+      final formDataMap = <String, dynamic>{};
+
+      final trimmedNickname = nickname?.trim();
+      if (trimmedNickname != null && trimmedNickname.isNotEmpty) {
+        formDataMap['nickname'] = trimmedNickname;
+      }
 
       if (profileImageBytes != null && profileImageBytes.isNotEmpty) {
         final resolvedFileName = profileImageFileName ??
@@ -45,6 +48,10 @@ class UserProfileRemoteDatasource {
       final trimmedPassword = password?.trim();
       if (trimmedPassword != null && trimmedPassword.isNotEmpty) {
         formDataMap['password'] = trimmedPassword;
+      }
+
+      if (formDataMap.isEmpty) {
+        throw UpdateMyProfileRequestException();
       }
 
       final response = await dio.post(
@@ -93,28 +100,32 @@ class UserProfileRemoteDatasource {
     return Uri.parse(_baseUrl).resolve(endpoint).toString();
   }
 
-  User _parseUser(Response<dynamic> response) {
+  User? _parseUser(Response<dynamic> response) {
     final responseData = response.data;
     if (responseData is! Map<String, dynamic>) {
       throw UpdateMyProfileRequestException();
     }
 
     final isSuccess = responseData['success'] == true;
-    final responseDataField = responseData['data'];
-    if (!isSuccess || responseDataField is! Map<String, dynamic>) {
+    if (!isSuccess) {
       throw UpdateMyProfileRequestException();
     }
 
-    final userData = responseDataField['user'] is Map<String, dynamic>
-        ? responseDataField['user'] as Map<String, dynamic>
-        : responseDataField;
+    final responseDataField = responseData['data'];
+    if (responseDataField is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final dynamic nestedUser = responseDataField['user'];
+    final userData =
+        nestedUser is Map<String, dynamic> ? nestedUser : responseDataField;
 
     final id = userData['id']?.toString() ?? userData['userId']?.toString();
     final role = userData['role']?.toString();
     final nickname =
         userData['nickname']?.toString() ?? userData['username']?.toString();
     if (id == null || role == null || nickname == null || nickname.isEmpty) {
-      throw UpdateMyProfileRequestException();
+      return null;
     }
 
     final profileImage = userData['profileImageUrl']?.toString() ??

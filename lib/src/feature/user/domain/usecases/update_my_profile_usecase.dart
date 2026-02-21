@@ -11,25 +11,31 @@ class UpdateMyProfileUsecase {
 
   /// 내 닉네임/프로필 이미지/비밀번호를 수정한다.
   Future<UpdateMyProfileResult> call({
-    required String nickname,
+    String? nickname,
     Uint8List? profileImageBytes,
     String? profileImageFileName,
     String? profileImageMimeType,
     String? password,
   }) async {
-    final trimmedNickname = nickname.trim();
-    if (trimmedNickname.isEmpty) {
+    final trimmedNickname = nickname?.trim();
+    final trimmedPassword = password?.trim();
+    final hasNickname = trimmedNickname != null && trimmedNickname.isNotEmpty;
+    final hasPassword = trimmedPassword != null && trimmedPassword.isNotEmpty;
+    final hasProfileImage =
+        profileImageBytes != null && profileImageBytes.isNotEmpty;
+
+    if (!hasNickname && !hasPassword && !hasProfileImage) {
       return const UpdateMyProfileFailure(
         UpdateMyProfileFailureReason.invalidNickname,
       );
     }
 
     return userProfileRepository.updateMyProfile(
-      nickname: trimmedNickname,
+      nickname: hasNickname ? trimmedNickname : null,
       profileImageBytes: profileImageBytes,
       profileImageFileName: profileImageFileName,
       profileImageMimeType: profileImageMimeType,
-      password: password,
+      password: hasPassword ? trimmedPassword : null,
     );
   }
 }

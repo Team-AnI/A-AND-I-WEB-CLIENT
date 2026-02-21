@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
@@ -27,8 +28,11 @@ class UserManagermentView extends ConsumerStatefulWidget {
 
 class UserManagermentViewState extends ConsumerState<UserManagermentView> {
   final TextEditingController nicknameController = TextEditingController();
+  final GlobalKey<UserProfileImagePickerState> profileImagePickerKey =
+      GlobalKey<UserProfileImagePickerState>();
   UserProfileImageSelection? selectedProfileImage;
   String? syncedNickname;
+  bool isEditingProfile = false;
   bool isSubmitting = false;
 
   @override
@@ -55,6 +59,34 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     syncedNickname = nickname;
   }
 
+  void resetEditingState({String? nickname}) {
+    profileImagePickerKey.currentState?.clearSelection();
+    selectedProfileImage = null;
+    synchronizeNicknameFromState(nickname);
+  }
+
+  User? resolveMergedUser(
+    User? updatedUser,
+    UserViewState userState, {
+    required String? requestNickname,
+  }) {
+    if (updatedUser != null) {
+      return updatedUser;
+    }
+
+    final currentUser = userState.user;
+    if (currentUser == null) {
+      return null;
+    }
+
+    final resolvedNickname =
+        requestNickname != null && requestNickname.isNotEmpty
+            ? requestNickname
+            : currentUser.nickname;
+
+    return currentUser.copyWith(nickname: resolvedNickname);
+  }
+
   Future<void> submitProfileUpdate(
     UserViewState userState, {
     String? password,
@@ -64,14 +96,17 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
       return;
     }
 
-    final nickname = nicknameController.text.trim();
+    final trimmedNickname = nicknameController.text.trim();
+    final fallbackNickname = userState.nickname?.trim();
+    final requestNickname =
+        trimmedNickname.isNotEmpty ? trimmedNickname : fallbackNickname;
     setState(() {
       isSubmitting = true;
     });
 
     try {
       final result = await ref.read(updateMyProfileUsecaseProvider).call(
-            nickname: nickname,
+            nickname: requestNickname,
             profileImageBytes:
                 includeProfileImage ? selectedProfileImage?.bytes : null,
             profileImageFileName:
@@ -86,15 +121,26 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
       }
 
       if (result is UpdateMyProfileSuccess) {
-        await ref.read(userViewModelProvider.notifier).onEvent(
-              UserViewEvent.myInfoFetched(user: result.user),
-            );
+        final mergedUser = resolveMergedUser(
+          result.user,
+          userState,
+          requestNickname: requestNickname,
+        );
+        if (mergedUser != null) {
+          await ref.read(userViewModelProvider.notifier).onEvent(
+                UserViewEvent.myInfoFetched(user: mergedUser),
+              );
+        }
         if (!mounted) {
           return;
         }
-        syncedNickname = result.user.nickname;
+        syncedNickname = mergedUser?.nickname ?? syncedNickname;
         if (includeProfileImage) {
-          selectedProfileImage = null;
+          setState(() {
+            isEditingProfile = false;
+          });
+          resetEditingState(
+              nickname: mergedUser?.nickname ?? userState.nickname);
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -110,7 +156,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
 
       final failure = result as UpdateMyProfileFailure;
       final errorMessage = switch (failure.reason) {
-        UpdateMyProfileFailureReason.invalidNickname => '닉네임을 입력해주세요.',
+        UpdateMyProfileFailureReason.invalidNickname => '닉네임 또는 비밀번호를 입력해주세요.',
         UpdateMyProfileFailureReason.unauthorized =>
           '로그인 정보가 만료되었습니다. 다시 로그인해주세요.',
         UpdateMyProfileFailureReason.networkError =>
@@ -272,23 +318,60 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '내 계정',
-                        style: TextStyle(
-                          fontSize: isMobile ? 34 : 40,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1.0,
-                          color: HomeTheme.textMain,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '프로필 정보 및 활동 현황을 관리하세요.',
-                        style: TextStyle(
-                          fontSize: isMobile ? 14 : 16,
-                          height: 1.5,
-                          color: HomeTheme.textMuted,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '내 계정',
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 34 : 40,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1.0,
+                                    color: HomeTheme.textMain,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '프로필 정보 및 활동 현황을 관리하세요.',
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 14 : 16,
+                                    height: 1.5,
+                                    color: HomeTheme.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          TextButton(
+                            onPressed: isSubmitting
+                                ? null
+                                : () {
+                                    setState(() {
+                                      isEditingProfile = !isEditingProfile;
+                                    });
+                                    if (isEditingProfile) {
+                                      synchronizeNicknameFromState(
+                                        userState.nickname,
+                                      );
+                                    } else {
+                                      resetEditingState(
+                                        nickname: userState.nickname,
+                                      );
+                                    }
+                                  },
+                            child: Text(
+                              isEditingProfile ? '수정 취소' : '내 정보 수정',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 40),
                       const UserManagementSectionTitle(text: '프로필 정보'),
@@ -297,12 +380,16 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           UserProfileImagePicker(
+                            key: profileImagePickerKey,
+                            enabled: isEditingProfile,
                             profileImageUrl: userState.user?.profileImageUrl,
-                            onImageChanged: (value) {
-                              setState(() {
-                                selectedProfileImage = value;
-                              });
-                            },
+                            onImageChanged: isEditingProfile
+                                ? (value) {
+                                    setState(() {
+                                      selectedProfileImage = value;
+                                    });
+                                  }
+                                : null,
                           ),
                           const SizedBox(width: 20),
                           Expanded(
@@ -311,46 +398,76 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                               children: [
                                 const UserManagementFieldLabel(text: '닉네임'),
                                 const SizedBox(height: 8),
-                                TextFormField(
-                                  controller: nicknameController,
-                                  decoration: InputDecoration(
-                                    hintText: '닉네임을 입력하세요',
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(
+                                if (isEditingProfile)
+                                  TextFormField(
+                                    controller: nicknameController,
+                                    decoration: InputDecoration(
+                                      hintText: '닉네임을 입력하세요',
+                                      isDense: true,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 12,
+                                      ),
+                                      filled: true,
+                                      fillColor: const Color(0xFFF8FAFC),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.06),
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.06),
+                                        ),
+                                      ),
+                                      focusedBorder: const OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(10),
+                                        ),
+                                        borderSide: BorderSide(
+                                          color: HomeTheme.primary,
+                                          width: 1.4,
+                                        ),
+                                      ),
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 14 : 15,
+                                      color: HomeTheme.textMain,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  )
+                                else
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: 14,
                                       vertical: 12,
                                     ),
-                                    filled: true,
-                                    fillColor: const Color(0xFFF8FAFC),
-                                    border: OutlineInputBorder(
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8FAFC),
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(
+                                      border: Border.all(
                                         color: Colors.black
                                             .withValues(alpha: 0.06),
                                       ),
                                     ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.06),
-                                      ),
-                                    ),
-                                    focusedBorder: const OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(10)),
-                                      borderSide: BorderSide(
-                                        color: HomeTheme.primary,
-                                        width: 1.4,
+                                    child: Text(
+                                      userState.nickname?.trim().isNotEmpty ==
+                                              true
+                                          ? userState.nickname!
+                                          : '닉네임 정보가 없습니다.',
+                                      style: TextStyle(
+                                        fontSize: isMobile ? 14 : 15,
+                                        color: HomeTheme.textMain,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ),
-                                  style: TextStyle(
-                                    fontSize: isMobile ? 14 : 15,
-                                    color: HomeTheme.textMain,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
                               ],
                             ),
                           ),
@@ -430,53 +547,56 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 48),
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(
-                              color: Colors.black.withValues(alpha: 0.06),
+                      if (isEditingProfile) ...[
+                        const SizedBox(height: 48),
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: Colors.black.withValues(alpha: 0.06),
+                              ),
                             ),
                           ),
-                        ),
-                        padding: const EdgeInsets.only(top: 24),
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: FilledButton(
-                            onPressed: isSubmitting
-                                ? null
-                                : () => submitProfileUpdate(userState),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: HomeTheme.primary,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 20 : 28,
-                                vertical: isMobile ? 12 : 14,
+                          padding: const EdgeInsets.only(top: 24),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton(
+                              onPressed: isSubmitting
+                                  ? null
+                                  : () => submitProfileUpdate(userState),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: HomeTheme.primary,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 20 : 28,
+                                  vertical: isMobile ? 12 : 14,
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
-                              textStyle: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: isSubmitting
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                              child: isSubmitting
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                : const Text('정보 수정 완료'),
+                                    )
+                                  : const Text('정보 수정 완료'),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

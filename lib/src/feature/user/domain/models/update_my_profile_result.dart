@@ -15,9 +15,9 @@ sealed class UpdateMyProfileResult {
 
 /// 내 정보 수정 성공 결과다.
 class UpdateMyProfileSuccess extends UpdateMyProfileResult {
-  const UpdateMyProfileSuccess(this.user);
+  const UpdateMyProfileSuccess({this.user});
 
-  final User user;
+  final User? user;
 }
 
 /// 내 정보 수정 실패 결과다.

@@ -17,7 +17,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
 
   @override
   Future<UpdateMyProfileResult> updateMyProfile({
-    required String nickname,
+    String? nickname,
     Uint8List? profileImageBytes,
     String? profileImageFileName,
     String? profileImageMimeType,
@@ -39,7 +39,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         profileImageMimeType: profileImageMimeType,
         password: password,
       );
-      return UpdateMyProfileSuccess(user);
+      return UpdateMyProfileSuccess(user: user);
     } on UpdateMyProfileNetworkException {
       return const UpdateMyProfileFailure(
         UpdateMyProfileFailureReason.networkError,

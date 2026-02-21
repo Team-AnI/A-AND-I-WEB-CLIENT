@@ -26,10 +26,12 @@ class UserProfileImagePicker extends StatefulWidget {
     super.key,
     this.onImageChanged,
     this.profileImageUrl,
+    this.enabled = true,
   });
 
   final ValueChanged<UserProfileImageSelection>? onImageChanged;
   final String? profileImageUrl;
+  final bool enabled;
 
   @override
   State<UserProfileImagePicker> createState() => UserProfileImagePickerState();
@@ -39,6 +41,16 @@ class UserProfileImagePickerState extends State<UserProfileImagePicker> {
   final ImagePicker imagePicker = ImagePicker();
   Uint8List? selectedImageBytes;
   bool isPicking = false;
+
+  /// 선택된 로컬 이미지를 초기화한다.
+  void clearSelection() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      selectedImageBytes = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +63,7 @@ class UserProfileImagePickerState extends State<UserProfileImagePicker> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
-          onTap: isPicking
+          onTap: !widget.enabled || isPicking
               ? null
               : () async {
                   setState(() {
@@ -126,26 +138,27 @@ class UserProfileImagePickerState extends State<UserProfileImagePicker> {
                   profileImageUrl: widget.profileImageUrl,
                 ),
               ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: Colors.black.withValues(alpha: 0.10),
+              if (widget.enabled)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: Colors.black.withValues(alpha: 0.10),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: 16,
+                      color: HomeTheme.textMuted.withValues(alpha: 0.8),
                     ),
                   ),
-                  child: Icon(
-                    Icons.photo_camera_outlined,
-                    size: 16,
-                    color: HomeTheme.textMuted.withValues(alpha: 0.8),
-                  ),
                 ),
-              ),
               if (isPicking)
                 Positioned.fill(
                   child: Container(

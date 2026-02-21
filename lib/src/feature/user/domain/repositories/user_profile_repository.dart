@@ -6,7 +6,7 @@ import 'package:a_and_i_report_web_server/src/feature/user/domain/models/update_
 abstract class UserProfileRepository {
   /// 닉네임/프로필 이미지/비밀번호 변경을 서버에 반영한다.
   Future<UpdateMyProfileResult> updateMyProfile({
-    required String nickname,
+    String? nickname,
     Uint8List? profileImageBytes,
     String? profileImageFileName,
     String? profileImageMimeType,
