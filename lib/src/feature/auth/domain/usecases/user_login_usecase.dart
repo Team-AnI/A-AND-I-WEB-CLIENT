@@ -1,7 +1,9 @@
 import 'dart:developer';
 
+import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_response_dto.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/domain/models/user_login_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
 
 /// 사용자 로그인을 처리하는 UseCase 구현체입니다.
@@ -22,7 +24,7 @@ final class UserLoginUsecaseImpl implements UserLoginUsecase {
   /// 이미 로그인되어 있는 경우 예외를 발생시킵니다.
   /// 네트워크 오류 등 실패 시 예외를 던집니다.
   @override
-  Future<LoginResponseDto> call(LoginRequestDto dto) async {
+  Future<UserLoginResult> call(LoginRequestDto dto) async {
     final token = await authRepository.getToken();
     if (token != null) throw Exception("이미 로그인 됨");
     try {
@@ -33,15 +35,43 @@ final class UserLoginUsecaseImpl implements UserLoginUsecase {
       final newAccessToken = response.data!.accessToken;
 
       await authRepository.saveToken(newAccessToken);
-      return response;
+      final user = await _loadMyInfo(
+        accessToken: newAccessToken,
+        fallbackResponse: response,
+      );
+
+      return UserLoginResult(
+        response: response,
+        user: user,
+      );
     } catch (e) {
       log(e.toString());
       throw Exception("서버와의 통신이 원할하지 않습니다.");
+    }
+  }
+
+  Future<User> _loadMyInfo({
+    required String accessToken,
+    required LoginResponseDto fallbackResponse,
+  }) async {
+    try {
+      return await authRepository.getMyInfo(accessToken);
+    } catch (_) {
+      final fallbackUser = fallbackResponse.data?.user;
+      if (fallbackUser == null) {
+        rethrow;
+      }
+
+      return User(
+        id: fallbackUser.id,
+        nickname: fallbackUser.username,
+        role: fallbackUser.role,
+      );
     }
   }
 }
 
 /// 사용자 로그인을 처리하는 UseCase 인터페이스입니다.
 abstract class UserLoginUsecase {
-  Future<LoginResponseDto> call(LoginRequestDto dto);
+  Future<UserLoginResult> call(LoginRequestDto dto);
 }

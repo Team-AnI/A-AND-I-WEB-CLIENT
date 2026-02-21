@@ -8,6 +8,7 @@ import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_vi
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/sections/home_footer_section.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/sections/home_top_bar_section.dart';
+import 'package:a_and_i_report_web_server/src/feature/user/domain/models/change_password_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/domain/models/update_my_profile_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/presentation/widgets/user_management_field_label.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/presentation/widgets/user_management_section_title.dart';
@@ -88,10 +89,8 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
   }
 
   Future<void> submitProfileUpdate(
-    UserViewState userState, {
-    String? password,
-    bool includeProfileImage = true,
-  }) async {
+    UserViewState userState,
+  ) async {
     if (isSubmitting) {
       return;
     }
@@ -107,13 +106,9 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     try {
       final result = await ref.read(updateMyProfileUsecaseProvider).call(
             nickname: requestNickname,
-            profileImageBytes:
-                includeProfileImage ? selectedProfileImage?.bytes : null,
-            profileImageFileName:
-                includeProfileImage ? selectedProfileImage?.fileName : null,
-            profileImageMimeType:
-                includeProfileImage ? selectedProfileImage?.mimeType : null,
-            password: password,
+            profileImageBytes: selectedProfileImage?.bytes,
+            profileImageFileName: selectedProfileImage?.fileName,
+            profileImageMimeType: selectedProfileImage?.mimeType,
           );
 
       if (!mounted) {
@@ -135,20 +130,13 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
           return;
         }
         syncedNickname = mergedUser?.nickname ?? syncedNickname;
-        if (includeProfileImage) {
-          setState(() {
-            isEditingProfile = false;
-          });
-          resetEditingState(
-              nickname: mergedUser?.nickname ?? userState.nickname);
-        }
+        setState(() {
+          isEditingProfile = false;
+        });
+        resetEditingState(nickname: mergedUser?.nickname ?? userState.nickname);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              password == null || password.isEmpty
-                  ? '내 정보가 수정되었습니다.'
-                  : '비밀번호가 변경되었습니다.',
-            ),
+          const SnackBar(
+            content: Text('내 정보가 수정되었습니다.'),
           ),
         );
         return;
@@ -156,7 +144,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
 
       final failure = result as UpdateMyProfileFailure;
       final errorMessage = switch (failure.reason) {
-        UpdateMyProfileFailureReason.invalidNickname => '닉네임 또는 비밀번호를 입력해주세요.',
+        UpdateMyProfileFailureReason.invalidNickname => '닉네임을 입력해주세요.',
         UpdateMyProfileFailureReason.unauthorized =>
           '로그인 정보가 만료되었습니다. 다시 로그인해주세요.',
         UpdateMyProfileFailureReason.networkError =>
@@ -176,7 +164,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     }
   }
 
-  Future<void> submitPasswordUpdate(UserViewState userState) async {
+  Future<void> submitPasswordUpdate() async {
     if (isSubmitting) {
       return;
     }
@@ -252,11 +240,46 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
       return;
     }
 
-    await submitProfileUpdate(
-      userState,
-      password: password,
-      includeProfileImage: false,
-    );
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      final result = await ref.read(changePasswordUsecaseProvider).call(
+            newPassword: password,
+          );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (result is ChangePasswordSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('비밀번호가 변경되었습니다.')),
+        );
+        return;
+      }
+
+      final failure = result as ChangePasswordFailure;
+      final errorMessage = switch (failure.reason) {
+        ChangePasswordFailureReason.invalidPassword => '새 비밀번호를 입력해주세요.',
+        ChangePasswordFailureReason.unauthorized =>
+          '로그인 정보가 만료되었습니다. 다시 로그인해주세요.',
+        ChangePasswordFailureReason.networkError =>
+          '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        ChangePasswordFailureReason.unknown => '비밀번호 변경에 실패했습니다.',
+      };
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -522,9 +545,8 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                               ),
                             ),
                             OutlinedButton(
-                              onPressed: isSubmitting
-                                  ? null
-                                  : () => submitPasswordUpdate(userState),
+                              onPressed:
+                                  isSubmitting ? null : submitPasswordUpdate,
                               style: OutlinedButton.styleFrom(
                                 padding: EdgeInsets.symmetric(
                                   horizontal: isMobile ? 14 : 18,

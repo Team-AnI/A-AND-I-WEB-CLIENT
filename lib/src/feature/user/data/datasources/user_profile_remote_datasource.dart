@@ -9,6 +9,12 @@ class UpdateMyProfileNetworkException implements Exception {}
 /// 내 정보 수정 요청/응답 오류다.
 class UpdateMyProfileRequestException implements Exception {}
 
+/// 비밀번호 변경 네트워크 오류다.
+class ChangePasswordNetworkException implements Exception {}
+
+/// 비밀번호 변경 요청/응답 오류다.
+class ChangePasswordRequestException implements Exception {}
+
 /// 사용자 프로필 원격 데이터소스다.
 class UserProfileRemoteDatasource {
   UserProfileRemoteDatasource(
@@ -26,7 +32,6 @@ class UserProfileRemoteDatasource {
     Uint8List? profileImageBytes,
     String? profileImageFileName,
     String? profileImageMimeType,
-    String? password,
   }) async {
     try {
       final formDataMap = <String, dynamic>{};
@@ -43,11 +48,6 @@ class UserProfileRemoteDatasource {
           profileImageBytes,
           filename: resolvedFileName,
         );
-      }
-
-      final trimmedPassword = password?.trim();
-      if (trimmedPassword != null && trimmedPassword.isNotEmpty) {
-        formDataMap['password'] = trimmedPassword;
       }
 
       if (formDataMap.isEmpty) {
@@ -77,6 +77,71 @@ class UserProfileRemoteDatasource {
       throw UpdateMyProfileRequestException();
     } catch (_) {
       throw UpdateMyProfileRequestException();
+    }
+  }
+
+  /// `/v1/me/password` 비밀번호 변경 API를 호출한다.
+  Future<void> changePassword({
+    required String authorization,
+    required String newPassword,
+  }) async {
+    try {
+      final trimmedPassword = newPassword.trim();
+      if (trimmedPassword.isEmpty) {
+        throw ChangePasswordRequestException();
+      }
+
+      Response<dynamic> response;
+      try {
+        response = await dio.post(
+          _buildUrl('/v1/me/password'),
+          data: {
+            'newPassword': trimmedPassword,
+          },
+          options: Options(
+            headers: {
+              'Authorization': authorization,
+            },
+          ),
+        );
+      } on DioException catch (error) {
+        final statusCode = error.response?.statusCode;
+        if (statusCode == 400 || statusCode == 422) {
+          response = await dio.post(
+            _buildUrl('/v1/me/password'),
+            data: {
+              'password': trimmedPassword,
+            },
+            options: Options(
+              headers: {
+                'Authorization': authorization,
+              },
+            ),
+          );
+        } else {
+          rethrow;
+        }
+      }
+
+      final responseData = response.data;
+      if (responseData is! Map<String, dynamic> ||
+          responseData['success'] != true) {
+        throw ChangePasswordRequestException();
+      }
+    } on DioException catch (error) {
+      final isNetworkError = error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.unknown;
+      if (isNetworkError) {
+        throw ChangePasswordNetworkException();
+      }
+      throw ChangePasswordRequestException();
+    } on ChangePasswordRequestException {
+      rethrow;
+    } catch (_) {
+      throw ChangePasswordRequestException();
     }
   }
 

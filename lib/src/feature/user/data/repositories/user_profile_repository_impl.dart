@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/data/datasources/user_profile_remote_datasource.dart';
+import 'package:a_and_i_report_web_server/src/feature/user/domain/models/change_password_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/domain/models/update_my_profile_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/domain/repositories/user_profile_repository.dart';
 
@@ -21,7 +22,6 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     Uint8List? profileImageBytes,
     String? profileImageFileName,
     String? profileImageMimeType,
-    String? password,
   }) async {
     try {
       final token = await authRepository.getToken();
@@ -37,7 +37,6 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         profileImageBytes: profileImageBytes,
         profileImageFileName: profileImageFileName,
         profileImageMimeType: profileImageMimeType,
-        password: password,
       );
       return UpdateMyProfileSuccess(user: user);
     } on UpdateMyProfileNetworkException {
@@ -47,6 +46,34 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     } on UpdateMyProfileRequestException {
       return const UpdateMyProfileFailure(
         UpdateMyProfileFailureReason.unknown,
+      );
+    }
+  }
+
+  @override
+  Future<ChangePasswordResult> changePassword({
+    required String newPassword,
+  }) async {
+    try {
+      final token = await authRepository.getToken();
+      if (token == null || token.isEmpty) {
+        return const ChangePasswordFailure(
+          ChangePasswordFailureReason.unauthorized,
+        );
+      }
+
+      await userProfileRemoteDatasource.changePassword(
+        authorization: 'Bearer $token',
+        newPassword: newPassword,
+      );
+      return const ChangePasswordSuccess();
+    } on ChangePasswordNetworkException {
+      return const ChangePasswordFailure(
+        ChangePasswordFailureReason.networkError,
+      );
+    } on ChangePasswordRequestException {
+      return const ChangePasswordFailure(
+        ChangePasswordFailureReason.unknown,
       );
     }
   }

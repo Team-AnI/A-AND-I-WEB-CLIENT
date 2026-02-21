@@ -42,6 +42,47 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<User> getMyInfo(String accessToken) async {
+    final response =
+        await remoteAuthRepository.getMyInfo('Bearer $accessToken');
+    if (response is! Map<String, dynamic>) {
+      throw Exception('유효하지 않은 내 정보 응답입니다.');
+    }
+    final responseData = response['data'];
+    if (response['success'] != true || responseData is! Map<String, dynamic>) {
+      throw Exception('내 정보 조회에 실패했습니다.');
+    }
+
+    final dynamic nestedUser = responseData['user'];
+    final userData =
+        nestedUser is Map<String, dynamic> ? nestedUser : responseData;
+
+    final id = userData['id']?.toString() ?? userData['userId']?.toString();
+    final role = userData['role']?.toString();
+    final nickname =
+        userData['nickname']?.toString() ?? userData['username']?.toString();
+    if (id == null || id.isEmpty || role == null || role.isEmpty) {
+      throw Exception('유효하지 않은 사용자 응답입니다.');
+    }
+
+    final resolvedNickname =
+        nickname == null || nickname.isEmpty ? '동아리원' : nickname;
+    final profileImage = userData['profileImageUrl']?.toString() ??
+        userData['profileImagePath']?.toString() ??
+        userData['profileImage']?.toString() ??
+        userData['avatarUrl']?.toString() ??
+        userData['avatar']?.toString() ??
+        userData['picture']?.toString();
+
+    return User(
+      id: id,
+      nickname: resolvedNickname,
+      role: role,
+      profileImageUrl: profileImage,
+    );
+  }
+
+  @override
   Future<void> saveCachedUser(User user) async {
     await localAuthRepository.saveCachedUserJson(
       jsonEncode(user.toJson()),
