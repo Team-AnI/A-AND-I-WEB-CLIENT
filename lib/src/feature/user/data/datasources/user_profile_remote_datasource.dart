@@ -19,13 +19,14 @@ class UserProfileRemoteDatasource {
   final Dio dio;
   final String _baseUrl;
 
-  /// `/v1/me` 프로필 수정 API를 호출한다.
-  Future<User> patchMyProfile({
+  /// `/v/me` 내 정보 수정 API를 호출한다.
+  Future<User> updateMyProfile({
     required String authorization,
     required String nickname,
     Uint8List? profileImageBytes,
     String? profileImageFileName,
     String? profileImageMimeType,
+    String? password,
   }) async {
     try {
       final formDataMap = <String, dynamic>{
@@ -41,8 +42,13 @@ class UserProfileRemoteDatasource {
         );
       }
 
-      final response = await dio.patch(
-        _buildUrl('/v1/me'),
+      final trimmedPassword = password?.trim();
+      if (trimmedPassword != null && trimmedPassword.isNotEmpty) {
+        formDataMap['password'] = trimmedPassword;
+      }
+
+      final response = await dio.post(
+        _buildUrl('/v/me'),
         data: FormData.fromMap(formDataMap),
         options: Options(
           headers: {
@@ -94,24 +100,32 @@ class UserProfileRemoteDatasource {
     }
 
     final isSuccess = responseData['success'] == true;
-    final data = responseData['data'];
-    if (!isSuccess || data is! Map<String, dynamic>) {
+    final responseDataField = responseData['data'];
+    if (!isSuccess || responseDataField is! Map<String, dynamic>) {
       throw UpdateMyProfileRequestException();
     }
 
-    final id = data['id']?.toString();
-    final role = data['role']?.toString();
+    final userData = responseDataField['user'] is Map<String, dynamic>
+        ? responseDataField['user'] as Map<String, dynamic>
+        : responseDataField;
+
+    final id = userData['id']?.toString() ?? userData['userId']?.toString();
+    final role = userData['role']?.toString();
     final nickname =
-        data['nickname']?.toString() ?? data['username']?.toString();
+        userData['nickname']?.toString() ?? userData['username']?.toString();
     if (id == null || role == null || nickname == null || nickname.isEmpty) {
       throw UpdateMyProfileRequestException();
     }
+
+    final profileImage = userData['profileImageUrl']?.toString() ??
+        userData['profileImagePath']?.toString() ??
+        userData['profileImage']?.toString();
 
     return User(
       id: id,
       role: role,
       nickname: nickname,
-      profileImageUrl: data['profileImageUrl']?.toString(),
+      profileImageUrl: profileImage,
     );
   }
 }

@@ -21,6 +21,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     Uint8List? profileImageBytes,
     String? profileImageFileName,
     String? profileImageMimeType,
+    String? password,
   }) async {
     try {
       final token = await authRepository.getToken();
@@ -30,12 +31,13 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         );
       }
 
-      final user = await userProfileRemoteDatasource.patchMyProfile(
+      final user = await userProfileRemoteDatasource.updateMyProfile(
         authorization: 'Bearer $token',
         nickname: nickname,
         profileImageBytes: profileImageBytes,
         profileImageFileName: profileImageFileName,
         profileImageMimeType: profileImageMimeType,
+        password: password,
       );
       return UpdateMyProfileSuccess(user);
     } on UpdateMyProfileNetworkException {

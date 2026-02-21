@@ -55,7 +55,11 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     syncedNickname = nickname;
   }
 
-  Future<void> submitProfileUpdate(UserViewState userState) async {
+  Future<void> submitProfileUpdate(
+    UserViewState userState, {
+    String? password,
+    bool includeProfileImage = true,
+  }) async {
     if (isSubmitting) {
       return;
     }
@@ -68,9 +72,13 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     try {
       final result = await ref.read(updateMyProfileUsecaseProvider).call(
             nickname: nickname,
-            profileImageBytes: selectedProfileImage?.bytes,
-            profileImageFileName: selectedProfileImage?.fileName,
-            profileImageMimeType: selectedProfileImage?.mimeType,
+            profileImageBytes:
+                includeProfileImage ? selectedProfileImage?.bytes : null,
+            profileImageFileName:
+                includeProfileImage ? selectedProfileImage?.fileName : null,
+            profileImageMimeType:
+                includeProfileImage ? selectedProfileImage?.mimeType : null,
+            password: password,
           );
 
       if (!mounted) {
@@ -85,8 +93,17 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
           return;
         }
         syncedNickname = result.user.nickname;
+        if (includeProfileImage) {
+          selectedProfileImage = null;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('내 정보가 수정되었습니다.')),
+          SnackBar(
+            content: Text(
+              password == null || password.isEmpty
+                  ? '내 정보가 수정되었습니다.'
+                  : '비밀번호가 변경되었습니다.',
+            ),
+          ),
         );
         return;
       }
@@ -111,6 +128,89 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
         });
       }
     }
+  }
+
+  Future<void> submitPasswordUpdate(UserViewState userState) async {
+    if (isSubmitting) {
+      return;
+    }
+
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    final password = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('비밀번호 변경'),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: '새 비밀번호',
+                  hintText: '새 비밀번호를 입력하세요',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: '새 비밀번호 확인',
+                  hintText: '비밀번호를 다시 입력하세요',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final password = newPasswordController.text.trim();
+              final confirmPassword = confirmPasswordController.text.trim();
+
+              if (password.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('새 비밀번호를 입력해주세요.')),
+                );
+                return;
+              }
+
+              if (password != confirmPassword) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('비밀번호 확인이 일치하지 않습니다.')),
+                );
+                return;
+              }
+
+              Navigator.of(dialogContext).pop(password);
+            },
+            child: const Text('변경'),
+          ),
+        ],
+      ),
+    );
+
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
+
+    if (!mounted || password == null || password.isEmpty) {
+      return;
+    }
+
+    await submitProfileUpdate(
+      userState,
+      password: password,
+      includeProfileImage: false,
+    );
   }
 
   @override
@@ -303,7 +403,9 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                               ),
                             ),
                             OutlinedButton(
-                              onPressed: () {},
+                              onPressed: isSubmitting
+                                  ? null
+                                  : () => submitPasswordUpdate(userState),
                               style: OutlinedButton.styleFrom(
                                 padding: EdgeInsets.symmetric(
                                   horizontal: isMobile ? 14 : 18,
