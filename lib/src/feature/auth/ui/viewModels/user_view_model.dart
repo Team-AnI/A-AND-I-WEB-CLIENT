@@ -51,9 +51,8 @@ class UserViewModel extends _$UserViewModel {
       }
 
       final cachedUser = await ref.read(getCachedUserUsecaseProvider).call();
-      final jwtUser = _extractUserFromJwt(token);
-      final resolvedUser = cachedUser ?? jwtUser;
-      final resolvedRole = resolvedUser?.role ?? _extractRoleFromJwt(token);
+      final resolvedUser = cachedUser;
+      final resolvedRole = resolvedUser?.role;
 
       state = state.copyWith(
         status: UserStatus.authenticated,
@@ -67,68 +66,6 @@ class UserViewModel extends _$UserViewModel {
         user: null,
         errorMsg: e.toString(),
       );
-    }
-  }
-
-  User? _extractUserFromJwt(String token) {
-    final map = _parseJwtPayload(token);
-    if (map == null) {
-      return null;
-    }
-
-    final id = map['id']?.toString() ??
-        map['userId']?.toString() ??
-        map['sub']?.toString();
-    final nickname = map['nickName']?.toString() ??
-        map['nickname']?.toString() ??
-        map['nick_name']?.toString() ??
-        map['displayName']?.toString() ??
-        map['username']?.toString() ??
-        map['name']?.toString();
-    final role = map['role']?.toString();
-
-    if (id == null || id.isEmpty || role == null || role.isEmpty) {
-      return null;
-    }
-
-    final resolvedNickname =
-        nickname == null || nickname.isEmpty ? '동아리원' : nickname;
-
-    final profileImageUrl = map['profileImageUrl']?.toString() ??
-        map['profileImagePath']?.toString() ??
-        map['profileImage']?.toString() ??
-        map['avatarUrl']?.toString() ??
-        map['avatar']?.toString() ??
-        map['picture']?.toString();
-
-    return User(
-      id: id,
-      nickname: resolvedNickname,
-      role: role,
-      profileImageUrl: profileImageUrl,
-    );
-  }
-
-  String? _extractRoleFromJwt(String token) {
-    final map = _parseJwtPayload(token);
-    if (map == null) {
-      return null;
-    }
-    final role = map['role'];
-    return role?.toString();
-  }
-
-  Map<String, dynamic>? _parseJwtPayload(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) return null;
-      final payload =
-          utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
-      final map = jsonDecode(payload);
-      if (map is! Map<String, dynamic>) return null;
-      return map;
-    } catch (_) {
-      return null;
     }
   }
 }

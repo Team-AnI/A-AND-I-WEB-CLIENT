@@ -290,7 +290,8 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
           '로그인 정보가 만료되었습니다. 다시 로그인해주세요.',
         ChangePasswordFailureReason.networkError =>
           '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-        ChangePasswordFailureReason.unknown => '비밀번호 변경에 실패했습니다. 현재 비밀번호를 확인해주세요.',
+        ChangePasswordFailureReason.unknown =>
+          '비밀번호 변경에 실패했습니다. 현재 비밀번호를 확인해주세요.',
       };
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -554,14 +555,6 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                                       fontSize: isMobile ? 14 : 15,
                                       fontWeight: FontWeight.w600,
                                       color: HomeTheme.textMain,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '마지막 변경: 3개월 전',
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 12 : 13,
-                                      color: HomeTheme.textMuted,
                                     ),
                                   ),
                                 ],
