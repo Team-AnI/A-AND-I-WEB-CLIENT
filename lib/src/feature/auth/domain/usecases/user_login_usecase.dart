@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/models/user_login_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
+import 'package:dio/dio.dart';
 
 /// 사용자 로그인을 처리하는 UseCase 구현체입니다.
 ///
@@ -36,9 +37,15 @@ final class UserLoginUsecaseImpl implements UserLoginUsecase {
         response: response,
         user: user,
       );
+    } on DioException catch (e) {
+      log(e.toString());
+      if (e.response?.statusCode == 401) {
+        throw Exception("아이디 혹은 비밀번호가 올바르지 않습니다.");
+      }
+      throw Exception("서버와의 통신이 원할하지 않습니다.");
     } catch (e) {
       log(e.toString());
-      throw Exception("서버와의 통신이 원할하지 않습니다.");
+      rethrow;
     }
   }
 }
