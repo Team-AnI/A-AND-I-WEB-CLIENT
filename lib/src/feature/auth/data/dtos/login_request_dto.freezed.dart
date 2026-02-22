@@ -14,8 +14,8 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$LoginRequestDto implements DiagnosticableTreeMixin {
-  /// 사용자 아이디
-  String get userId;
+  /// 로그인 사용자명
+  String get username;
 
   /// 사용자 비밀번호
   String get password;
@@ -35,7 +35,7 @@ mixin _$LoginRequestDto implements DiagnosticableTreeMixin {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
       ..add(DiagnosticsProperty('type', 'LoginRequestDto'))
-      ..add(DiagnosticsProperty('userId', userId))
+      ..add(DiagnosticsProperty('username', username))
       ..add(DiagnosticsProperty('password', password));
   }
 
@@ -44,18 +44,19 @@ mixin _$LoginRequestDto implements DiagnosticableTreeMixin {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is LoginRequestDto &&
-            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.username, username) ||
+                other.username == username) &&
             (identical(other.password, password) ||
                 other.password == password));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, userId, password);
+  int get hashCode => Object.hash(runtimeType, username, password);
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'LoginRequestDto(userId: $userId, password: $password)';
+    return 'LoginRequestDto(username: $username, password: $password)';
   }
 }
 
@@ -65,7 +66,7 @@ abstract mixin class $LoginRequestDtoCopyWith<$Res> {
           LoginRequestDto value, $Res Function(LoginRequestDto) _then) =
       _$LoginRequestDtoCopyWithImpl;
   @useResult
-  $Res call({String userId, String password});
+  $Res call({String username, String password});
 }
 
 /// @nodoc
@@ -81,13 +82,13 @@ class _$LoginRequestDtoCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? userId = null,
+    Object? username = null,
     Object? password = null,
   }) {
     return _then(_self.copyWith(
-      userId: null == userId
-          ? _self.userId
-          : userId // ignore: cast_nullable_to_non_nullable
+      username: null == username
+          ? _self.username
+          : username // ignore: cast_nullable_to_non_nullable
               as String,
       password: null == password
           ? _self.password
@@ -190,13 +191,13 @@ extension LoginRequestDtoPatterns on LoginRequestDto {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(String userId, String password)? $default, {
+    TResult Function(String username, String password)? $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _LoginRequestDto() when $default != null:
-        return $default(_that.userId, _that.password);
+        return $default(_that.username, _that.password);
       case _:
         return orElse();
     }
@@ -217,12 +218,12 @@ extension LoginRequestDtoPatterns on LoginRequestDto {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(String userId, String password) $default,
+    TResult Function(String username, String password) $default,
   ) {
     final _that = this;
     switch (_that) {
       case _LoginRequestDto():
-        return $default(_that.userId, _that.password);
+        return $default(_that.username, _that.password);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -242,12 +243,12 @@ extension LoginRequestDtoPatterns on LoginRequestDto {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(String userId, String password)? $default,
+    TResult? Function(String username, String password)? $default,
   ) {
     final _that = this;
     switch (_that) {
       case _LoginRequestDto() when $default != null:
-        return $default(_that.userId, _that.password);
+        return $default(_that.username, _that.password);
       case _:
         return null;
     }
@@ -257,14 +258,14 @@ extension LoginRequestDtoPatterns on LoginRequestDto {
 /// @nodoc
 @JsonSerializable()
 class _LoginRequestDto with DiagnosticableTreeMixin implements LoginRequestDto {
-  const _LoginRequestDto({this.userId = "", this.password = ""});
+  const _LoginRequestDto({this.username = "", this.password = ""});
   factory _LoginRequestDto.fromJson(Map<String, dynamic> json) =>
       _$LoginRequestDtoFromJson(json);
 
-  /// 사용자 아이디
+  /// 로그인 사용자명
   @override
   @JsonKey()
-  final String userId;
+  final String username;
 
   /// 사용자 비밀번호
   @override
@@ -290,7 +291,7 @@ class _LoginRequestDto with DiagnosticableTreeMixin implements LoginRequestDto {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
       ..add(DiagnosticsProperty('type', 'LoginRequestDto'))
-      ..add(DiagnosticsProperty('userId', userId))
+      ..add(DiagnosticsProperty('username', username))
       ..add(DiagnosticsProperty('password', password));
   }
 
@@ -299,18 +300,19 @@ class _LoginRequestDto with DiagnosticableTreeMixin implements LoginRequestDto {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _LoginRequestDto &&
-            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.username, username) ||
+                other.username == username) &&
             (identical(other.password, password) ||
                 other.password == password));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, userId, password);
+  int get hashCode => Object.hash(runtimeType, username, password);
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'LoginRequestDto(userId: $userId, password: $password)';
+    return 'LoginRequestDto(username: $username, password: $password)';
   }
 }
 
@@ -322,7 +324,7 @@ abstract mixin class _$LoginRequestDtoCopyWith<$Res>
       __$LoginRequestDtoCopyWithImpl;
   @override
   @useResult
-  $Res call({String userId, String password});
+  $Res call({String username, String password});
 }
 
 /// @nodoc
@@ -338,13 +340,13 @@ class __$LoginRequestDtoCopyWithImpl<$Res>
   @override
   @pragma('vm:prefer-inline')
   $Res call({
-    Object? userId = null,
+    Object? username = null,
     Object? password = null,
   }) {
     return _then(_LoginRequestDto(
-      userId: null == userId
-          ? _self.userId
-          : userId // ignore: cast_nullable_to_non_nullable
+      username: null == username
+          ? _self.username
+          : username // ignore: cast_nullable_to_non_nullable
               as String,
       password: null == password
           ? _self.password

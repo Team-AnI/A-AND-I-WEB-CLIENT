@@ -1,8 +1,11 @@
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ArticleDetailView extends StatelessWidget {
+class ArticleDetailView extends ConsumerWidget {
   const ArticleDetailView({
     super.key,
     required this.id,
@@ -11,7 +14,9 @@ class ArticleDetailView extends StatelessWidget {
   final String id;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canShowWriteButton = ref.watch(authViewModelProvider).status ==
+        AuthenticationStatus.authenticated;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
     final isTablet = width >= 768 && width < 1200;
@@ -75,6 +80,16 @@ class ArticleDetailView extends StatelessWidget {
                           ),
                         ],
                       ),
+                      SizedBox(height: isMobile ? 10 : 12),
+                      if (canShowWriteButton)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton.icon(
+                            onPressed: () => context.go('/articles/write'),
+                            icon: const Icon(Icons.edit, size: 18),
+                            label: const Text('블로그 글 작성'),
+                          ),
+                        ),
                       SizedBox(height: isMobile ? 18 : 26),
                       Text(
                         'The Future of Artificial Intelligence in Modern Education',

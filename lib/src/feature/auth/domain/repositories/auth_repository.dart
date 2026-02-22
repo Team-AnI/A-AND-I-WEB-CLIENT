@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_response_dto.dart';
 
@@ -8,7 +9,7 @@ import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_respo
 abstract class AuthRepository {
   /// 서버에 로그인을 요청합니다.
   ///
-  /// [dto]에 담긴 사용자 정보(ID, PW)를 전송하고, 성공 시 [LoginResponseDto]를 반환합니다.
+  /// [dto]에 담긴 사용자명과 비밀번호를 전송하고, 성공 시 [LoginResponseDto]를 반환합니다.
   Future<LoginResponseDto> login(LoginRequestDto dto);
 
   /// 액세스 토큰을 로컬 저장소(Session Storage 등)에 저장합니다.
@@ -21,4 +22,25 @@ abstract class AuthRepository {
 
   /// 로컬 저장소의 액세스 토큰을 삭제합니다. (로그아웃 시 사용)
   Future<void> deleteToken();
+
+  /// 리프레시 토큰을 로컬 저장소에 저장합니다.
+  Future<void> saveRefreshToken(String token);
+
+  /// 로컬 저장소에 저장된 리프레시 토큰을 조회합니다.
+  Future<String?> getRefreshToken();
+
+  /// 로컬 저장소의 리프레시 토큰을 삭제합니다.
+  Future<void> deleteRefreshToken();
+
+  /// 액세스 토큰으로 서버의 내 정보를 조회합니다.
+  Future<User> getMyInfo(String accessToken);
+
+  /// 사용자 정보를 로컬 캐시에 저장합니다.
+  Future<void> saveCachedUser(User user);
+
+  /// 로컬 캐시에 저장된 사용자 정보를 조회합니다.
+  Future<User?> getCachedUser();
+
+  /// 로컬 캐시에 저장된 사용자 정보를 삭제합니다.
+  Future<void> deleteCachedUser();
 }

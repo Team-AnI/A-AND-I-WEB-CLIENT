@@ -1,7 +1,11 @@
 import 'package:a_and_i_report_web_server/src/feature/home/home_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_confirm_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_detail_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_list_view.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_write_view.dart';
+import 'package:a_and_i_report_web_server/src/feature/activate/ui/activate_page.dart';
 import 'package:a_and_i_report_web_server/src/feature/promotion/ui/faq_light_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/user/presentation/user_managerment_view.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -56,8 +60,10 @@ GoRouter goRouter(Ref ref) {
       final isUnauthenticated = status == AuthenticationStatus.unauthenticated;
       final location = state.matchedLocation;
 
-      // 1. 비로그인 상태인데 /report 하위 페이지로 접근하려 할 때
-      if (isUnauthenticated && location.startsWith('/report')) {
+      // 1. 비로그인 상태인데 보호된 페이지로 접근하려 할 때
+      if (isUnauthenticated &&
+          (location.startsWith('/report') ||
+              location.startsWith('/my-account'))) {
         final fromPath = state.uri.toString();
         return '/sign-in?from=${Uri.encodeComponent(fromPath)}';
       }
@@ -90,6 +96,16 @@ GoRouter goRouter(Ref ref) {
         },
       ),
       GoRoute(
+        path: '/activate',
+        name: "계정 활성화 | A&I",
+        pageBuilder: (context, state) {
+          html.document.title = "계정 활성화 | A&I";
+          return NoTransitionPage(
+            child: ActivatePage(token: state.uri.queryParameters['token']),
+          );
+        },
+      ),
+      GoRoute(
         path: '/promotion',
         name: "2026 팀 A&I 모집안내",
         pageBuilder: (context, state) {
@@ -114,6 +130,20 @@ GoRouter goRouter(Ref ref) {
         },
         routes: [
           GoRoute(
+            path: 'write',
+            pageBuilder: (context, state) {
+              html.document.title = "블로그 작성 | A&I";
+              return NoTransitionPage(child: const ArticleWriteView());
+            },
+          ),
+          GoRoute(
+            path: 'confirm',
+            pageBuilder: (context, state) {
+              html.document.title = "블로그 출간 설정 | A&I";
+              return NoTransitionPage(child: const ArticleConfirmView());
+            },
+          ),
+          GoRoute(
             path: ':id',
             pageBuilder: (context, state) {
               final id = state.pathParameters['id']!;
@@ -124,6 +154,14 @@ GoRouter goRouter(Ref ref) {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: '/my-account',
+        name: "내 계정 | A&I",
+        pageBuilder: (context, state) {
+          html.document.title = "내 계정 | A&I";
+          return NoTransitionPage(child: const UserManagermentView());
+        },
       ),
       GoRoute(
         path: '/report',

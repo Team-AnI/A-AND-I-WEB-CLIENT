@@ -18,8 +18,10 @@ class ArticleListView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
+    final canShowWriteButton = isLoggedIn;
     final userState = ref.watch(userViewModelProvider);
     final nickname = userState.nickname ?? '동아리원';
+    final profileImageUrl = userState.profileImageUrl;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
     final isTablet = width >= 768 && width < 1200;
@@ -44,10 +46,12 @@ class ArticleListView extends ConsumerWidget {
             titleSpacing: 0,
             title: HomeTopBarSection(
               nickname: nickname,
+              profileImageUrl: profileImageUrl,
               isLoggedIn: isLoggedIn,
               onGoIntro: () => context.go('/promotion'),
               onGoEducation: () => context.go('/report'),
               onGoPosts: () => context.go('/articles'),
+              onGoMyAccount: () => context.go('/my-account'),
               onLogin: () => context.go('/sign-in'),
               onLogout: () async {
                 await ref
@@ -92,6 +96,16 @@ class ArticleListView extends ConsumerWidget {
                           color: HomeTheme.textMuted,
                         ),
                       ),
+                      SizedBox(height: isMobile ? 16 : 20),
+                      if (canShowWriteButton)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton.icon(
+                            onPressed: () => context.go('/articles/write'),
+                            icon: const Icon(Icons.edit, size: 18),
+                            label: const Text('블로그 글 작성'),
+                          ),
+                        ),
                       SizedBox(height: sectionSpacing),
                       Wrap(
                         spacing: isMobile ? 6 : 8,
@@ -187,7 +201,9 @@ class CategoryChipView extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: selected ? HomeTheme.textMain : Colors.black.withValues(alpha: 0.05),
+        color: selected
+            ? HomeTheme.textMain
+            : Colors.black.withValues(alpha: 0.05),
       ),
       child: Text(
         text,

@@ -6,7 +6,7 @@ part of 'dio_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dioHash() => r'a03da399b44b3740dc4fcfc6716203041d66ff01';
+String _$dioHash() => r'4664e932ecb6c19d12d58dd52236acdf353c7dd8';
 
 /// HTTP 통신을 위한 [Dio] 인스턴스를 제공하는 Provider입니다.
 ///

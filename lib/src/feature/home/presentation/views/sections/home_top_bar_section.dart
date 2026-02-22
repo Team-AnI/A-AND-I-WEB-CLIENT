@@ -1,24 +1,31 @@
+import 'package:a_and_i_report_web_server/src/core/constants/api_url.dart';
 import 'package:a_and_i_report_web_server/src/core/widgets/logo_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeTopBarSection extends StatelessWidget {
   const HomeTopBarSection({
     super.key,
     required this.nickname,
+    this.profileImageUrl,
     required this.isLoggedIn,
     required this.onGoIntro,
     required this.onGoEducation,
     required this.onGoPosts,
+    required this.onGoMyAccount,
     required this.onLogin,
     required this.onLogout,
   });
 
   final String nickname;
+  final String? profileImageUrl;
   final bool isLoggedIn;
   final VoidCallback onGoIntro;
   final VoidCallback onGoEducation;
   final VoidCallback onGoPosts;
+  final VoidCallback onGoMyAccount;
   final VoidCallback onLogin;
   final Future<void> Function() onLogout;
 
@@ -42,8 +49,13 @@ class HomeTopBarSection extends StatelessWidget {
             height: barHeight,
             child: Row(
               children: [
-                LogoImage(
-                  width: logoWidth,
+                InkWell(
+                  onTap: () {
+                    context.go("/");
+                  },
+                  child: LogoImage(
+                    width: logoWidth,
+                  ),
                 ),
                 if (isDesktop) ...[
                   const Spacer(),
@@ -58,23 +70,41 @@ class HomeTopBarSection extends StatelessWidget {
                 Row(
                   children: [
                     if (isLoggedIn && !showMenu) ...[
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: HomeTheme.primary.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Icon(Icons.person,
-                            color: HomeTheme.primary, size: 18),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        nickname,
-                        style: TextStyle(
-                          fontSize: isMobile ? 12 : 13,
-                          fontWeight: FontWeight.w600,
-                          color: HomeTheme.textMain,
+                      InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: onGoMyAccount,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color:
+                                      HomeTheme.primary.withValues(alpha: 0.10),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: TopBarProfileAvatar(
+                                  profileImageUrl: profileImageUrl,
+                                  size: 32,
+                                  iconSize: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                nickname,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 12 : 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: HomeTheme.textMain,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -106,6 +136,10 @@ class HomeTopBarSection extends StatelessWidget {
                             onGoPosts();
                             return;
                           }
+                          if (value == 'account') {
+                            onGoMyAccount();
+                            return;
+                          }
                           if (value == 'login') {
                             onLogin();
                             return;
@@ -117,24 +151,40 @@ class HomeTopBarSection extends StatelessWidget {
                         itemBuilder: (context) => [
                           if (isLoggedIn) ...[
                             PopupMenuItem<String>(
+                              value: "account",
                               enabled: false,
                               height: 52,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    nickname,
-                                    style: const TextStyle(
-                                      color: HomeTheme.textMain,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13,
-                                    ),
+                                  Row(
+                                    children: [
+                                      TopBarProfileAvatar(
+                                        profileImageUrl: profileImageUrl,
+                                        size: 20,
+                                        iconSize: 12,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          nickname,
+                                          style: const TextStyle(
+                                            color: HomeTheme.textMain,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  const SizedBox(height: 2),
                                   Text(
                                     '로그인됨',
                                     style: TextStyle(
-                                      color: HomeTheme.textMuted.withValues(alpha: 0.8),
+                                      color: HomeTheme.textMuted
+                                          .withValues(alpha: 0.8),
                                       fontWeight: FontWeight.w600,
                                       fontSize: 11,
                                     ),
@@ -177,6 +227,17 @@ class HomeTopBarSection extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (isLoggedIn)
+                            const PopupMenuItem<String>(
+                              value: 'account',
+                              child: Text(
+                                '내 계정',
+                                style: TextStyle(
+                                  color: HomeTheme.textMain,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           PopupMenuDivider(
                             height: 12,
                             color: Colors.black.withValues(alpha: 0.08),
@@ -265,6 +326,57 @@ class HomeTopBarSection extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class TopBarProfileAvatar extends StatelessWidget {
+  const TopBarProfileAvatar({
+    super.key,
+    required this.profileImageUrl,
+    this.size = 32,
+    this.iconSize = 18,
+  });
+
+  final String? profileImageUrl;
+  final double size;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedImageUrl = _resolveProfileImageUrl(profileImageUrl);
+    if (resolvedImageUrl == null || resolvedImageUrl.isEmpty) {
+      return Icon(Icons.person, color: HomeTheme.primary, size: iconSize);
+    }
+
+    return ClipOval(
+      child: CachedNetworkImage(
+        imageUrl: resolvedImageUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorWidget: (context, url, error) =>
+            Icon(Icons.person, color: HomeTheme.primary, size: iconSize),
+      ),
+    );
+  }
+
+  String? _resolveProfileImageUrl(String? imagePath) {
+    final trimmedImagePath = imagePath?.trim();
+    if (trimmedImagePath == null || trimmedImagePath.isEmpty) {
+      return null;
+    }
+
+    if (trimmedImagePath.startsWith('http://') ||
+        trimmedImagePath.startsWith('https://') ||
+        trimmedImagePath.startsWith('data:')) {
+      return trimmedImagePath;
+    }
+
+    if (baseUrl.trim().isEmpty) {
+      return trimmedImagePath;
+    }
+
+    return Uri.parse(baseUrl).resolve(trimmedImagePath).toString();
   }
 }
 

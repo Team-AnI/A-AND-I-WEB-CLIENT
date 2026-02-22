@@ -6,6 +6,8 @@ import 'package:a_and_i_report_web_server/src/feature/auth/providers/user_login_
 import 'package:a_and_i_report_web_server/src/feature/auth/data/dtos/login_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_event.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_view_model.g.dart';
@@ -54,17 +56,26 @@ class AuthViewModel extends _$AuthViewModel {
     switch (event) {
       case SignIn():
         try {
-          final dto =
-              LoginRequestDto(userId: event.account, password: event.password);
-          await ref.read(userLoginUsecaseProvider).call(dto);
+          final dto = LoginRequestDto(
+              username: event.account, password: event.password);
+          final result = await ref.read(userLoginUsecaseProvider).call(dto);
+          await ref.read(userViewModelProvider.notifier).onEvent(
+                UserViewEvent.myInfoFetched(
+                  user: result.user,
+                ),
+              );
           state = state.copyWith(status: AuthenticationStatus.authenticated);
         } catch (e) {
-          state = state.copyWith(status: AuthenticationStatus.unauthenticated);
+          // 로그인 실패 시 상태 변경을 하지 않음 (불필요한 리다이렉트 방지)
+          // 에러는 UI 레벨에서 처리됨
           rethrow;
         }
         break;
       case SignOut():
         await ref.read(deleteUserAccessTokenUsecaseProvider).call();
+        await ref
+            .read(userViewModelProvider.notifier)
+            .onEvent(const UserViewEvent.clear());
         state = state.copyWith(status: AuthenticationStatus.unauthenticated);
         break;
     }

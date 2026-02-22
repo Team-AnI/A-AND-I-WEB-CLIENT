@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:a_and_i_report_web_server/src/core/constants/api_url.dart';
 
 part 'dio_provider.g.dart';
 
@@ -10,5 +11,9 @@ part 'dio_provider.g.dart';
 /// 필요한 경우 Interceptor나 기본 옵션(BaseOptions)을 이곳에서 설정할 수 있습니다.
 @riverpod
 Dio dio(Ref ref) {
-  return Dio();
+  final dio = Dio(BaseOptions(
+    baseUrl: baseUrl,
+  ));
+
+  return dio;
 }

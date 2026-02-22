@@ -23,6 +23,7 @@ class HomePage extends ConsumerWidget {
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
     final nickname = userState.nickname ?? '동아리원';
+    final profileImageUrl = userState.profileImageUrl;
 
     return Scaffold(
       backgroundColor: HomeTheme.background,
@@ -36,10 +37,12 @@ class HomePage extends ConsumerWidget {
             titleSpacing: 0,
             title: HomeTopBarSection(
               nickname: nickname,
+              profileImageUrl: profileImageUrl,
               isLoggedIn: isLoggedIn,
               onGoIntro: () => context.go("/promotion"),
               onGoEducation: () => context.go('/report'),
               onGoPosts: () => context.go('/articles'),
+              onGoMyAccount: () => context.go('/my-account'),
               onLogin: () => context.go('/sign-in'),
               onLogout: () async {
                 await ref
