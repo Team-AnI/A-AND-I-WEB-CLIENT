@@ -19,10 +19,10 @@ class AuthInterceptor extends QueuedInterceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    // 401 에러이고, refresh 엔드포인트가 아닌 경우에만 토큰 갱신 시도
-    if (err.response?.statusCode == 401 &&
-        !err.requestOptions.path.contains('/v1/auth/refresh') &&
-        !err.requestOptions.path.contains('/v1/auth/login')) {
+    // Authorization 헤더가 있는 요청에서 401 에러 발생 시에만 토큰 갱신 시도
+    final hasAuthHeader = err.requestOptions.headers['Authorization'] != null;
+
+    if (err.response?.statusCode == 401 && hasAuthHeader) {
       try {
         log('401 에러 발생, 토큰 갱신 시도...');
 
