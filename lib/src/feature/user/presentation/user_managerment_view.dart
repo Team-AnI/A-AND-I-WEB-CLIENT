@@ -643,8 +643,12 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
               ),
             ),
           ),
-          const SliverToBoxAdapter(
-            child: HomeFooterSection(),
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: HomeFooterSection(),
+            ),
           ),
         ],
       ),
