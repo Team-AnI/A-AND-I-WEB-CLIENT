@@ -1,6 +1,7 @@
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -153,11 +154,12 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                   final post = posts[index];
                   return HomePostCard(
                     post: HomePostCardData(
-                      category: _statusLabel(post.status),
                       date: _formatKoreanDate(post.updatedAt),
                       title: post.title,
                       summary: _extractSummary(post.contentMarkdown),
-                      icon: _statusIcon(post.status),
+                      thumbnailUrl: _resolveThumbnailUrl(post),
+                      authorNickname: post.author.nickname,
+                      authorProfileImage: post.author.profileImage,
                     ),
                     onTap: () => context.go('/articles/${post.id}'),
                   );
@@ -188,6 +190,7 @@ class HomePostCard extends StatelessWidget {
     final isTablet = width >= 768 && width < 1200;
     final titleFont = isMobile ? 20.0 : (isTablet ? 20.0 : 21.0);
     final summaryFont = isMobile ? 13.0 : 14.0;
+    final authorProfile = _extractValidProfileImageUrl(post.authorProfileImage);
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -203,23 +206,41 @@ class HomePostCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
               ),
-              child: Center(
-                child: Icon(post.icon,
-                    size: isMobile ? 62 : 76,
-                    color: Colors.black.withValues(alpha: 0.10)),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _HomePostCardThumbnail(
+                  thumbnailUrl: post.thumbnailUrl,
+                ),
               ),
             ),
           ),
           SizedBox(height: isMobile ? 10 : 12),
           Row(
             children: [
-              Text(
-                post.category,
-                style: const TextStyle(
-                  color: HomeTheme.primary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
+              CircleAvatar(
+                radius: isMobile ? 10 : 11,
+                backgroundColor: Colors.black.withValues(alpha: 0.06),
+                backgroundImage:
+                    authorProfile == null ? null : NetworkImage(authorProfile),
+                child: authorProfile == null
+                    ? Icon(
+                        Icons.person,
+                        size: isMobile ? 11 : 12,
+                        color: HomeTheme.textMuted,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  post.authorNickname,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: HomeTheme.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(width: 7),
@@ -271,30 +292,24 @@ class HomePostCard extends StatelessWidget {
 
 class HomePostCardData {
   const HomePostCardData({
-    required this.category,
     required this.date,
     required this.title,
     required this.summary,
-    required this.icon,
+    required this.thumbnailUrl,
+    required this.authorNickname,
+    required this.authorProfileImage,
   });
 
-  final String category;
   final String date;
   final String title;
   final String summary;
-  final IconData icon;
+  final String? thumbnailUrl;
+  final String authorNickname;
+  final String? authorProfileImage;
 }
 
 bool _isPublished(String status) {
   return status.trim().toLowerCase() == 'published';
-}
-
-String _statusLabel(String status) {
-  final normalized = status.trim();
-  if (normalized.isEmpty) {
-    return 'UNKNOWN';
-  }
-  return normalized.toUpperCase();
 }
 
 String _formatKoreanDate(DateTime dateTime) {
@@ -322,13 +337,97 @@ String _extractSummary(String markdown) {
   return '${plainText.substring(0, maxLength)}...';
 }
 
-IconData _statusIcon(String status) {
-  switch (status.toLowerCase()) {
-    case 'published':
-      return Icons.article;
-    case 'draft':
-      return Icons.edit_note;
-    default:
-      return Icons.description;
+String? _extractFirstImageUrl(String markdown) {
+  final match = RegExp(r'!\[[^\]]*\]\(([^)\s]+)').firstMatch(markdown);
+  if (match == null) {
+    return null;
+  }
+  final raw = (match.group(1) ?? '').trim();
+  final sanitized = raw.replaceAll('<', '').replaceAll('>', '');
+  final uri = Uri.tryParse(sanitized);
+  if (uri == null || !uri.hasScheme) {
+    return null;
+  }
+  if (uri.scheme != 'http' && uri.scheme != 'https') {
+    return null;
+  }
+  return sanitized;
+}
+
+String? _resolveThumbnailUrl(Post post) {
+  final fromField = _extractValidHttpUrl(post.thumbnailUrl);
+  if (fromField != null) {
+    return fromField;
+  }
+  return _extractFirstImageUrl(post.contentMarkdown);
+}
+
+String? _extractValidHttpUrl(String? rawUrl) {
+  final normalized = rawUrl?.trim();
+  if (normalized == null || normalized.isEmpty) {
+    return null;
+  }
+  final uri = Uri.tryParse(normalized);
+  if (uri == null || !uri.hasScheme) {
+    return null;
+  }
+  if (uri.scheme != 'http' && uri.scheme != 'https') {
+    return null;
+  }
+  return normalized;
+}
+
+String? _extractValidProfileImageUrl(String? rawUrl) {
+  return _extractValidHttpUrl(rawUrl);
+}
+
+class _HomePostCardThumbnail extends StatelessWidget {
+  const _HomePostCardThumbnail({
+    required this.thumbnailUrl,
+  });
+
+  final String? thumbnailUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = thumbnailUrl?.trim();
+    final hasThumbnail = url != null && url.isNotEmpty;
+    if (!hasThumbnail) {
+      return const _HomePostCardThumbnailFallback();
+    }
+
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      placeholder: (context, _) => Container(
+        color: const Color(0xFFF3F4F6),
+        alignment: Alignment.center,
+        child: const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      errorWidget: (context, _, __) {
+        return const _HomePostCardThumbnailFallback();
+      },
+    );
+  }
+}
+
+class _HomePostCardThumbnailFallback extends StatelessWidget {
+  const _HomePostCardThumbnailFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Icon(
+        Icons.article,
+        size: 56,
+        color: Colors.black.withValues(alpha: 0.14),
+      ),
+    );
   }
 }
