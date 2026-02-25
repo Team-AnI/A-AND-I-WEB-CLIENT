@@ -37,7 +37,6 @@ class ArticleListView extends ConsumerWidget {
     final subtitleFontSize = isMobile ? 15.0 : (isTablet ? 16.0 : 18.0);
     final topPadding = isMobile ? 44.0 : (isTablet ? 54.0 : 64.0);
     final bottomPadding = isMobile ? 56.0 : (isTablet ? 64.0 : 72.0);
-    final sectionSpacing = isMobile ? 28.0 : 36.0;
     final cardGap = isMobile ? 20.0 : 24.0;
     final articleListStateAsync = ref.watch(articleListViewModelProvider);
 
@@ -113,18 +112,6 @@ class ArticleListView extends ConsumerWidget {
                             label: const Text('블로그 글 작성'),
                           ),
                         ),
-                      SizedBox(height: sectionSpacing),
-                      Wrap(
-                        spacing: isMobile ? 6 : 8,
-                        runSpacing: isMobile ? 6 : 8,
-                        alignment: WrapAlignment.center,
-                        children: const [
-                          CategoryChipView(text: '전체', selected: true),
-                          CategoryChipView(text: '기술 블로그'),
-                          CategoryChipView(text: '공지사항'),
-                          CategoryChipView(text: '활동 후기'),
-                        ],
-                      ),
                       SizedBox(height: isMobile ? 34 : 44),
                       ArticleCardListSection(
                         articleListStateAsync: articleListStateAsync,
@@ -347,43 +334,6 @@ IconData _statusIcon(String status) {
       return Icons.edit_note;
     default:
       return Icons.description;
-  }
-}
-
-class CategoryChipView extends StatelessWidget {
-  const CategoryChipView({
-    super.key,
-    required this.text,
-    this.selected = false,
-  });
-
-  final String text;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 768;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 13 : 16,
-        vertical: isMobile ? 8 : 10,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: selected
-            ? HomeTheme.textMain
-            : Colors.black.withValues(alpha: 0.05),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: selected ? Colors.white : HomeTheme.textMuted,
-          fontSize: isMobile ? 13 : 14,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
   }
 }
 
