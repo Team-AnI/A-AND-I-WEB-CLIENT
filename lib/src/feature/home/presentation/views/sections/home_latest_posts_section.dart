@@ -1,8 +1,47 @@
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class HomeLatestPostsSection extends StatelessWidget {
+/// 메인 화면 최신 블로그 게시글을 조회하는 Provider입니다.
+final homeLatestPostsProvider = FutureProvider.autoDispose<List<Post>>((
+  ref,
+) async {
+  final page =
+      await ref.read(getPostListUsecaseProvider).call(page: 0, size: 20);
+  return page.items.where((post) => _isPublished(post.status)).toList();
+});
+
+class HomeLatestPostsSection extends ConsumerWidget {
   const HomeLatestPostsSection({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final latestPostsAsync = ref.watch(homeLatestPostsProvider);
+    return latestPostsAsync.when(
+      data: (posts) {
+        final maxPostCount = kIsWeb ? 3 : 4;
+        final visiblePosts = posts.take(maxPostCount).toList();
+        if (visiblePosts.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return _HomeLatestPostsSectionContent(posts: visiblePosts);
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _HomeLatestPostsSectionContent extends StatelessWidget {
+  const _HomeLatestPostsSectionContent({
+    required this.posts,
+  });
+
+  final List<Post> posts;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +59,8 @@ class HomeLatestPostsSection extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1280),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(horizontal, topPadding, horizontal, bottomPadding),
+          padding: EdgeInsets.fromLTRB(
+              horizontal, topPadding, horizontal, bottomPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -52,7 +92,7 @@ class HomeLatestPostsSection extends StatelessWidget {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () {},
+                      onPressed: () => context.go('/articles'),
                       iconAlignment: IconAlignment.end,
                       label: const Text('전체 보기'),
                       icon: const Icon(Icons.chevron_right),
@@ -86,7 +126,7 @@ class HomeLatestPostsSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     TextButton.icon(
-                      onPressed: () {},
+                      onPressed: () => context.go('/articles'),
                       iconAlignment: IconAlignment.end,
                       label: const Text('전체 보기'),
                       icon: const Icon(Icons.chevron_right),
@@ -108,9 +148,19 @@ class HomeLatestPostsSection extends StatelessWidget {
                   mainAxisSpacing: isMobile ? 14 : 18,
                   childAspectRatio: isMobile ? 1.18 : (isTablet ? 1.02 : 0.98),
                 ),
-                itemCount: homePostCards.length,
+                itemCount: posts.length,
                 itemBuilder: (context, index) {
-                  return HomePostCard(post: homePostCards[index]);
+                  final post = posts[index];
+                  return HomePostCard(
+                    post: HomePostCardData(
+                      category: _statusLabel(post.status),
+                      date: _formatKoreanDate(post.updatedAt),
+                      title: post.title,
+                      summary: _extractSummary(post.contentMarkdown),
+                      icon: _statusIcon(post.status),
+                    ),
+                    onTap: () => context.go('/articles/${post.id}'),
+                  );
                 },
               ),
             ],
@@ -125,9 +175,11 @@ class HomePostCard extends StatelessWidget {
   const HomePostCard({
     super.key,
     required this.post,
+    required this.onTap,
   });
 
   final HomePostCardData post;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +191,7 @@ class HomePostCard extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () {},
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -233,26 +285,50 @@ class HomePostCardData {
   final IconData icon;
 }
 
-const List<HomePostCardData> homePostCards = [
-  HomePostCardData(
-    category: 'Project',
-    date: '2026년 2월 10일',
-    title: '겨울방학 팀 프로젝트 회고',
-    summary: '학생 팀이 직접 기획하고 개발한 웹 프로젝트의 아키텍처, 협업 방식, 배운 점을 공유합니다.',
-    icon: Icons.groups,
-  ),
-  HomePostCardData(
-    category: 'Study',
-    date: '2026년 2월 6일',
-    title: '알고리즘 스터디 4주차 기록',
-    summary: '문제 풀이 전략부터 코드 리뷰 포인트까지, 스터디에서 실제로 다룬 내용을 정리했습니다.',
-    icon: Icons.functions,
-  ),
-  HomePostCardData(
-    category: 'Session',
-    date: '2026년 1월 29일',
-    title: '프론트엔드 실습 세션 안내',
-    summary: 'Flutter와 웹 프론트엔드 기초를 함께 학습하는 실습 중심 세션 일정을 안내합니다.',
-    icon: Icons.web,
-  ),
-];
+bool _isPublished(String status) {
+  return status.trim().toLowerCase() == 'published';
+}
+
+String _statusLabel(String status) {
+  final normalized = status.trim();
+  if (normalized.isEmpty) {
+    return 'UNKNOWN';
+  }
+  return normalized.toUpperCase();
+}
+
+String _formatKoreanDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  return '${local.year}년 ${local.month}월 ${local.day}일';
+}
+
+String _extractSummary(String markdown) {
+  final plainText = markdown
+      .replaceAll(RegExp(r'!\[[^\]]*\]\([^)]*\)'), ' ')
+      .replaceAll(RegExp(r'\[[^\]]*\]\([^)]*\)'), ' ')
+      .replaceAll(RegExp(r'[#>*`~_\-\[\]()]'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+
+  if (plainText.isEmpty) {
+    return '본문 내용이 없습니다.';
+  }
+
+  const maxLength = 120;
+  if (plainText.length <= maxLength) {
+    return plainText;
+  }
+
+  return '${plainText.substring(0, maxLength)}...';
+}
+
+IconData _statusIcon(String status) {
+  switch (status.toLowerCase()) {
+    case 'published':
+      return Icons.article;
+    case 'draft':
+      return Icons.edit_note;
+    default:
+      return Icons.description;
+  }
+}

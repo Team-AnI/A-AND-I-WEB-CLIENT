@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:a_and_i_report_web_server/src/core/routes/route_config.dart';
 import 'package:a_and_i_report_web_server/src/core/theme/app_theme.dart';
 import 'package:a_and_i_report_web_server/src/core/utils/logger.dart';
+import 'package:a_and_i_report_web_server/src/core/utils/app_messenger.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:a_and_i_report_web_server/firebase_options.dart';
@@ -35,6 +36,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp.router(
       title: "A&I",
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       routerConfig: goRouter,
       theme: theme,
       scrollBehavior: const AppScrollBehavior(),
