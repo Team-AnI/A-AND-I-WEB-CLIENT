@@ -50,9 +50,9 @@
       body {
         overflow-x: hidden;
         overflow-y: auto;
-        min-height: 100dvh;
+        min-height: 100lvh;
         min-height: -webkit-fill-available;
-        min-height: var(--app-viewport-height, 100dvh);
+        min-height: var(--app-viewport-height, 100lvh);
       }
 
       /* Safari 툴바 축소 트리거를 위해 문서 루트에 최소 스크롤 여유를 둔다. */
@@ -65,17 +65,37 @@
       flt-glass-pane,
       flt-scene-host,
       flutter-view {
-        height: var(--app-viewport-height, 100dvh) !important;
+        min-height: var(--app-viewport-height, 100lvh) !important;
+        height: var(--app-viewport-height, 100lvh) !important;
       }
     </style>
     <script>
       (function () {
         const root = document.documentElement;
+        const isIOS = (() => {
+          const ua = window.navigator.userAgent;
+          return (
+            /iPad|iPhone|iPod/.test(ua) ||
+            (window.navigator.platform === "MacIntel" &&
+              window.navigator.maxTouchPoints > 1)
+          );
+        })();
+
+        const resolveViewportHeight = () => {
+          const viewport = window.visualViewport;
+          const visualHeight = viewport
+            ? viewport.height + viewport.offsetTop
+            : 0;
+          const innerHeight = window.innerHeight || 0;
+          const clientHeight = document.documentElement.clientHeight || 0;
+          return Math.max(visualHeight, innerHeight, clientHeight);
+        };
 
         const syncViewportHeight = () => {
-          const viewport = window.visualViewport;
-          const viewportHeight = viewport ? viewport.height : window.innerHeight;
-          root.style.setProperty("--app-viewport-height", `${viewportHeight}px`);
+          root.style.setProperty(
+            "--app-viewport-height",
+            `${resolveViewportHeight()}px`
+          );
         };
 
         window.addEventListener("resize", syncViewportHeight, { passive: true });
@@ -89,6 +109,21 @@
           });
           window.visualViewport.addEventListener("scroll", syncViewportHeight, {
             passive: true,
+          });
+        }
+
+        if (isIOS) {
+          const nudgeBrowserBars = () => {
+            if (window.scrollY < 1) {
+              window.scrollTo(0, 1);
+            }
+          };
+
+          window.addEventListener("touchstart", nudgeBrowserBars, {
+            passive: true,
+          });
+          window.addEventListener("load", () => {
+            window.setTimeout(nudgeBrowserBars, 250);
           });
         }
 

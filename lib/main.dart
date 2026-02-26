@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:a_and_i_report_web_server/src/core/routes/route_config.dart';
 import 'package:a_and_i_report_web_server/src/core/theme/app_theme.dart';
@@ -40,6 +41,20 @@ class MyApp extends ConsumerWidget {
       routerConfig: goRouter,
       theme: theme,
       scrollBehavior: const AppScrollBehavior(),
+      builder: (context, child) {
+        if (child == null || !_shouldOverrideWebIosInsets()) {
+          return child ?? const SizedBox.shrink();
+        }
+
+        final mediaQuery = MediaQuery.of(context);
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            padding: EdgeInsets.zero,
+            viewPadding: EdgeInsets.zero,
+          ),
+          child: child,
+        );
+      },
     );
   }
 }
@@ -53,4 +68,8 @@ class AppScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.mouse,
         PointerDeviceKind.trackpad,
       };
+}
+
+bool _shouldOverrideWebIosInsets() {
+  return kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 }
