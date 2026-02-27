@@ -41,6 +41,26 @@ MarkdownStyleSheet createArticlePreviewMarkdownStyle(BuildContext context) {
       color: HomeTheme.textMain,
       fontSize: 24,
       fontWeight: FontWeight.w700,
+      height: 1.35,
+      letterSpacing: -0.3,
+    ),
+    h4: const TextStyle(
+      color: HomeTheme.textMain,
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      height: 1.4,
+    ),
+    h5: const TextStyle(
+      color: HomeTheme.textMain,
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      height: 1.45,
+    ),
+    h6: const TextStyle(
+      color: HomeTheme.textMain,
+      fontSize: 17,
+      fontWeight: FontWeight.w700,
+      height: 1.5,
     ),
     strong: const TextStyle(
       color: HomeTheme.textMain,
@@ -77,10 +97,12 @@ MarkdownStyleSheet createArticlePreviewMarkdownStyle(BuildContext context) {
       fontWeight: FontWeight.w700,
     ),
     code: const TextStyle(
-      fontSize: 13,
-      height: 1.6,
+      fontSize: 14,
+      height: 1.45,
       fontFamily: 'monospace',
       color: Color(0xFF111827),
+      backgroundColor: Color(0xFFEFF1F5),
+      fontWeight: FontWeight.w600,
     ),
     codeblockPadding: const EdgeInsets.all(14),
     codeblockDecoration: BoxDecoration(
