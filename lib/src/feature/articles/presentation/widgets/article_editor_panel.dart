@@ -88,7 +88,7 @@ class ArticleEditorPanel extends StatelessWidget {
                       letterSpacing: -1.2,
                     ),
                     decoration: InputDecoration(
-                      hintText: '제목을 입력하세요',
+                      hintText: '제목',
                       hintStyle: TextStyle(
                         color: const Color(0xFFD1D5DB),
                         fontSize: isMobile ? 30 : 42,
@@ -171,7 +171,7 @@ class ArticleEditorPanel extends StatelessWidget {
                         fontFamily: 'monospace',
                       ),
                       decoration: const InputDecoration(
-                        hintText: '당신의 이야기를 적어보세요...',
+                        hintText: '당신의 이야기를 적어주세요',
                         hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,

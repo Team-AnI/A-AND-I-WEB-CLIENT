@@ -11,13 +11,8 @@ import 'package:a_and_i_report_web_server/src/feature/articles/presentation/widg
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/widgets/article_preview_panel.dart';
 import 'package:image_picker/image_picker.dart';
 
-const String articleWriteDefaultTitle =
-    'The Future of Artificial Intelligence in Modern Education';
-const String articleWriteDefaultMarkdown =
-    '> Explore how adaptive learning algorithms and generative models are reshaping the pedagogical landscape for the next generation of scholars.\n\n'
-    'As we stand at the precipice of a new era in educational technology, artificial intelligence is no longer a distant promise but a present reality. The integration of large language models and machine learning into the classroom is creating unprecedented opportunities for personalized learning at scale.\n\n'
-    '## The Shift Toward Adaptive Systems\n\n'
-    'Adaptive learning systems utilize data-driven insights to adjust the difficulty and style of content delivered to a student. This ensures that a learner is neither bored by content that is too simple nor overwhelmed by material that is too advanced.';
+const String articleWriteDefaultTitle = '';
+const String articleWriteDefaultMarkdown = '';
 
 class ArticleWriteView extends ConsumerStatefulWidget {
   const ArticleWriteView({super.key});
@@ -122,6 +117,7 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
                   builder: (context, child) {
                     if (split) {
                       return Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(
                             child: DecoratedBox(
