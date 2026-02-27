@@ -3,7 +3,6 @@ import 'package:a_and_i_report_web_server/src/core/widgets/logo_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class HomeTopBarSection extends StatelessWidget {
   const HomeTopBarSection({
@@ -11,9 +10,11 @@ class HomeTopBarSection extends StatelessWidget {
     required this.nickname,
     this.profileImageUrl,
     required this.isLoggedIn,
+    required this.onGoHome,
     required this.onGoIntro,
     required this.onGoEducation,
     required this.onGoPosts,
+    required this.onGoFaq,
     required this.onGoMyAccount,
     required this.onLogin,
     required this.onLogout,
@@ -22,9 +23,11 @@ class HomeTopBarSection extends StatelessWidget {
   final String nickname;
   final String? profileImageUrl;
   final bool isLoggedIn;
+  final VoidCallback onGoHome;
   final VoidCallback onGoIntro;
   final VoidCallback onGoEducation;
   final VoidCallback onGoPosts;
+  final VoidCallback onGoFaq;
   final VoidCallback onGoMyAccount;
   final VoidCallback onLogin;
   final Future<void> Function() onLogout;
@@ -50,20 +53,22 @@ class HomeTopBarSection extends StatelessWidget {
             child: Row(
               children: [
                 InkWell(
-                  onTap: () {
-                    context.go("/");
-                  },
+                  onTap: onGoHome,
                   child: LogoImage(
                     width: logoWidth,
                   ),
                 ),
                 if (isDesktop) ...[
                   const Spacer(),
+                  HomeTopBarNavButton(text: '홈', onTap: onGoHome),
+                  const SizedBox(width: 30),
                   HomeTopBarNavButton(text: '동아리 소개', onTap: onGoIntro),
-                  const SizedBox(width: 18),
+                  const SizedBox(width: 30),
                   HomeTopBarNavButton(text: '스터디', onTap: onGoEducation),
-                  const SizedBox(width: 18),
+                  const SizedBox(width: 30),
                   HomeTopBarNavButton(text: '블로그', onTap: onGoPosts),
+                  const SizedBox(width: 30),
+                  HomeTopBarNavButton(text: '자주묻는질문', onTap: onGoFaq),
                   const Spacer(),
                 ] else
                   const Spacer(),
@@ -110,174 +115,36 @@ class HomeTopBarSection extends StatelessWidget {
                       const SizedBox(width: 12),
                     ],
                     if (showMenu)
-                      PopupMenuButton<String>(
-                        tooltip: '메뉴',
-                        color: Colors.white,
-                        surfaceTintColor: Colors.white,
-                        elevation: 10,
-                        shadowColor: Colors.black.withValues(alpha: 0.12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(
-                            color: Colors.black.withValues(alpha: 0.08),
-                          ),
-                        ),
-                        offset: const Offset(0, 8),
-                        onSelected: (value) async {
-                          if (value == 'intro') {
-                            onGoIntro();
-                            return;
-                          }
-                          if (value == 'study') {
-                            onGoEducation();
-                            return;
-                          }
-                          if (value == 'blog') {
-                            onGoPosts();
-                            return;
-                          }
-                          if (value == 'account') {
-                            onGoMyAccount();
-                            return;
-                          }
-                          if (value == 'login') {
-                            onLogin();
-                            return;
-                          }
-                          if (value == 'logout') {
-                            await onLogout();
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          if (isLoggedIn) ...[
-                            PopupMenuItem<String>(
-                              value: "account",
-                              enabled: false,
-                              height: 52,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Row(
-                                    children: [
-                                      TopBarProfileAvatar(
-                                        profileImageUrl: profileImageUrl,
-                                        size: 20,
-                                        iconSize: 12,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          nickname,
-                                          style: const TextStyle(
-                                            color: HomeTheme.textMain,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 13,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '로그인됨',
-                                    style: TextStyle(
-                                      color: HomeTheme.textMuted
-                                          .withValues(alpha: 0.8),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 11,
-                                    ),
+                      Builder(
+                        builder: (menuButtonContext) {
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(11),
+                            onTap: () => _openTopMenu(menuButtonContext),
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(11),
+                                border: Border.all(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
-                            ),
-                            PopupMenuDivider(
-                              height: 10,
-                              color: Colors.black.withValues(alpha: 0.08),
-                            ),
-                          ],
-                          const PopupMenuItem<String>(
-                            value: 'intro',
-                            child: Text(
-                              '동아리 소개',
-                              style: TextStyle(
+                              child: const Icon(
+                                Icons.menu_rounded,
+                                size: 20,
                                 color: HomeTheme.textMain,
-                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'study',
-                            child: Text(
-                              '스터디',
-                              style: TextStyle(
-                                color: HomeTheme.textMain,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'blog',
-                            child: Text(
-                              '블로그',
-                              style: TextStyle(
-                                color: HomeTheme.textMain,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          if (isLoggedIn)
-                            const PopupMenuItem<String>(
-                              value: 'account',
-                              child: Text(
-                                '내 계정',
-                                style: TextStyle(
-                                  color: HomeTheme.textMain,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          PopupMenuDivider(
-                            height: 12,
-                            color: Colors.black.withValues(alpha: 0.08),
-                          ),
-                          PopupMenuItem<String>(
-                            value: isLoggedIn ? 'logout' : 'login',
-                            child: Text(
-                              isLoggedIn ? '로그아웃' : '로그인',
-                              style: TextStyle(
-                                color: isLoggedIn
-                                    ? HomeTheme.textMain
-                                    : HomeTheme.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(11),
-                            border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.08),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.06),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.menu_rounded,
-                            size: 20,
-                            color: HomeTheme.textMain,
-                          ),
-                        ),
+                          );
+                        },
                       )
                     else
                       (isLoggedIn
@@ -326,6 +193,212 @@ class HomeTopBarSection extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openTopMenu(BuildContext menuButtonContext) async {
+    final buttonRenderBox = menuButtonContext.findRenderObject() as RenderBox?;
+    final overlay = Overlay.maybeOf(menuButtonContext);
+    final overlayRenderBox = overlay?.context.findRenderObject() as RenderBox?;
+    if (buttonRenderBox == null || overlayRenderBox == null) {
+      return;
+    }
+
+    final topLeft =
+        buttonRenderBox.localToGlobal(Offset.zero, ancestor: overlayRenderBox);
+    final bottomRight = buttonRenderBox.localToGlobal(
+      buttonRenderBox.size.bottomRight(Offset.zero),
+      ancestor: overlayRenderBox,
+    );
+    final buttonRect = Rect.fromPoints(topLeft, bottomRight);
+    final position = RelativeRect.fromLTRB(
+      buttonRect.left,
+      buttonRect.bottom + 8,
+      overlayRenderBox.size.width - buttonRect.right,
+      overlayRenderBox.size.height - buttonRect.bottom - 8,
+    );
+
+    final selected = await showMenu<String>(
+      context: menuButtonContext,
+      position: position,
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
+      elevation: 10,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: Colors.black.withValues(alpha: 0.08),
+        ),
+      ),
+      items: _buildTopMenuItems(),
+    );
+
+    if (selected == null) {
+      return;
+    }
+
+    await _handleTopMenuSelection(selected);
+  }
+
+  List<PopupMenuEntry<String>> _buildTopMenuItems() {
+    return [
+      if (isLoggedIn) ...[
+        PopupMenuItem<String>(
+          value: 'account-info',
+          enabled: false,
+          height: 52,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  TopBarProfileAvatar(
+                    profileImageUrl: profileImageUrl,
+                    size: 20,
+                    iconSize: 12,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      nickname,
+                      style: const TextStyle(
+                        color: HomeTheme.textMain,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '로그인됨',
+                style: TextStyle(
+                  color: HomeTheme.textMuted.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuDivider(
+          height: 10,
+          color: Colors.black.withValues(alpha: 0.08),
+        ),
+      ],
+      const PopupMenuItem<String>(
+        value: 'home',
+        child: Text(
+          '홈',
+          style: TextStyle(
+            color: HomeTheme.textMain,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      const PopupMenuItem<String>(
+        value: 'intro',
+        child: Text(
+          '동아리 소개',
+          style: TextStyle(
+            color: HomeTheme.textMain,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      const PopupMenuItem<String>(
+        value: 'study',
+        child: Text(
+          '스터디',
+          style: TextStyle(
+            color: HomeTheme.textMain,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      const PopupMenuItem<String>(
+        value: 'blog',
+        child: Text(
+          '블로그',
+          style: TextStyle(
+            color: HomeTheme.textMain,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      const PopupMenuItem<String>(
+        value: 'faq',
+        child: Text(
+          'FAQ',
+          style: TextStyle(
+            color: HomeTheme.textMain,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      if (isLoggedIn)
+        const PopupMenuItem<String>(
+          value: 'account',
+          child: Text(
+            '내 계정',
+            style: TextStyle(
+              color: HomeTheme.textMain,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      PopupMenuDivider(
+        height: 12,
+        color: Colors.black.withValues(alpha: 0.08),
+      ),
+      PopupMenuItem<String>(
+        value: isLoggedIn ? 'logout' : 'login',
+        child: Text(
+          isLoggedIn ? '로그아웃' : '로그인',
+          style: TextStyle(
+            color: isLoggedIn ? HomeTheme.textMain : HomeTheme.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    ];
+  }
+
+  Future<void> _handleTopMenuSelection(String value) async {
+    if (value == 'home') {
+      onGoHome();
+      return;
+    }
+    if (value == 'intro') {
+      onGoIntro();
+      return;
+    }
+    if (value == 'study') {
+      onGoEducation();
+      return;
+    }
+    if (value == 'blog') {
+      onGoPosts();
+      return;
+    }
+    if (value == 'faq') {
+      onGoFaq();
+      return;
+    }
+    if (value == 'account') {
+      onGoMyAccount();
+      return;
+    }
+    if (value == 'login') {
+      onLogin();
+      return;
+    }
+    if (value == 'logout') {
+      await onLogout();
+    }
   }
 }
 

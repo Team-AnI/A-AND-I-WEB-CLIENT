@@ -26,6 +26,8 @@ class HomePage extends ConsumerWidget {
     final profileImageUrl = userState.profileImageUrl;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       backgroundColor: HomeTheme.background,
       body: CustomScrollView(
         slivers: [
@@ -39,9 +41,11 @@ class HomePage extends ConsumerWidget {
               nickname: nickname,
               profileImageUrl: profileImageUrl,
               isLoggedIn: isLoggedIn,
+              onGoHome: () => context.go('/'),
               onGoIntro: () => context.go("/promotion"),
               onGoEducation: () => context.go('/report'),
               onGoPosts: () => context.go('/articles'),
+              onGoFaq: () => context.go('/faq'),
               onGoMyAccount: () => context.go('/my-account'),
               onLogin: () => context.go('/sign-in'),
               onLogout: () async {
