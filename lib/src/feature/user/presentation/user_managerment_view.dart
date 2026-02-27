@@ -351,6 +351,8 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                     .read(userViewModelProvider.notifier)
                     .onEvent(const UserViewEvent.clear());
               },
+              onGoFaq: () => context.go("/faq"),
+              onGoHome: () => context.go("/"),
             ),
           ),
           SliverToBoxAdapter(
