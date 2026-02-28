@@ -14,7 +14,7 @@ abstract class ReportRepository {
   /// 특정 ID의 과제 상세 정보를 조회합니다.
   ///
   /// [id]는 과제의 UUID이며, [authorization] 헤더가 필요합니다.
-  @GET("/api/report/{id}")
+  @GET("/v1/report/{id}")
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })

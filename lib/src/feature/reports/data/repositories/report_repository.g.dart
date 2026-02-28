@@ -36,7 +36,7 @@ class _ReportRepository implements ReportRepository {
       )
           .compose(
             _dio.options,
-            '/api/report/${id}',
+            '/v1/report/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
