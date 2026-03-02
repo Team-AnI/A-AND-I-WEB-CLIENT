@@ -91,12 +91,16 @@ class AuthRepositoryImpl implements AuthRepository {
         userData['avatarUrl']?.toString() ??
         userData['avatar']?.toString() ??
         userData['picture']?.toString();
+    final publicCode = userData['publicCode']?.toString() ??
+        userData['public_code']?.toString() ??
+        userData['publiccode']?.toString();
 
     return User(
       id: id,
       nickname: resolvedNickname,
       role: role,
       profileImageUrl: profileImage,
+      publicCode: publicCode,
     );
   }
 

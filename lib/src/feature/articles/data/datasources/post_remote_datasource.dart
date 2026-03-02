@@ -199,7 +199,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     int size,
   ) async {
     final response = await dio.get<Map<String, dynamic>>(
-      '/v1/posts/drafts',
+      '/v1/posts/drafts/me',
       queryParameters: <String, dynamic>{
         'page': page,
         'size': size,

@@ -8,6 +8,7 @@ class HomeTopBarSection extends StatelessWidget {
   const HomeTopBarSection({
     super.key,
     required this.nickname,
+    this.publicCode,
     this.profileImageUrl,
     required this.isLoggedIn,
     required this.onGoHome,
@@ -21,6 +22,7 @@ class HomeTopBarSection extends StatelessWidget {
   });
 
   final String nickname;
+  final String? publicCode;
   final String? profileImageUrl;
   final bool isLoggedIn;
   final VoidCallback onGoHome;
@@ -100,12 +102,16 @@ class HomeTopBarSection extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                nickname,
-                                style: TextStyle(
+                              _buildNicknameWithPublicCode(
+                                nicknameStyle: TextStyle(
                                   fontSize: isMobile ? 12 : 13,
                                   fontWeight: FontWeight.w600,
                                   color: HomeTheme.textMain,
+                                ),
+                                publicCodeStyle: TextStyle(
+                                  fontSize: isMobile ? 12 : 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: HomeTheme.textMuted,
                                 ),
                               ),
                             ],
@@ -260,10 +266,14 @@ class HomeTopBarSection extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      nickname,
-                      style: const TextStyle(
+                    child: _buildNicknameWithPublicCode(
+                      nicknameStyle: const TextStyle(
                         color: HomeTheme.textMain,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                      publicCodeStyle: const TextStyle(
+                        color: HomeTheme.textMuted,
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
                       ),
@@ -399,6 +409,33 @@ class HomeTopBarSection extends StatelessWidget {
     if (value == 'logout') {
       await onLogout();
     }
+  }
+
+  Widget _buildNicknameWithPublicCode({
+    required TextStyle nicknameStyle,
+    required TextStyle publicCodeStyle,
+    TextOverflow overflow = TextOverflow.clip,
+  }) {
+    final resolvedPublicCode = publicCode?.trim();
+    if (resolvedPublicCode == null || resolvedPublicCode.isEmpty) {
+      return Text(
+        nickname,
+        style: nicknameStyle,
+        maxLines: 1,
+        overflow: overflow,
+      );
+    }
+    return RichText(
+      maxLines: 1,
+      overflow: overflow,
+      text: TextSpan(
+        children: [
+          TextSpan(text: nickname, style: nicknameStyle),
+          TextSpan(text: ' ', style: nicknameStyle),
+          TextSpan(text: resolvedPublicCode, style: publicCodeStyle),
+        ],
+      ),
+    );
   }
 }
 

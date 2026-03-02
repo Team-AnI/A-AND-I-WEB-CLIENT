@@ -27,6 +27,7 @@ class ArticleListView extends ConsumerWidget {
     final canShowWriteButton =
         isLoggedIn && canManageArticlesWithRole(userState.resolvedRole);
     final nickname = userState.nickname ?? '동아리원';
+    final publicCode = userState.publicCode;
     final profileImageUrl = userState.profileImageUrl;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
@@ -52,6 +53,7 @@ class ArticleListView extends ConsumerWidget {
             titleSpacing: 0,
             title: HomeTopBarSection(
               nickname: nickname,
+              publicCode: publicCode,
               profileImageUrl: profileImageUrl,
               isLoggedIn: isLoggedIn,
               onGoIntro: () => context.go('/promotion'),

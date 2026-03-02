@@ -1,4 +1,7 @@
 import 'package:a_and_i_report_web_server/src/core/models/user.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
@@ -66,13 +69,73 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     synchronizeNicknameFromState(nickname);
   }
 
+  Widget _buildNicknameWithPublicCode({
+    required bool isMobile,
+    required String? nickname,
+    required String? publicCode,
+  }) {
+    final resolvedNickname = nickname?.trim();
+    final resolvedPublicCode = publicCode?.trim();
+
+    if (resolvedNickname == null || resolvedNickname.isEmpty) {
+      return Text(
+        '닉네임 정보가 없습니다.',
+        style: TextStyle(
+          fontSize: isMobile ? 14 : 15,
+          color: HomeTheme.textMain,
+          fontWeight: FontWeight.w500,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          resolvedNickname,
+          style: TextStyle(
+            fontSize: isMobile ? 14 : 15,
+            color: HomeTheme.textMain,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        if (resolvedPublicCode != null && resolvedPublicCode.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
+            ),
+            child: Text(
+              resolvedPublicCode,
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.1,
+                color: Color(0xFF1D4ED8),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   User? resolveMergedUser(
     User? updatedUser,
     UserViewState userState, {
     required String? requestNickname,
   }) {
     if (updatedUser != null) {
-      return updatedUser;
+      final fallbackPublicCode = userState.publicCode?.trim();
+      final mergedPublicCode = updatedUser.publicCode?.trim();
+      return updatedUser.copyWith(
+        publicCode: mergedPublicCode?.isNotEmpty == true
+            ? mergedPublicCode
+            : fallbackPublicCode,
+      );
     }
 
     final currentUser = userState.user;
@@ -311,7 +374,9 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
+    final myDraftPostPageAsync = ref.watch(myDraftPostPageProvider);
     final topBarNickname = userState.nickname ?? '동아리원';
+    final topBarPublicCode = userState.publicCode;
     final topBarProfileImageUrl = userState.profileImageUrl;
 
     synchronizeNicknameFromState(userState.nickname);
@@ -336,6 +401,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
             titleSpacing: 0,
             title: HomeTopBarSection(
               nickname: topBarNickname,
+              publicCode: topBarPublicCode,
               profileImageUrl: topBarProfileImageUrl,
               isLoggedIn: isLoggedIn,
               onGoIntro: () => context.go('/promotion'),
@@ -507,16 +573,10 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                                             .withValues(alpha: 0.06),
                                       ),
                                     ),
-                                    child: Text(
-                                      userState.nickname?.trim().isNotEmpty ==
-                                              true
-                                          ? userState.nickname!
-                                          : '닉네임 정보가 없습니다.',
-                                      style: TextStyle(
-                                        fontSize: isMobile ? 14 : 15,
-                                        color: HomeTheme.textMain,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    child: _buildNicknameWithPublicCode(
+                                      isMobile: isMobile,
+                                      nickname: userState.nickname,
+                                      publicCode: userState.publicCode,
                                     ),
                                   ),
                               ],
@@ -589,6 +649,13 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 40),
+                      const UserManagementSectionTitle(text: '내 임시저장 글'),
+                      const SizedBox(height: 16),
+                      _MyDraftPostSection(
+                        postPageAsync: myDraftPostPageAsync,
+                        onRetry: () => ref.invalidate(myDraftPostPageProvider),
+                      ),
                       if (isEditingProfile) ...[
                         const SizedBox(height: 48),
                         Container(
@@ -656,4 +723,214 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
       ),
     );
   }
+}
+
+class _MyDraftPostSection extends StatelessWidget {
+  const _MyDraftPostSection({
+    required this.postPageAsync,
+    required this.onRetry,
+  });
+
+  final AsyncValue<PostPage> postPageAsync;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return postPageAsync.when(
+      data: (page) {
+        if (page.items.isEmpty) {
+          return const _DraftSectionFeedback(message: '임시저장한 글이 없습니다.');
+        }
+
+        final children = <Widget>[];
+        for (var index = 0; index < page.items.length; index++) {
+          final post = page.items[index];
+          children.add(_DraftPostCard(post: post));
+          if (index != page.items.length - 1) {
+            children.add(const SizedBox(height: 12));
+          }
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 18),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (_, __) => _DraftSectionFeedback(
+        message: '임시저장 글을 불러오지 못했습니다.',
+        actionLabel: '다시 시도',
+        onAction: onRetry,
+      ),
+    );
+  }
+}
+
+class _DraftPostCard extends StatelessWidget {
+  const _DraftPostCard({
+    required this.post,
+  });
+
+  final Post post;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+
+    return InkWell(
+      onTap: () => context.go('/articles/${post.id}'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 14 : 18,
+          vertical: isMobile ? 14 : 16,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC).withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HomeTheme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'DRAFT',
+                    style: TextStyle(
+                      color: HomeTheme.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _formatKoreanDate(post.updatedAt),
+                  style: TextStyle(
+                    color: HomeTheme.textMuted,
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              post.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: HomeTheme.textMain,
+                fontSize: isMobile ? 17 : 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _extractSummary(post.contentMarkdown),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: HomeTheme.textMuted,
+                fontSize: isMobile ? 12 : 13,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DraftSectionFeedback extends StatelessWidget {
+  const _DraftSectionFeedback({
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC).withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(
+              color: HomeTheme.textMuted,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: onAction,
+              child: Text(actionLabel!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+String _formatKoreanDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  return '${local.year}년 ${local.month}월 ${local.day}일';
+}
+
+String _extractSummary(String markdown) {
+  final plainText = markdown
+      .replaceAll(RegExp(r'!\[[^\]]*\]\([^)]*\)'), ' ')
+      .replaceAll(RegExp(r'\[[^\]]*\]\([^)]*\)'), ' ')
+      .replaceAll(RegExp(r'[#>*`~_\-\[\]()]'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+
+  if (plainText.isEmpty) {
+    return '본문 내용이 없습니다.';
+  }
+
+  const maxLength = 120;
+  if (plainText.length <= maxLength) {
+    return plainText;
+  }
+
+  return '${plainText.substring(0, maxLength)}...';
 }

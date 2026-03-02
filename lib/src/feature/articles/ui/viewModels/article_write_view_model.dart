@@ -179,7 +179,9 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     }
     final hasThumbnailImage = (state.thumbnailBytes?.isNotEmpty ?? false) &&
         (state.thumbnailFileName?.isNotEmpty ?? false);
-    if (!hasThumbnailImage) {
+    final hasThumbnailUrl = (state.thumbnailUrl?.trim().isNotEmpty ?? false);
+    final requiresThumbnail = status.trim().toLowerCase() == 'published';
+    if (requiresThumbnail && !hasThumbnailImage && !hasThumbnailUrl) {
       state = state.copyWith(
         errorMsg: '썸네일 이미지를 선택해주세요.',
         successMsg: '',

@@ -23,6 +23,7 @@ class HomePage extends ConsumerWidget {
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
     final nickname = userState.nickname ?? '동아리원';
+    final publicCode = userState.publicCode;
     final profileImageUrl = userState.profileImageUrl;
 
     return Scaffold(
@@ -39,6 +40,7 @@ class HomePage extends ConsumerWidget {
             titleSpacing: 0,
             title: HomeTopBarSection(
               nickname: nickname,
+              publicCode: publicCode,
               profileImageUrl: profileImageUrl,
               isLoggedIn: isLoggedIn,
               onGoHome: () => context.go('/'),

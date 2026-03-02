@@ -126,6 +126,48 @@ void main() {
       );
       expect(files.any((entry) => entry.key == 'thumbnail'), isFalse);
     });
+
+    test('getDraftPosts는 /v1/posts/drafts/me 경로와 인증 헤더로 조회한다', () async {
+      RequestOptions? capturedOptions;
+
+      final dio = Dio()
+        ..interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              capturedOptions = options;
+              handler.resolve(
+                Response<Map<String, dynamic>>(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: <String, dynamic>{
+                    'success': true,
+                    'data': <String, dynamic>{
+                      'items': <Map<String, dynamic>>[],
+                      'page': 0,
+                      'size': 20,
+                      'totalElements': 0,
+                      'totalPages': 0,
+                    },
+                    'error': null,
+                  },
+                ),
+              );
+            },
+          ),
+        );
+
+      final datasource = PostRemoteDatasourceImpl(dio);
+      await datasource.getDraftPosts('Bearer access-token', 0, 20);
+
+      expect(capturedOptions, isNotNull);
+      expect(capturedOptions!.path, '/v1/posts/drafts/me');
+      expect(capturedOptions!.method, 'GET');
+      expect(capturedOptions!.headers['Authorization'], 'Bearer access-token');
+      expect(capturedOptions!.queryParameters, <String, dynamic>{
+        'page': 0,
+        'size': 20,
+      });
+    });
   });
 }
 
