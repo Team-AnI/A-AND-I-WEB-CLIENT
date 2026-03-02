@@ -19,6 +19,7 @@ mixin _$PostResponseDto {
   String get contentMarkdown;
   String? get thumbnailUrl;
   PostAuthorResponseDto get author;
+  List<PostAuthorResponseDto> get collaborators;
   String get status;
   DateTime get createdAt;
   DateTime get updatedAt;
@@ -46,6 +47,8 @@ mixin _$PostResponseDto {
             (identical(other.thumbnailUrl, thumbnailUrl) ||
                 other.thumbnailUrl == thumbnailUrl) &&
             (identical(other.author, author) || other.author == author) &&
+            const DeepCollectionEquality()
+                .equals(other.collaborators, collaborators) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
@@ -55,12 +58,21 @@ mixin _$PostResponseDto {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, title, contentMarkdown,
-      thumbnailUrl, author, status, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      title,
+      contentMarkdown,
+      thumbnailUrl,
+      author,
+      const DeepCollectionEquality().hash(collaborators),
+      status,
+      createdAt,
+      updatedAt);
 
   @override
   String toString() {
-    return 'PostResponseDto(id: $id, title: $title, contentMarkdown: $contentMarkdown, thumbnailUrl: $thumbnailUrl, author: $author, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PostResponseDto(id: $id, title: $title, contentMarkdown: $contentMarkdown, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -76,6 +88,7 @@ abstract mixin class $PostResponseDtoCopyWith<$Res> {
       String contentMarkdown,
       String? thumbnailUrl,
       PostAuthorResponseDto author,
+      List<PostAuthorResponseDto> collaborators,
       String status,
       DateTime createdAt,
       DateTime updatedAt});
@@ -101,6 +114,7 @@ class _$PostResponseDtoCopyWithImpl<$Res>
     Object? contentMarkdown = null,
     Object? thumbnailUrl = freezed,
     Object? author = null,
+    Object? collaborators = null,
     Object? status = null,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -126,6 +140,10 @@ class _$PostResponseDtoCopyWithImpl<$Res>
           ? _self.author
           : author // ignore: cast_nullable_to_non_nullable
               as PostAuthorResponseDto,
+      collaborators: null == collaborators
+          ? _self.collaborators
+          : collaborators // ignore: cast_nullable_to_non_nullable
+              as List<PostAuthorResponseDto>,
       status: null == status
           ? _self.status
           : status // ignore: cast_nullable_to_non_nullable
@@ -249,6 +267,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
             String contentMarkdown,
             String? thumbnailUrl,
             PostAuthorResponseDto author,
+            List<PostAuthorResponseDto> collaborators,
             String status,
             DateTime createdAt,
             DateTime updatedAt)?
@@ -264,6 +283,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
             _that.contentMarkdown,
             _that.thumbnailUrl,
             _that.author,
+            _that.collaborators,
             _that.status,
             _that.createdAt,
             _that.updatedAt);
@@ -293,6 +313,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
             String contentMarkdown,
             String? thumbnailUrl,
             PostAuthorResponseDto author,
+            List<PostAuthorResponseDto> collaborators,
             String status,
             DateTime createdAt,
             DateTime updatedAt)
@@ -307,6 +328,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
             _that.contentMarkdown,
             _that.thumbnailUrl,
             _that.author,
+            _that.collaborators,
             _that.status,
             _that.createdAt,
             _that.updatedAt);
@@ -333,6 +355,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
             String contentMarkdown,
             String? thumbnailUrl,
             PostAuthorResponseDto author,
+            List<PostAuthorResponseDto> collaborators,
             String status,
             DateTime createdAt,
             DateTime updatedAt)?
@@ -347,6 +370,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
             _that.contentMarkdown,
             _that.thumbnailUrl,
             _that.author,
+            _that.collaborators,
             _that.status,
             _that.createdAt,
             _that.updatedAt);
@@ -365,9 +389,12 @@ class _PostResponseDto implements PostResponseDto {
       required this.contentMarkdown,
       this.thumbnailUrl,
       required this.author,
+      final List<PostAuthorResponseDto> collaborators =
+          const <PostAuthorResponseDto>[],
       required this.status,
       required this.createdAt,
-      required this.updatedAt});
+      required this.updatedAt})
+      : _collaborators = collaborators;
   factory _PostResponseDto.fromJson(Map<String, dynamic> json) =>
       _$PostResponseDtoFromJson(json);
 
@@ -381,6 +408,15 @@ class _PostResponseDto implements PostResponseDto {
   final String? thumbnailUrl;
   @override
   final PostAuthorResponseDto author;
+  final List<PostAuthorResponseDto> _collaborators;
+  @override
+  @JsonKey()
+  List<PostAuthorResponseDto> get collaborators {
+    if (_collaborators is EqualUnmodifiableListView) return _collaborators;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_collaborators);
+  }
+
   @override
   final String status;
   @override
@@ -415,6 +451,8 @@ class _PostResponseDto implements PostResponseDto {
             (identical(other.thumbnailUrl, thumbnailUrl) ||
                 other.thumbnailUrl == thumbnailUrl) &&
             (identical(other.author, author) || other.author == author) &&
+            const DeepCollectionEquality()
+                .equals(other._collaborators, _collaborators) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
@@ -424,12 +462,21 @@ class _PostResponseDto implements PostResponseDto {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, title, contentMarkdown,
-      thumbnailUrl, author, status, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      title,
+      contentMarkdown,
+      thumbnailUrl,
+      author,
+      const DeepCollectionEquality().hash(_collaborators),
+      status,
+      createdAt,
+      updatedAt);
 
   @override
   String toString() {
-    return 'PostResponseDto(id: $id, title: $title, contentMarkdown: $contentMarkdown, thumbnailUrl: $thumbnailUrl, author: $author, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PostResponseDto(id: $id, title: $title, contentMarkdown: $contentMarkdown, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -447,6 +494,7 @@ abstract mixin class _$PostResponseDtoCopyWith<$Res>
       String contentMarkdown,
       String? thumbnailUrl,
       PostAuthorResponseDto author,
+      List<PostAuthorResponseDto> collaborators,
       String status,
       DateTime createdAt,
       DateTime updatedAt});
@@ -473,6 +521,7 @@ class __$PostResponseDtoCopyWithImpl<$Res>
     Object? contentMarkdown = null,
     Object? thumbnailUrl = freezed,
     Object? author = null,
+    Object? collaborators = null,
     Object? status = null,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -498,6 +547,10 @@ class __$PostResponseDtoCopyWithImpl<$Res>
           ? _self.author
           : author // ignore: cast_nullable_to_non_nullable
               as PostAuthorResponseDto,
+      collaborators: null == collaborators
+          ? _self._collaborators
+          : collaborators // ignore: cast_nullable_to_non_nullable
+              as List<PostAuthorResponseDto>,
       status: null == status
           ? _self.status
           : status // ignore: cast_nullable_to_non_nullable

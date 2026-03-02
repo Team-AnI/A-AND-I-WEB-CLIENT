@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/collaborator_lookup_user.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/create_post_payload.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/image_upload_payload.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/patch_post_payload.dart';
@@ -135,11 +136,12 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     required String title,
     required String contentMarkdown,
   }) async {
+    final isEditingPublishedPost = _isEditingPublishedPost();
     return _submit(
       title: title,
       contentMarkdown: contentMarkdown,
       status: 'Draft',
-      successMsg: '임시저장되었습니다.',
+      successMsg: isEditingPublishedPost ? '수정사항이 임시저장되었습니다.' : '임시저장되었습니다.',
     );
   }
 
@@ -148,17 +150,105 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     required String title,
     required String contentMarkdown,
   }) async {
+    final isEditingPublishedPost = _isEditingPublishedPost();
     return _submit(
       title: title,
       contentMarkdown: contentMarkdown,
       status: 'Published',
-      successMsg: '포스트가 출간되었습니다.',
+      successMsg: isEditingPublishedPost ? '포스트가 수정되었습니다.' : '포스트가 출간되었습니다.',
+    );
+  }
+
+  /// 기존 게시글을 수정 모드로 전환합니다.
+  void startEditing(Post post) {
+    state = state.copyWith(
+      postId: post.id,
+      editingPostStatus: post.status,
+      title: post.title,
+      contentMarkdown: post.contentMarkdown,
+      summary: '',
+      tags: const <String>[],
+      collaborators: post.collaborators,
+      thumbnailUrl: post.thumbnailUrl,
+      thumbnailBytes: null,
+      thumbnailFileName: null,
+      isUploadingImage: false,
+      isSubmitting: false,
+      errorMsg: '',
+      successMsg: '',
     );
   }
 
   /// 작성 상태를 초기화합니다.
   void reset() {
     state = const ArticleWriteState();
+  }
+
+  /// 공개 코드로 협업자를 조회합니다.
+  Future<CollaboratorLookupUser?> lookupCollaboratorByCode({
+    required String code,
+  }) async {
+    _ensureCanManageArticles();
+    final normalizedCode = code.trim();
+    if (normalizedCode.isEmpty) {
+      return null;
+    }
+    return ref
+        .read(lookupCollaboratorByCodeUsecaseProvider)
+        .call(code: normalizedCode);
+  }
+
+  /// 조회된 협업자를 작성 상태에 추가합니다.
+  bool addCollaborator(CollaboratorLookupUser collaborator) {
+    final normalizedId = collaborator.id.trim();
+    final normalizedNickname = collaborator.nickname.trim();
+    if (normalizedId.isEmpty || normalizedNickname.isEmpty) {
+      return false;
+    }
+
+    final myUserId = ref.read(userViewModelProvider).userId?.trim();
+    if (myUserId != null && myUserId.isNotEmpty && myUserId == normalizedId) {
+      return false;
+    }
+
+    final alreadyExists =
+        state.collaborators.any((item) => item.id == normalizedId);
+    if (alreadyExists) {
+      return false;
+    }
+
+    final normalizedProfileImage = collaborator.profileImageUrl?.trim();
+    state = state.copyWith(
+      collaborators: <PostAuthor>[
+        ...state.collaborators,
+        PostAuthor(
+          id: normalizedId,
+          nickname: normalizedNickname,
+          profileImage:
+              normalizedProfileImage == null || normalizedProfileImage.isEmpty
+                  ? null
+                  : normalizedProfileImage,
+        ),
+      ],
+      errorMsg: '',
+      successMsg: '',
+    );
+    return true;
+  }
+
+  /// 작성 상태에서 협업자를 제거합니다.
+  void removeCollaborator(String collaboratorId) {
+    final normalizedId = collaboratorId.trim();
+    if (normalizedId.isEmpty) {
+      return;
+    }
+
+    state = state.copyWith(
+      collaborators:
+          state.collaborators.where((item) => item.id != normalizedId).toList(),
+      errorMsg: '',
+      successMsg: '',
+    );
   }
 
   Future<bool> _submit({
@@ -173,17 +263,9 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
       state = state.copyWith(errorMsg: '제목을 입력해주세요.', successMsg: '');
       return false;
     }
-    if (normalizedContent.isEmpty) {
+    final isPublished = status.trim().toLowerCase() == 'published';
+    if (isPublished && normalizedContent.isEmpty) {
       state = state.copyWith(errorMsg: '본문을 입력해주세요.', successMsg: '');
-      return false;
-    }
-    final hasThumbnailImage = (state.thumbnailBytes?.isNotEmpty ?? false) &&
-        (state.thumbnailFileName?.isNotEmpty ?? false);
-    if (!hasThumbnailImage) {
-      state = state.copyWith(
-        errorMsg: '썸네일 이미지를 선택해주세요.',
-        successMsg: '',
-      );
       return false;
     }
 
@@ -210,6 +292,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
                 authorNickname: authorInfo.nickname,
                 authorProfileImageUrl: authorInfo.profileImageUrl,
                 status: status,
+                collaborators: state.collaborators,
                 imageFileName: imageFileName,
                 imageBytes: imageBytes,
               ),
@@ -217,8 +300,10 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
 
         state = state.copyWith(
           postId: createdPost.id,
+          editingPostStatus: createdPost.status,
           title: createdPost.title,
           contentMarkdown: createdPost.contentMarkdown,
+          collaborators: createdPost.collaborators,
           isSubmitting: false,
           successMsg: successMsg,
         );
@@ -232,6 +317,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
               title: normalizedTitle,
               contentMarkdown: normalizedContent,
               status: status,
+              collaborators: state.collaborators,
               imageFileName: imageFileName,
               imageBytes: imageBytes,
             ),
@@ -239,8 +325,10 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
 
       state = state.copyWith(
         postId: patchedPost.id,
+        editingPostStatus: patchedPost.status,
         title: patchedPost.title,
         contentMarkdown: patchedPost.contentMarkdown,
+        collaborators: patchedPost.collaborators,
         isSubmitting: false,
         successMsg: successMsg,
       );
@@ -307,6 +395,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
         nickname: normalizedNickname,
         profileImage: normalizedProfileImage,
       ),
+      collaborators: post.collaborators,
       status: post.status,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
@@ -315,5 +404,13 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     ref
         .read(articleListViewModelProvider.notifier)
         .upsertPublishedPost(normalizedPost);
+  }
+
+  bool _isEditingPublishedPost() {
+    final hasEditingTarget = state.postId.trim().isNotEmpty;
+    if (!hasEditingTarget) {
+      return false;
+    }
+    return state.editingPostStatus.trim().toLowerCase() == 'published';
   }
 }

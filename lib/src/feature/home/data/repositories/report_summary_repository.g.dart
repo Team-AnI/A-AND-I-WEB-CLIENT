@@ -36,7 +36,7 @@ class _ReportSummaryRepository implements ReportSummaryRepository {
       )
           .compose(
             _dio.options,
-            '/api/report',
+            '/v1/report',
             queryParameters: queryParameters,
             data: _data,
           )

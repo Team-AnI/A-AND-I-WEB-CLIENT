@@ -9,6 +9,7 @@ class Post {
     required this.contentMarkdown,
     this.thumbnailUrl,
     required this.author,
+    this.collaborators = const <PostAuthor>[],
     required this.status,
     required this.createdAt,
     required this.updatedAt,
@@ -28,6 +29,9 @@ class Post {
 
   /// 작성자 정보입니다.
   final PostAuthor author;
+
+  /// 공동 작업자 목록입니다.
+  final List<PostAuthor> collaborators;
 
   /// 게시글 상태입니다. (예: Draft, Published)
   final String status;

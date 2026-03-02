@@ -38,45 +38,40 @@ class ArticlePreviewPanel extends StatelessWidget {
             horizontalPadding,
             40,
           ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: SizedBox(
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      displayTitle,
-                      style: TextStyle(
-                        color: HomeTheme.textMain,
-                        fontSize: isMobile ? 34 : 46,
-                        fontWeight: FontWeight.w800,
-                        height: 1.2,
-                        letterSpacing: -1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    if (hasBody)
-                      MarkdownBody(
-                        data: normalizedMarkdown,
-                        selectable: true,
-                        fitContent: false,
-                        styleSheet: markdownStyle,
-                        syntaxHighlighter: codeSyntaxHighlighter,
-                      )
-                    else
-                      const Text(
-                        '본문을 입력하면 프리뷰가 표시됩니다.',
-                        style: TextStyle(
-                          color: HomeTheme.textMuted,
-                          fontSize: 16,
-                          height: 1.8,
-                        ),
-                      ),
-                  ],
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  displayTitle,
+                  style: TextStyle(
+                    color: HomeTheme.textMain,
+                    fontSize: isMobile ? 34 : 46,
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
+                    letterSpacing: -1.5,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 28),
+                if (hasBody)
+                  MarkdownBody(
+                    data: normalizedMarkdown,
+                    selectable: true,
+                    fitContent: false,
+                    styleSheet: markdownStyle,
+                    syntaxHighlighter: codeSyntaxHighlighter,
+                  )
+                else
+                  const Text(
+                    '본문을 입력하면 프리뷰가 표시됩니다.',
+                    style: TextStyle(
+                      color: HomeTheme.textMuted,
+                      fontSize: 16,
+                      height: 1.8,
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

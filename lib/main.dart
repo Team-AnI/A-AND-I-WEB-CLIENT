@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:a_and_i_report_web_server/src/core/routes/route_config.dart';
 import 'package:a_and_i_report_web_server/src/core/theme/app_theme.dart';
@@ -28,11 +27,34 @@ Future<void> main() async {
 ///
 /// [MaterialApp.router]를 사용하여 [goRouterProvider]에서 정의된 라우팅 설정을 적용합니다.
 /// 앱 전반에 걸친 테마([theme])와 디버그 배너 설정을 관리합니다.
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    // Viewport 크기 변경 시 강제 rebuild
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final goRouter = ref.watch(goRouterProvider);
     return MaterialApp.router(
       title: "A&I",
@@ -41,20 +63,6 @@ class MyApp extends ConsumerWidget {
       routerConfig: goRouter,
       theme: theme,
       scrollBehavior: const AppScrollBehavior(),
-      builder: (context, child) {
-        if (child == null || !_shouldOverrideWebIosInsets()) {
-          return child ?? const SizedBox.shrink();
-        }
-
-        final mediaQuery = MediaQuery.of(context);
-        return MediaQuery(
-          data: mediaQuery.copyWith(
-            padding: EdgeInsets.zero,
-            viewPadding: EdgeInsets.zero,
-          ),
-          child: child,
-        );
-      },
     );
   }
 }
@@ -68,8 +76,4 @@ class AppScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.mouse,
         PointerDeviceKind.trackpad,
       };
-}
-
-bool _shouldOverrideWebIosInsets() {
-  return kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 }

@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/collaborator_lookup_user.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,12 +20,17 @@ class ArticleConfirmView extends ConsumerStatefulWidget {
 
 class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
   late final TextEditingController summaryController;
+  late final TextEditingController collaboratorCodeController;
+  CollaboratorLookupUser? lookupCollaborator;
+  String collaboratorLookupMessage = '';
+  bool isLookingUpCollaborator = false;
 
   @override
   void initState() {
     super.initState();
     final composeState = ref.read(articleWriteViewModelProvider);
     summaryController = TextEditingController(text: composeState.summary);
+    collaboratorCodeController = TextEditingController();
     summaryController.addListener(_syncSummary);
   }
 
@@ -31,6 +38,7 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
   void dispose() {
     summaryController.removeListener(_syncSummary);
     summaryController.dispose();
+    collaboratorCodeController.dispose();
     super.dispose();
   }
 
@@ -51,6 +59,8 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
     }
 
     final composeState = ref.watch(articleWriteViewModelProvider);
+    final isEditingPublished = composeState.postId.trim().isNotEmpty &&
+        composeState.editingPostStatus.trim().toLowerCase() == 'published';
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
     final isTablet = width >= 768 && width < 1200;
@@ -77,7 +87,7 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                       Column(
                         children: [
                           Text(
-                            '포스트 출간 설정',
+                            isEditingPublished ? '포스트 수정 설정' : '포스트 출간 설정',
                             style: TextStyle(
                               fontSize: isMobile ? 28 : (isTablet ? 32 : 34),
                               fontWeight: FontWeight.w800,
@@ -100,10 +110,18 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                       SizedBox(height: isMobile ? 26 : (isTablet ? 40 : 56)),
                       ConfirmPreviewSection(
                         summaryController: summaryController,
+                        collaboratorCodeController: collaboratorCodeController,
                         thumbnailUrl: composeState.thumbnailUrl,
                         thumbnailBytes: composeState.thumbnailBytes,
+                        collaborators: composeState.collaborators,
+                        lookupCollaborator: lookupCollaborator,
+                        collaboratorLookupMessage: collaboratorLookupMessage,
+                        isLookingUpCollaborator: isLookingUpCollaborator,
                         isUploadingImage: composeState.isUploadingImage,
                         onPickThumbnail: () => onTapPickThumbnail(context),
+                        onLookupCollaborator: onTapLookupCollaborator,
+                        onAddCollaborator: onTapAddCollaborator,
+                        onRemoveCollaborator: onTapRemoveCollaborator,
                         isMobile: isMobile,
                         isTablet: isTablet,
                       ),
@@ -147,7 +165,40 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                               child: const Text('취소'),
                             ),
                             SizedBox(
-                              width: isMobile ? 0 : 34,
+                              width: isMobile ? 0 : 12,
+                              height: isMobile ? 12 : 0,
+                            ),
+                            TextButton(
+                              onPressed: composeState.isSubmitting ||
+                                      composeState.isUploadingImage
+                                  ? null
+                                  : () => onTapSaveDraft(context),
+                              style: TextButton.styleFrom(
+                                backgroundColor: const Color(0xFFF3F4F6),
+                                foregroundColor: const Color(0xFF374151),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 14,
+                                ),
+                                minimumSize: Size(
+                                  isMobile ? double.infinity : 0,
+                                  48,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                              child: Text(
+                                isEditingPublished ? '수정 저장' : '임시저장',
+                              ),
+                            ),
+                            SizedBox(
+                              width: isMobile ? 0 : 12,
                               height: isMobile ? 12 : 0,
                             ),
                             FilledButton(
@@ -175,7 +226,9 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                                   letterSpacing: 0.2,
                                 ),
                               ),
-                              child: const Text('출간하기'),
+                              child: Text(
+                                isEditingPublished ? '수정 완료' : '출간하기',
+                              ),
                             ),
                           ],
                         ),
@@ -241,6 +294,98 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
     context.go('/articles');
   }
 
+  Future<void> onTapSaveDraft(BuildContext context) async {
+    final composeState = ref.read(articleWriteViewModelProvider);
+    final success =
+        await ref.read(articleWriteViewModelProvider.notifier).saveDraft(
+              title: composeState.title,
+              contentMarkdown: composeState.contentMarkdown,
+            );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    final nextState = ref.read(articleWriteViewModelProvider);
+    if (!success) {
+      _showMessage(
+        context,
+        nextState.errorMsg.isEmpty ? '임시저장에 실패했습니다.' : nextState.errorMsg,
+      );
+      return;
+    }
+
+    _showMessage(context, nextState.successMsg);
+  }
+
+  Future<void> onTapLookupCollaborator() async {
+    final code = collaboratorCodeController.text.trim();
+    if (code.isEmpty) {
+      setState(() {
+        lookupCollaborator = null;
+        collaboratorLookupMessage = '협업자 코드를 입력해주세요.';
+      });
+      return;
+    }
+
+    setState(() {
+      isLookingUpCollaborator = true;
+      collaboratorLookupMessage = '';
+    });
+
+    try {
+      final result = await ref
+          .read(articleWriteViewModelProvider.notifier)
+          .lookupCollaboratorByCode(code: code);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        isLookingUpCollaborator = false;
+        lookupCollaborator = result;
+        collaboratorLookupMessage =
+            result == null ? '해당 코드의 사용자를 찾을 수 없습니다.' : '';
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        isLookingUpCollaborator = false;
+        lookupCollaborator = null;
+        collaboratorLookupMessage = '협업자 조회 중 오류가 발생했습니다.';
+      });
+    }
+  }
+
+  void onTapAddCollaborator() {
+    final collaborator = lookupCollaborator;
+    if (collaborator == null) {
+      return;
+    }
+
+    final added =
+        ref.read(articleWriteViewModelProvider.notifier).addCollaborator(
+              collaborator,
+            );
+    setState(() {
+      if (added) {
+        collaboratorCodeController.clear();
+        lookupCollaborator = null;
+        collaboratorLookupMessage = '협업자를 추가했습니다.';
+        return;
+      }
+      collaboratorLookupMessage = '이미 추가했거나 본인은 협업자로 추가할 수 없습니다.';
+    });
+  }
+
+  void onTapRemoveCollaborator(String collaboratorId) {
+    ref
+        .read(articleWriteViewModelProvider.notifier)
+        .removeCollaborator(collaboratorId);
+  }
+
   void _syncSummary() {
     ref
         .read(articleWriteViewModelProvider.notifier)
@@ -268,19 +413,35 @@ class ConfirmPreviewSection extends StatelessWidget {
   const ConfirmPreviewSection({
     super.key,
     required this.summaryController,
+    required this.collaboratorCodeController,
     required this.thumbnailUrl,
     required this.thumbnailBytes,
+    required this.collaborators,
+    required this.lookupCollaborator,
+    required this.collaboratorLookupMessage,
+    required this.isLookingUpCollaborator,
     required this.isUploadingImage,
     required this.onPickThumbnail,
+    required this.onLookupCollaborator,
+    required this.onAddCollaborator,
+    required this.onRemoveCollaborator,
     required this.isMobile,
     required this.isTablet,
   });
 
   final TextEditingController summaryController;
+  final TextEditingController collaboratorCodeController;
   final String? thumbnailUrl;
   final Uint8List? thumbnailBytes;
+  final List<PostAuthor> collaborators;
+  final CollaboratorLookupUser? lookupCollaborator;
+  final String collaboratorLookupMessage;
+  final bool isLookingUpCollaborator;
   final bool isUploadingImage;
   final VoidCallback onPickThumbnail;
+  final VoidCallback onLookupCollaborator;
+  final VoidCallback onAddCollaborator;
+  final ValueChanged<String> onRemoveCollaborator;
   final bool isMobile;
   final bool isTablet;
 
@@ -441,7 +602,249 @@ class ConfirmPreviewSection extends StatelessWidget {
             ),
           ],
         ),
+        SizedBox(height: isMobile ? 18 : 24),
+        const Text(
+          '공동 작성자',
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(0xFF1F2937),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: collaboratorCodeController,
+                decoration: const InputDecoration(
+                  filled: true,
+                  fillColor: Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Color(0xFFF3F4F6)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+                  ),
+                  hintText: '공개 코드 입력 (예: #OR009)',
+                  isDense: true,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(
+              onPressed: isLookingUpCollaborator ? null : onLookupCollaborator,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(64, 44),
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                '조회',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (isLookingUpCollaborator)
+          const Padding(
+            padding: EdgeInsets.only(top: 10),
+            child: LinearProgressIndicator(minHeight: 2),
+          ),
+        if (collaboratorLookupMessage.trim().isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              collaboratorLookupMessage,
+              style: const TextStyle(
+                color: Color(0xFF6B7280),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        if (lookupCollaborator != null)
+          Container(
+            margin: const EdgeInsets.only(top: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFF3F4F6)),
+            ),
+            child: Row(
+              children: [
+                _CollaboratorAvatar(
+                  profileImageUrl: lookupCollaborator!.profileImageUrl,
+                  size: 34,
+                  iconSize: 18,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lookupCollaborator!.nickname,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF111827),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (lookupCollaborator!.publicCode != null &&
+                          lookupCollaborator!.publicCode!.trim().isNotEmpty)
+                        Text(
+                          lookupCollaborator!.publicCode!,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: onAddCollaborator,
+                  child: const Text('추가'),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 10),
+        if (collaborators.isEmpty)
+          const Text(
+            '추가된 협업자가 없습니다.',
+            style: TextStyle(
+              color: Color(0xFF9CA3AF),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: collaborators
+                .map(
+                  (collaborator) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _CollaboratorAvatar(
+                          profileImageUrl: collaborator.profileImage,
+                          size: 20,
+                          iconSize: 12,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          collaborator.nickname,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF111827),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        InkWell(
+                          onTap: () => onRemoveCollaborator(collaborator.id),
+                          borderRadius: BorderRadius.circular(999),
+                          child: const Padding(
+                            padding: EdgeInsets.all(2),
+                            child: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
       ],
+    );
+  }
+}
+
+class _CollaboratorAvatar extends StatelessWidget {
+  const _CollaboratorAvatar({
+    required this.profileImageUrl,
+    this.size = 24,
+    this.iconSize = 14,
+  });
+
+  final String? profileImageUrl;
+  final double size;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = profileImageUrl?.trim();
+    if (url == null || url.isEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE5E7EB),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Icon(
+          Icons.person,
+          size: iconSize,
+          color: const Color(0xFF6B7280),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: Image.network(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE5E7EB),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Icon(
+            Icons.person,
+            size: iconSize,
+            color: const Color(0xFF6B7280),
+          ),
+        ),
+      ),
     );
   }
 }

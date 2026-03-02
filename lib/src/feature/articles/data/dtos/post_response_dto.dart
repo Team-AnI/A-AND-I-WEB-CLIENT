@@ -14,6 +14,8 @@ sealed class PostResponseDto with _$PostResponseDto {
     required String contentMarkdown,
     String? thumbnailUrl,
     required PostAuthorResponseDto author,
+    @Default(<PostAuthorResponseDto>[])
+    List<PostAuthorResponseDto> collaborators,
     required String status,
     required DateTime createdAt,
     required DateTime updatedAt,

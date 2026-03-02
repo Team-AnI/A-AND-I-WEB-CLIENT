@@ -1,4 +1,8 @@
 import 'package:a_and_i_report_web_server/src/core/models/user.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
@@ -18,6 +22,27 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+final myWrittenPostsProvider =
+    FutureProvider.autoDispose.family<List<Post>, String>(
+  (ref, userId) async {
+    final response = await ref.read(getPostListUsecaseProvider).call(
+          page: 0,
+          size: 100,
+        );
+    final normalizedUserId = userId.trim();
+    final posts = response.items.where((post) {
+      final authorId = post.author.id.trim();
+      if (authorId != normalizedUserId) {
+        return false;
+      }
+      final normalizedStatus = post.status.trim().toLowerCase();
+      return normalizedStatus != 'draft' && normalizedStatus != 'deleted';
+    }).toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return posts;
+  },
+);
+
 /// 사용자 계정 정보 관리 화면이다.
 class UserManagermentView extends ConsumerStatefulWidget {
   const UserManagermentView({super.key});
@@ -35,6 +60,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
   String? syncedNickname;
   bool isEditingProfile = false;
   bool isSubmitting = false;
+  int selectedPostTabIndex = 0;
 
   @override
   void dispose() {
@@ -66,13 +92,73 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     synchronizeNicknameFromState(nickname);
   }
 
+  Widget _buildNicknameWithPublicCode({
+    required bool isMobile,
+    required String? nickname,
+    required String? publicCode,
+  }) {
+    final resolvedNickname = nickname?.trim();
+    final resolvedPublicCode = publicCode?.trim();
+
+    if (resolvedNickname == null || resolvedNickname.isEmpty) {
+      return Text(
+        '닉네임 정보가 없습니다.',
+        style: TextStyle(
+          fontSize: isMobile ? 14 : 15,
+          color: HomeTheme.textMain,
+          fontWeight: FontWeight.w500,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          resolvedNickname,
+          style: TextStyle(
+            fontSize: isMobile ? 14 : 15,
+            color: HomeTheme.textMain,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        if (resolvedPublicCode != null && resolvedPublicCode.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
+            ),
+            child: Text(
+              resolvedPublicCode,
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.1,
+                color: Color(0xFF1D4ED8),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   User? resolveMergedUser(
     User? updatedUser,
     UserViewState userState, {
     required String? requestNickname,
   }) {
     if (updatedUser != null) {
-      return updatedUser;
+      final fallbackPublicCode = userState.publicCode?.trim();
+      final mergedPublicCode = updatedUser.publicCode?.trim();
+      return updatedUser.copyWith(
+        publicCode: mergedPublicCode?.isNotEmpty == true
+            ? mergedPublicCode
+            : fallbackPublicCode,
+      );
     }
 
     final currentUser = userState.user;
@@ -311,7 +397,13 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
+    final myDraftPostPageAsync = ref.watch(myDraftPostPageProvider);
+    final myWrittenPostsAsync =
+        (userState.userId == null || userState.userId!.trim().isEmpty)
+            ? const AsyncValue<List<Post>>.data(<Post>[])
+            : ref.watch(myWrittenPostsProvider(userState.userId!.trim()));
     final topBarNickname = userState.nickname ?? '동아리원';
+    final topBarPublicCode = userState.publicCode;
     final topBarProfileImageUrl = userState.profileImageUrl;
 
     synchronizeNicknameFromState(userState.nickname);
@@ -336,6 +428,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
             titleSpacing: 0,
             title: HomeTopBarSection(
               nickname: topBarNickname,
+              publicCode: topBarPublicCode,
               profileImageUrl: topBarProfileImageUrl,
               isLoggedIn: isLoggedIn,
               onGoIntro: () => context.go('/promotion'),
@@ -351,6 +444,8 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                     .read(userViewModelProvider.notifier)
                     .onEvent(const UserViewEvent.clear());
               },
+              onGoFaq: () => context.go("/faq"),
+              onGoHome: () => context.go("/"),
             ),
           ),
           SliverToBoxAdapter(
@@ -505,16 +600,10 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                                             .withValues(alpha: 0.06),
                                       ),
                                     ),
-                                    child: Text(
-                                      userState.nickname?.trim().isNotEmpty ==
-                                              true
-                                          ? userState.nickname!
-                                          : '닉네임 정보가 없습니다.',
-                                      style: TextStyle(
-                                        fontSize: isMobile ? 14 : 15,
-                                        color: HomeTheme.textMain,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    child: _buildNicknameWithPublicCode(
+                                      isMobile: isMobile,
+                                      nickname: userState.nickname,
+                                      publicCode: userState.publicCode,
                                     ),
                                   ),
                               ],
@@ -587,6 +676,34 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 40),
+                      const UserManagementSectionTitle(text: '내 블로그 글'),
+                      const SizedBox(height: 12),
+                      UserPostTabBar(
+                        selectedIndex: selectedPostTabIndex,
+                        onChanged: (index) {
+                          setState(() {
+                            selectedPostTabIndex = index;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      if (selectedPostTabIndex == 0)
+                        UserWrittenPostSection(
+                          postsAsync: myWrittenPostsAsync,
+                          onRetry: () {
+                            final userId = userState.userId?.trim() ?? '';
+                            if (userId.isNotEmpty) {
+                              ref.invalidate(myWrittenPostsProvider(userId));
+                            }
+                          },
+                        )
+                      else
+                        UserDraftPostSection(
+                          postPageAsync: myDraftPostPageAsync,
+                          onRetry: () =>
+                              ref.invalidate(myDraftPostPageProvider),
+                        ),
                       if (isEditingProfile) ...[
                         const SizedBox(height: 48),
                         Container(
@@ -654,4 +771,439 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
       ),
     );
   }
+}
+
+class UserPostTabBar extends StatelessWidget {
+  const UserPostTabBar({
+    super.key,
+    required this.selectedIndex,
+    required this.onChanged,
+  });
+
+  final int selectedIndex;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: UserPostTabButton(
+              label: '내가 작성한 글',
+              selected: selectedIndex == 0,
+              onTap: () => onChanged(0),
+            ),
+          ),
+          Expanded(
+            child: UserPostTabButton(
+              label: '내 임시저장 글',
+              selected: selectedIndex == 1,
+              onTap: () => onChanged(1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class UserPostTabButton extends StatelessWidget {
+  const UserPostTabButton({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: selected
+              ? Border.all(color: const Color(0xFFE5E7EB))
+              : Border.all(color: Colors.transparent),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: selected ? HomeTheme.textMain : HomeTheme.textMuted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class UserWrittenPostSection extends StatelessWidget {
+  const UserWrittenPostSection({
+    super.key,
+    required this.postsAsync,
+    required this.onRetry,
+  });
+
+  final AsyncValue<List<Post>> postsAsync;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return postsAsync.when(
+      data: (posts) {
+        if (posts.isEmpty) {
+          return const UserPostSectionFeedback(message: '작성한 글이 없습니다.');
+        }
+
+        final children = <Widget>[];
+        for (var index = 0; index < posts.length; index++) {
+          final post = posts[index];
+          children.add(UserWrittenPostCard(post: post));
+          if (index != posts.length - 1) {
+            children.add(const SizedBox(height: 12));
+          }
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 18),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (_, __) => UserPostSectionFeedback(
+        message: '작성 글을 불러오지 못했습니다.',
+        actionLabel: '다시 시도',
+        onAction: onRetry,
+      ),
+    );
+  }
+}
+
+class UserWrittenPostCard extends StatelessWidget {
+  const UserWrittenPostCard({
+    super.key,
+    required this.post,
+  });
+
+  final Post post;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+
+    return InkWell(
+      onTap: () => context.go('/articles/${post.id}'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 14 : 18,
+          vertical: isMobile ? 14 : 16,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC).withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HomeTheme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'PUBLISHED',
+                    style: TextStyle(
+                      color: HomeTheme.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _formatKoreanDate(post.updatedAt),
+                  style: TextStyle(
+                    color: HomeTheme.textMuted,
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              post.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: HomeTheme.textMain,
+                fontSize: isMobile ? 17 : 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _extractSummary(post.contentMarkdown),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: HomeTheme.textMuted,
+                fontSize: isMobile ? 12 : 13,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class UserDraftPostSection extends StatelessWidget {
+  const UserDraftPostSection({
+    super.key,
+    required this.postPageAsync,
+    required this.onRetry,
+  });
+
+  final AsyncValue<PostPage> postPageAsync;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return postPageAsync.when(
+      data: (page) {
+        if (page.items.isEmpty) {
+          return const UserPostSectionFeedback(message: '임시저장한 글이 없습니다.');
+        }
+
+        final children = <Widget>[];
+        for (var index = 0; index < page.items.length; index++) {
+          final post = page.items[index];
+          children.add(UserDraftPostCard(post: post));
+          if (index != page.items.length - 1) {
+            children.add(const SizedBox(height: 12));
+          }
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 18),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (_, __) => UserPostSectionFeedback(
+        message: '임시저장 글을 불러오지 못했습니다.',
+        actionLabel: '다시 시도',
+        onAction: onRetry,
+      ),
+    );
+  }
+}
+
+class UserDraftPostCard extends ConsumerWidget {
+  const UserDraftPostCard({
+    super.key,
+    required this.post,
+  });
+
+  final Post post;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+
+    return InkWell(
+      onTap: () {
+        ref.read(articleWriteViewModelProvider.notifier).startEditing(post);
+        context.go('/articles/write');
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 14 : 18,
+          vertical: isMobile ? 14 : 16,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC).withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HomeTheme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'DRAFT',
+                    style: TextStyle(
+                      color: HomeTheme.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _formatKoreanDate(post.updatedAt),
+                  style: TextStyle(
+                    color: HomeTheme.textMuted,
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              post.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: HomeTheme.textMain,
+                fontSize: isMobile ? 17 : 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _extractSummary(post.contentMarkdown),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: HomeTheme.textMuted,
+                fontSize: isMobile ? 12 : 13,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class UserPostSectionFeedback extends StatelessWidget {
+  const UserPostSectionFeedback({
+    super.key,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC).withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(
+              color: HomeTheme.textMuted,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: onAction,
+              child: Text(actionLabel!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+String _formatKoreanDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  return '${local.year}년 ${local.month}월 ${local.day}일';
+}
+
+String _extractSummary(String markdown) {
+  final plainText = markdown
+      .replaceAll(RegExp(r'!\[[^\]]*\]\([^)]*\)'), ' ')
+      .replaceAll(RegExp(r'\[[^\]]*\]\([^)]*\)'), ' ')
+      .replaceAll(RegExp(r'[#>*`~_\-\[\]()]'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+
+  if (plainText.isEmpty) {
+    return '본문 내용이 없습니다.';
+  }
+
+  const maxLength = 120;
+  if (plainText.length <= maxLength) {
+    return plainText;
+  }
+
+  return '${plainText.substring(0, maxLength)}...';
 }

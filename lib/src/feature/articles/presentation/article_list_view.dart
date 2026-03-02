@@ -8,6 +8,7 @@ import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/sections/home_footer_section.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/sections/home_top_bar_section.dart';
@@ -27,6 +28,7 @@ class ArticleListView extends ConsumerWidget {
     final canShowWriteButton =
         isLoggedIn && canManageArticlesWithRole(userState.resolvedRole);
     final nickname = userState.nickname ?? '동아리원';
+    final publicCode = userState.publicCode;
     final profileImageUrl = userState.profileImageUrl;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
@@ -52,6 +54,7 @@ class ArticleListView extends ConsumerWidget {
             titleSpacing: 0,
             title: HomeTopBarSection(
               nickname: nickname,
+              publicCode: publicCode,
               profileImageUrl: profileImageUrl,
               isLoggedIn: isLoggedIn,
               onGoIntro: () => context.go('/promotion'),
@@ -67,6 +70,8 @@ class ArticleListView extends ConsumerWidget {
                     .read(userViewModelProvider.notifier)
                     .onEvent(const UserViewEvent.clear());
               },
+              onGoFaq: () => context.go('/faq'),
+              onGoHome: () => context.go("/"),
             ),
           ),
           SliverToBoxAdapter(
@@ -107,7 +112,12 @@ class ArticleListView extends ConsumerWidget {
                         Align(
                           alignment: Alignment.centerRight,
                           child: FilledButton.icon(
-                            onPressed: () => context.go('/articles/write'),
+                            onPressed: () {
+                              ref
+                                  .read(articleWriteViewModelProvider.notifier)
+                                  .reset();
+                              context.go('/articles/write');
+                            },
                             icon: const Icon(Icons.edit, size: 18),
                             label: const Text('블로그 글 작성'),
                           ),
