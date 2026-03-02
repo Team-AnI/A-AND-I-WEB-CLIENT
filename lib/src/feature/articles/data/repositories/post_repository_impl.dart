@@ -52,6 +52,7 @@ class PostRepositoryImpl implements PostRepository {
       payload.authorNickname,
       payload.authorProfileImageUrl,
       payload.status,
+      payload.collaborators,
       imageFile,
     );
     return response.toEntity();
@@ -81,6 +82,7 @@ class PostRepositoryImpl implements PostRepository {
       payload.title,
       payload.contentMarkdown,
       payload.status,
+      payload.collaborators,
       imageFile,
     );
     return response.toEntity();
@@ -104,6 +106,7 @@ class PostRepositoryImpl implements PostRepository {
         null,
         null,
         'Deleted',
+        const <PostAuthor>[],
         null,
       );
     }
@@ -125,10 +128,14 @@ class PostRepositoryImpl implements PostRepository {
 
   Future<String> _resolveAuthorization() async {
     final token = await localAuthDatasource.getUserToken();
-    if (token == null || token.isEmpty) {
+    final normalizedToken = token?.trim();
+    if (normalizedToken == null || normalizedToken.isEmpty) {
       throw Exception('로그인이 필요합니다.');
     }
-    return 'Bearer $token';
+    if (normalizedToken.toLowerCase().startsWith('bearer ')) {
+      return normalizedToken;
+    }
+    return 'Bearer $normalizedToken';
   }
 
   MultipartFile? _toMultipartFile({
@@ -170,6 +177,7 @@ extension on PostResponseDto {
       contentMarkdown: contentMarkdown,
       thumbnailUrl: thumbnailUrl,
       author: author.toEntity(),
+      collaborators: collaborators.map((item) => item.toEntity()).toList(),
       status: status,
       createdAt: createdAt,
       updatedAt: updatedAt,

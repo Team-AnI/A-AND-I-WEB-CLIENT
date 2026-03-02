@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
+
 /// 게시글 수정 요청 페이로드입니다.
 class PatchPostPayload {
   /// 게시글 수정 요청 페이로드를 생성합니다.
@@ -7,6 +9,7 @@ class PatchPostPayload {
     this.title,
     this.contentMarkdown,
     this.status,
+    this.collaborators = const <PostAuthor>[],
     this.imageFileName,
     this.imageBytes,
   });
@@ -19,6 +22,9 @@ class PatchPostPayload {
 
   /// 게시글 상태입니다. (예: Draft, Published, Deleted)
   final String? status;
+
+  /// 공동 작업자 목록입니다.
+  final List<PostAuthor> collaborators;
 
   /// 첨부 이미지 파일명입니다.
   final String? imageFileName;

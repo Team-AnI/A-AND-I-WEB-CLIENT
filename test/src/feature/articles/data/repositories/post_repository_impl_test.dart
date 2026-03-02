@@ -6,6 +6,7 @@ import 'package:a_and_i_report_web_server/src/feature/articles/data/repositories
 import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/local/local_auth_datasource.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/create_post_payload.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/patch_post_payload.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -37,6 +38,9 @@ void main() {
       expect(result.items.first.status, 'Published');
       expect(result.items.first.author.id, 'author-id-1');
       expect(result.items.first.author.nickname, 'author-1');
+      expect(result.items.first.collaborators.length, 1);
+      expect(result.items.first.collaborators.first.id, 'collaborator-id-1');
+      expect(result.items.first.collaborators.first.nickname, 'collaborator-1');
     });
 
     test('createPost는 payload를 DTO로 변환하고 Post를 반환한다', () async {
@@ -65,6 +69,7 @@ void main() {
       expect(datasource.createAuthorProfileImageUrl,
           'https://example.com/profile.png');
       expect(datasource.createStatus, 'Draft');
+      expect(datasource.createCollaborators, isEmpty);
       expect(datasource.createFile, isNull);
       expect(datasource.createAuthorization, 'Bearer token');
       expect(result.id, 'post-1');
@@ -107,6 +112,7 @@ void main() {
       expect(datasource.patchTitle, '수정 제목');
       expect(datasource.patchContentMarkdown, '수정 본문');
       expect(datasource.patchStatus, 'Published');
+      expect(datasource.patchCollaborators, isEmpty);
       expect(datasource.patchFile, isNull);
       expect(result.id, 'post-1');
     });
@@ -227,11 +233,13 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
   String? createAuthorNickname;
   String? createAuthorProfileImageUrl;
   String? createStatus;
+  List<PostAuthor> createCollaborators = <PostAuthor>[];
   DioException? deleteException;
   MultipartFile? createFile;
   String? patchTitle;
   String? patchContentMarkdown;
   String? patchStatus;
+  List<PostAuthor> patchCollaborators = <PostAuthor>[];
   MultipartFile? patchFile;
 
   @override
@@ -243,6 +251,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
     String authorNickname,
     String? authorProfileImageUrl,
     String? status,
+    List<PostAuthor> collaborators,
     MultipartFile? file,
   ) async {
     createAuthorization = authorization;
@@ -252,6 +261,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
     createAuthorNickname = authorNickname;
     createAuthorProfileImageUrl = authorProfileImageUrl;
     createStatus = status;
+    createCollaborators = collaborators;
     createFile = file;
     return _samplePost(status: status ?? 'Draft');
   }
@@ -311,6 +321,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
     String? title,
     String? contentMarkdown,
     String? status,
+    List<PostAuthor> collaborators,
     MultipartFile? file,
   ) async {
     patchAuthorization = authorization;
@@ -318,6 +329,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
     patchTitle = title;
     patchContentMarkdown = contentMarkdown;
     patchStatus = status;
+    patchCollaborators = collaborators;
     patchFile = file;
     return _samplePost(status: status ?? 'Draft');
   }
@@ -336,6 +348,13 @@ PostResponseDto _samplePost({
       nickname: 'author-1',
       profileImage: 'https://example.com/profile.png',
     ),
+    collaborators: const <PostAuthorResponseDto>[
+      PostAuthorResponseDto(
+        id: 'collaborator-id-1',
+        nickname: 'collaborator-1',
+        profileImage: 'https://example.com/collaborator.png',
+      ),
+    ],
     status: status,
     createdAt: DateTime.parse('2026-02-01T00:00:00Z'),
     updatedAt: DateTime.parse('2026-02-02T00:00:00Z'),

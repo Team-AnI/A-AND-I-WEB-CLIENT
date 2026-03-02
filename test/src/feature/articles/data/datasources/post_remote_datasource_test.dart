@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:a_and_i_report_web_server/src/feature/articles/data/datasources/post_remote_datasource.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -42,6 +43,13 @@ void main() {
         '멘토',
         'https://example.com/profile.png',
         'Published',
+        const <PostAuthor>[
+          PostAuthor(
+            id: '22222222-2222-2222-2222-222222222222',
+            nickname: '공동작업자',
+            profileImage: 'https://example.com/collaborator.png',
+          ),
+        ],
         thumbnail,
       );
 
@@ -67,6 +75,13 @@ void main() {
             'nickname': '멘토',
             'profileImageUrl': 'https://example.com/profile.png',
           },
+          'collaborators': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'id': '22222222-2222-2222-2222-222222222222',
+              'nickname': '공동작업자',
+              'profileImageUrl': 'https://example.com/collaborator.png',
+            },
+          ],
           'status': 'Published',
         },
       );
@@ -104,6 +119,7 @@ void main() {
         '수정 제목',
         '수정 본문',
         'Draft',
+        const <PostAuthor>[],
         null,
       );
 
@@ -184,6 +200,13 @@ Map<String, dynamic> _responseJson() {
         'nickname': '멘토',
         'profileImage': 'https://example.com/profile.png',
       },
+      'collaborators': <Map<String, dynamic>>[
+        <String, dynamic>{
+          'id': '22222222-2222-2222-2222-222222222222',
+          'nickname': '공동작업자',
+          'profileImageUrl': 'https://example.com/collaborator.png',
+        },
+      ],
       'status': 'Published',
       'createdAt': DateTime.utc(2026, 1, 1).toIso8601String(),
       'updatedAt': DateTime.utc(2026, 1, 1).toIso8601String(),

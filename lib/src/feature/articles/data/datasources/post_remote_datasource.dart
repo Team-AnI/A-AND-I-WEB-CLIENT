@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:a_and_i_report_web_server/src/feature/articles/data/dtos/post_list_response_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/dtos/post_response_dto.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
 import 'package:dio/dio.dart';
 
 /// 게시글 원격 데이터소스입니다.
@@ -22,6 +23,7 @@ abstract class PostRemoteDatasource {
     String authorNickname,
     String? authorProfileImageUrl,
     String? status,
+    List<PostAuthor> collaborators,
     MultipartFile? thumbnail,
   );
 
@@ -35,6 +37,7 @@ abstract class PostRemoteDatasource {
     String? title,
     String? contentMarkdown,
     String? status,
+    List<PostAuthor> collaborators,
     MultipartFile? thumbnail,
   );
 
@@ -92,6 +95,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     String authorNickname,
     String? authorProfileImageUrl,
     String? status,
+    List<PostAuthor> collaborators,
     MultipartFile? thumbnail,
   ) async {
     final postJson = <String, dynamic>{
@@ -103,6 +107,8 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
         if (authorProfileImageUrl != null && authorProfileImageUrl.isNotEmpty)
           'profileImageUrl': authorProfileImageUrl,
       },
+      if (collaborators.isNotEmpty)
+        'collaborators': _toCollaboratorJson(collaborators),
       if (status != null && status.isNotEmpty) 'status': status,
     };
     final formDataMap = <String, dynamic>{
@@ -148,12 +154,15 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     String? title,
     String? contentMarkdown,
     String? status,
+    List<PostAuthor> collaborators,
     MultipartFile? thumbnail,
   ) async {
     final postJson = <String, dynamic>{
       if (title != null && title.isNotEmpty) 'title': title,
       if (contentMarkdown != null && contentMarkdown.isNotEmpty)
         'contentMarkdown': contentMarkdown,
+      if (collaborators.isNotEmpty)
+        'collaborators': _toCollaboratorJson(collaborators),
       if (status != null && status.isNotEmpty) 'status': status,
     };
     final formDataMap = <String, dynamic>{
@@ -225,5 +234,17 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
       return Map<String, dynamic>.from(data);
     }
     return responseData;
+  }
+
+  List<Map<String, dynamic>> _toCollaboratorJson(
+      List<PostAuthor> collaborators) {
+    return collaborators
+        .map((item) => <String, dynamic>{
+              'id': item.id,
+              'nickname': item.nickname,
+              if (item.profileImage != null && item.profileImage!.isNotEmpty)
+                'profileImageUrl': item.profileImage,
+            })
+        .toList();
   }
 }

@@ -15,10 +15,12 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ArticleWriteState {
   String get postId;
+  String get editingPostStatus;
   String get title;
   String get contentMarkdown;
   String get summary;
   List<String> get tags;
+  List<PostAuthor> get collaborators;
   String? get thumbnailUrl;
   Uint8List? get thumbnailBytes;
   String? get thumbnailFileName;
@@ -41,11 +43,15 @@ mixin _$ArticleWriteState {
         (other.runtimeType == runtimeType &&
             other is ArticleWriteState &&
             (identical(other.postId, postId) || other.postId == postId) &&
+            (identical(other.editingPostStatus, editingPostStatus) ||
+                other.editingPostStatus == editingPostStatus) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.contentMarkdown, contentMarkdown) ||
                 other.contentMarkdown == contentMarkdown) &&
             (identical(other.summary, summary) || other.summary == summary) &&
             const DeepCollectionEquality().equals(other.tags, tags) &&
+            const DeepCollectionEquality()
+                .equals(other.collaborators, collaborators) &&
             (identical(other.thumbnailUrl, thumbnailUrl) ||
                 other.thumbnailUrl == thumbnailUrl) &&
             const DeepCollectionEquality()
@@ -66,10 +72,12 @@ mixin _$ArticleWriteState {
   int get hashCode => Object.hash(
       runtimeType,
       postId,
+      editingPostStatus,
       title,
       contentMarkdown,
       summary,
       const DeepCollectionEquality().hash(tags),
+      const DeepCollectionEquality().hash(collaborators),
       thumbnailUrl,
       const DeepCollectionEquality().hash(thumbnailBytes),
       thumbnailFileName,
@@ -80,7 +88,7 @@ mixin _$ArticleWriteState {
 
   @override
   String toString() {
-    return 'ArticleWriteState(postId: $postId, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
+    return 'ArticleWriteState(postId: $postId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
   }
 }
 
@@ -92,10 +100,12 @@ abstract mixin class $ArticleWriteStateCopyWith<$Res> {
   @useResult
   $Res call(
       {String postId,
+      String editingPostStatus,
       String title,
       String contentMarkdown,
       String summary,
       List<String> tags,
+      List<PostAuthor> collaborators,
       String? thumbnailUrl,
       Uint8List? thumbnailBytes,
       String? thumbnailFileName,
@@ -119,10 +129,12 @@ class _$ArticleWriteStateCopyWithImpl<$Res>
   @override
   $Res call({
     Object? postId = null,
+    Object? editingPostStatus = null,
     Object? title = null,
     Object? contentMarkdown = null,
     Object? summary = null,
     Object? tags = null,
+    Object? collaborators = null,
     Object? thumbnailUrl = freezed,
     Object? thumbnailBytes = freezed,
     Object? thumbnailFileName = freezed,
@@ -135,6 +147,10 @@ class _$ArticleWriteStateCopyWithImpl<$Res>
       postId: null == postId
           ? _self.postId
           : postId // ignore: cast_nullable_to_non_nullable
+              as String,
+      editingPostStatus: null == editingPostStatus
+          ? _self.editingPostStatus
+          : editingPostStatus // ignore: cast_nullable_to_non_nullable
               as String,
       title: null == title
           ? _self.title
@@ -152,6 +168,10 @@ class _$ArticleWriteStateCopyWithImpl<$Res>
           ? _self.tags
           : tags // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      collaborators: null == collaborators
+          ? _self.collaborators
+          : collaborators // ignore: cast_nullable_to_non_nullable
+              as List<PostAuthor>,
       thumbnailUrl: freezed == thumbnailUrl
           ? _self.thumbnailUrl
           : thumbnailUrl // ignore: cast_nullable_to_non_nullable
@@ -277,10 +297,12 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(
             String postId,
+            String editingPostStatus,
             String title,
             String contentMarkdown,
             String summary,
             List<String> tags,
+            List<PostAuthor> collaborators,
             String? thumbnailUrl,
             Uint8List? thumbnailBytes,
             String? thumbnailFileName,
@@ -296,10 +318,12 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
       case _ArticleWriteState() when $default != null:
         return $default(
             _that.postId,
+            _that.editingPostStatus,
             _that.title,
             _that.contentMarkdown,
             _that.summary,
             _that.tags,
+            _that.collaborators,
             _that.thumbnailUrl,
             _that.thumbnailBytes,
             _that.thumbnailFileName,
@@ -329,10 +353,12 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
   TResult when<TResult extends Object?>(
     TResult Function(
             String postId,
+            String editingPostStatus,
             String title,
             String contentMarkdown,
             String summary,
             List<String> tags,
+            List<PostAuthor> collaborators,
             String? thumbnailUrl,
             Uint8List? thumbnailBytes,
             String? thumbnailFileName,
@@ -347,10 +373,12 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
       case _ArticleWriteState():
         return $default(
             _that.postId,
+            _that.editingPostStatus,
             _that.title,
             _that.contentMarkdown,
             _that.summary,
             _that.tags,
+            _that.collaborators,
             _that.thumbnailUrl,
             _that.thumbnailBytes,
             _that.thumbnailFileName,
@@ -377,10 +405,12 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(
             String postId,
+            String editingPostStatus,
             String title,
             String contentMarkdown,
             String summary,
             List<String> tags,
+            List<PostAuthor> collaborators,
             String? thumbnailUrl,
             Uint8List? thumbnailBytes,
             String? thumbnailFileName,
@@ -395,10 +425,12 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
       case _ArticleWriteState() when $default != null:
         return $default(
             _that.postId,
+            _that.editingPostStatus,
             _that.title,
             _that.contentMarkdown,
             _that.summary,
             _that.tags,
+            _that.collaborators,
             _that.thumbnailUrl,
             _that.thumbnailBytes,
             _that.thumbnailFileName,
@@ -417,10 +449,12 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
 class _ArticleWriteState implements ArticleWriteState {
   const _ArticleWriteState(
       {this.postId = '',
+      this.editingPostStatus = '',
       this.title = '',
       this.contentMarkdown = '',
       this.summary = '',
       final List<String> tags = const <String>[],
+      final List<PostAuthor> collaborators = const <PostAuthor>[],
       this.thumbnailUrl,
       this.thumbnailBytes,
       this.thumbnailFileName,
@@ -428,11 +462,15 @@ class _ArticleWriteState implements ArticleWriteState {
       this.isSubmitting = false,
       this.errorMsg = '',
       this.successMsg = ''})
-      : _tags = tags;
+      : _tags = tags,
+        _collaborators = collaborators;
 
   @override
   @JsonKey()
   final String postId;
+  @override
+  @JsonKey()
+  final String editingPostStatus;
   @override
   @JsonKey()
   final String title;
@@ -449,6 +487,15 @@ class _ArticleWriteState implements ArticleWriteState {
     if (_tags is EqualUnmodifiableListView) return _tags;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_tags);
+  }
+
+  final List<PostAuthor> _collaborators;
+  @override
+  @JsonKey()
+  List<PostAuthor> get collaborators {
+    if (_collaborators is EqualUnmodifiableListView) return _collaborators;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_collaborators);
   }
 
   @override
@@ -484,11 +531,15 @@ class _ArticleWriteState implements ArticleWriteState {
         (other.runtimeType == runtimeType &&
             other is _ArticleWriteState &&
             (identical(other.postId, postId) || other.postId == postId) &&
+            (identical(other.editingPostStatus, editingPostStatus) ||
+                other.editingPostStatus == editingPostStatus) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.contentMarkdown, contentMarkdown) ||
                 other.contentMarkdown == contentMarkdown) &&
             (identical(other.summary, summary) || other.summary == summary) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
+            const DeepCollectionEquality()
+                .equals(other._collaborators, _collaborators) &&
             (identical(other.thumbnailUrl, thumbnailUrl) ||
                 other.thumbnailUrl == thumbnailUrl) &&
             const DeepCollectionEquality()
@@ -509,10 +560,12 @@ class _ArticleWriteState implements ArticleWriteState {
   int get hashCode => Object.hash(
       runtimeType,
       postId,
+      editingPostStatus,
       title,
       contentMarkdown,
       summary,
       const DeepCollectionEquality().hash(_tags),
+      const DeepCollectionEquality().hash(_collaborators),
       thumbnailUrl,
       const DeepCollectionEquality().hash(thumbnailBytes),
       thumbnailFileName,
@@ -523,7 +576,7 @@ class _ArticleWriteState implements ArticleWriteState {
 
   @override
   String toString() {
-    return 'ArticleWriteState(postId: $postId, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
+    return 'ArticleWriteState(postId: $postId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
   }
 }
 
@@ -537,10 +590,12 @@ abstract mixin class _$ArticleWriteStateCopyWith<$Res>
   @useResult
   $Res call(
       {String postId,
+      String editingPostStatus,
       String title,
       String contentMarkdown,
       String summary,
       List<String> tags,
+      List<PostAuthor> collaborators,
       String? thumbnailUrl,
       Uint8List? thumbnailBytes,
       String? thumbnailFileName,
@@ -564,10 +619,12 @@ class __$ArticleWriteStateCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   $Res call({
     Object? postId = null,
+    Object? editingPostStatus = null,
     Object? title = null,
     Object? contentMarkdown = null,
     Object? summary = null,
     Object? tags = null,
+    Object? collaborators = null,
     Object? thumbnailUrl = freezed,
     Object? thumbnailBytes = freezed,
     Object? thumbnailFileName = freezed,
@@ -580,6 +637,10 @@ class __$ArticleWriteStateCopyWithImpl<$Res>
       postId: null == postId
           ? _self.postId
           : postId // ignore: cast_nullable_to_non_nullable
+              as String,
+      editingPostStatus: null == editingPostStatus
+          ? _self.editingPostStatus
+          : editingPostStatus // ignore: cast_nullable_to_non_nullable
               as String,
       title: null == title
           ? _self.title
@@ -597,6 +658,10 @@ class __$ArticleWriteStateCopyWithImpl<$Res>
           ? _self._tags
           : tags // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      collaborators: null == collaborators
+          ? _self._collaborators
+          : collaborators // ignore: cast_nullable_to_non_nullable
+              as List<PostAuthor>,
       thumbnailUrl: freezed == thumbnailUrl
           ? _self.thumbnailUrl
           : thumbnailUrl // ignore: cast_nullable_to_non_nullable

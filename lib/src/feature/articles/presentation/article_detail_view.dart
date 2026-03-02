@@ -4,6 +4,7 @@ import 'package:a_and_i_report_web_server/src/feature/articles/presentation/widg
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_detail_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
@@ -114,11 +115,25 @@ class ArticleDetailView extends ConsumerWidget {
                 canShowDeleteButton: isLoggedIn &&
                     userState.userId != null &&
                     userState.userId == post.author.id,
+                canShowEditButton: isLoggedIn &&
+                    canManageArticlesWithRole(userState.resolvedRole) &&
+                    userState.userId != null &&
+                    userState.userId == post.author.id,
                 onDelete: () => _deletePost(
                   context,
                   ref,
                   postId: post.id,
                 ),
+                onEdit: () {
+                  ref
+                      .read(articleWriteViewModelProvider.notifier)
+                      .startEditing(post);
+                  context.go('/articles/write');
+                },
+                onWrite: () {
+                  ref.read(articleWriteViewModelProvider.notifier).reset();
+                  context.go('/articles/write');
+                },
                 isMobile: isMobile,
                 isTablet: isTablet,
                 markdownStyle: createArticlePreviewMarkdownStyle(context),
@@ -147,7 +162,10 @@ class _ArticleDetailContent extends StatelessWidget {
     required this.post,
     required this.canShowWriteButton,
     required this.canShowDeleteButton,
+    required this.canShowEditButton,
     required this.onDelete,
+    required this.onEdit,
+    required this.onWrite,
     required this.isMobile,
     required this.isTablet,
     required this.markdownStyle,
@@ -157,7 +175,10 @@ class _ArticleDetailContent extends StatelessWidget {
   final Post post;
   final bool canShowWriteButton;
   final bool canShowDeleteButton;
+  final bool canShowEditButton;
   final Future<void> Function() onDelete;
+  final VoidCallback onEdit;
+  final VoidCallback onWrite;
   final bool isMobile;
   final bool isTablet;
   final MarkdownStyleSheet markdownStyle;
@@ -166,10 +187,8 @@ class _ArticleDetailContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final headingFont = isMobile ? 32.0 : (isTablet ? 40.0 : 46.0);
-    final introFont = isMobile ? 17.0 : (isTablet ? 19.0 : 21.0);
     final normalizedMarkdown =
         normalizeMarkdownForPreview(post.contentMarkdown);
-    final intro = _extractIntro(normalizedMarkdown);
     final thumbnailUrl = _resolveThumbnailUrl(
       thumbnailUrl: post.thumbnailUrl,
       markdown: normalizedMarkdown,
@@ -216,12 +235,20 @@ class _ArticleDetailContent extends StatelessWidget {
           ],
         ),
         SizedBox(height: isMobile ? 10 : 12),
-        if (canShowWriteButton || canShowDeleteButton)
+        if (canShowWriteButton || canShowDeleteButton || canShowEditButton)
           Align(
             alignment: Alignment.centerRight,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (canShowEditButton)
+                  FilledButton.icon(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('수정'),
+                  ),
+                if (canShowEditButton && canShowDeleteButton)
+                  const SizedBox(width: 8),
                 if (canShowDeleteButton)
                   TextButton(
                     onPressed: () async {
@@ -232,14 +259,9 @@ class _ArticleDetailContent extends StatelessWidget {
                     ),
                     child: const Text('삭제'),
                   ),
-                if (canShowDeleteButton && canShowWriteButton)
+                if ((canShowDeleteButton || canShowEditButton) &&
+                    canShowWriteButton)
                   const SizedBox(width: 8),
-                if (canShowWriteButton)
-                  FilledButton.icon(
-                    onPressed: () => context.go('/articles/write'),
-                    icon: const Icon(Icons.edit, size: 18),
-                    label: const Text('블로그 글 작성'),
-                  ),
               ],
             ),
           ),
@@ -483,28 +505,6 @@ Color _statusColor(String status) {
     default:
       return HomeTheme.primary;
   }
-}
-
-String _extractIntro(String markdown) {
-  final withoutImages =
-      markdown.replaceAll(RegExp(r'!\[[^\]]*\]\(([^)]+)\)'), ' ');
-  final withoutLinks = withoutImages.replaceAllMapped(
-    RegExp(r'\[([^\]]+)\]\(([^)]+)\)'),
-    (match) => match.group(1) ?? '',
-  );
-  final plainText = withoutLinks
-      .replaceAll(RegExp(r'[#>*`_~-]'), ' ')
-      .replaceAll(RegExp(r'\n+'), ' ')
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
-
-  if (plainText.isEmpty) {
-    return '';
-  }
-  if (plainText.length <= 180) {
-    return plainText;
-  }
-  return '${plainText.substring(0, 180)}...';
 }
 
 String? _extractFirstImageUrl(String markdown) {

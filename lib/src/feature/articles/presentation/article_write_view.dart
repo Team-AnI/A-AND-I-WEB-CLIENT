@@ -69,6 +69,8 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
     }
 
     final composeState = ref.watch(articleWriteViewModelProvider);
+    final isEditingPublished = composeState.postId.trim().isNotEmpty &&
+        composeState.editingPostStatus.trim().toLowerCase() == 'published';
     final width = MediaQuery.of(context).size.width;
     final split = width >= 1100;
 
@@ -202,8 +204,8 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          '임시저장',
+                        child: Text(
+                          isEditingPublished ? '수정 저장' : '임시저장',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -224,8 +226,8 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          '출간하기',
+                        child: Text(
+                          isEditingPublished ? '수정 완료' : '출간하기',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
