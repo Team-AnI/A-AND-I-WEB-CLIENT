@@ -1,26 +1,28 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'route_config.dart';
+part of 'get_courses_usecase_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$goRouterHash() => r'fd988503170176a6ca95d0fbb99a8ef34371c5f5';
+String _$getCoursesUsecaseHash() => r'2d4ae3644b295cf18300e9596080e63e7dec1bc4';
 
-/// See also [goRouter].
-@ProviderFor(goRouter)
-final goRouterProvider = AutoDisposeProvider<GoRouter>.internal(
-  goRouter,
-  name: r'goRouterProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$goRouterHash,
+/// See also [getCoursesUsecase].
+@ProviderFor(getCoursesUsecase)
+final getCoursesUsecaseProvider =
+    AutoDisposeProvider<GetCoursesUsecase>.internal(
+  getCoursesUsecase,
+  name: r'getCoursesUsecaseProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$getCoursesUsecaseHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef GoRouterRef = AutoDisposeProviderRef<GoRouter>;
+typedef GetCoursesUsecaseRef = AutoDisposeProviderRef<GetCoursesUsecase>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
