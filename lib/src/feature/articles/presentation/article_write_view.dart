@@ -90,6 +90,7 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
         composeState.editingPostStatus.trim().toLowerCase() == 'published';
     final width = MediaQuery.of(context).size.width;
     final split = width >= 1100;
+    final livePreviewPanel = _buildLivePreviewPanel();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -138,54 +139,17 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
             },
             child: Stack(
               children: [
-                ListenableBuilder(
-                  listenable: Listenable.merge([
-                    titleController,
-                    contentController,
-                  ]),
-                  builder: (context, child) {
-                    if (split) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: DecoratedBox(
-                              decoration: const BoxDecoration(
-                                border: Border(
-                                  right: BorderSide(color: Color(0xFFE5E7EB)),
-                                ),
-                              ),
-                              child: ArticleEditorPanel(
-                                titleController: titleController,
-                                contentController: contentController,
-                                contentFocusNode: contentFocusNode,
-                                contentUndoController: contentUndoController,
-                                onExit: () => context.go('/articles'),
-                                onBold: onTapBold,
-                                onItalic: onTapItalic,
-                                onStrikethrough: onTapStrikethrough,
-                                onQuote: onTapQuote,
-                                onCodeBlock: onTapCodeBlock,
-                                onImage: () => onTapImage(context),
-                                onLink: onTapLink,
-                                markdownAreaKey: _markdownAreaKey,
-                                isMarkdownDragOver: _isMarkdownDragOver,
-                              ),
+                if (split)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: DecoratedBox(
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              right: BorderSide(color: Color(0xFFE5E7EB)),
                             ),
                           ),
-                          Expanded(
-                            child: ArticlePreviewPanel(
-                              title: titleController.text.trim(),
-                              markdown: contentController.text,
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-
-                    return Column(
-                      children: [
-                        Expanded(
                           child: ArticleEditorPanel(
                             titleController: titleController,
                             contentController: contentController,
@@ -203,17 +167,35 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
                             isMarkdownDragOver: _isMarkdownDragOver,
                           ),
                         ),
-                        const Divider(height: 1, color: Color(0xFFE5E7EB)),
-                        Expanded(
-                          child: ArticlePreviewPanel(
-                            title: titleController.text.trim(),
-                            markdown: contentController.text,
-                          ),
+                      ),
+                      Expanded(child: livePreviewPanel),
+                    ],
+                  )
+                else
+                  Column(
+                    children: [
+                      Expanded(
+                        child: ArticleEditorPanel(
+                          titleController: titleController,
+                          contentController: contentController,
+                          contentFocusNode: contentFocusNode,
+                          contentUndoController: contentUndoController,
+                          onExit: () => context.go('/articles'),
+                          onBold: onTapBold,
+                          onItalic: onTapItalic,
+                          onStrikethrough: onTapStrikethrough,
+                          onQuote: onTapQuote,
+                          onCodeBlock: onTapCodeBlock,
+                          onImage: () => onTapImage(context),
+                          onLink: onTapLink,
+                          markdownAreaKey: _markdownAreaKey,
+                          isMarkdownDragOver: _isMarkdownDragOver,
                         ),
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                      const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                      Expanded(child: livePreviewPanel),
+                    ],
+                  ),
                 Positioned(
                   right: split ? 32 : 16,
                   bottom: split ? 24 : 16,
@@ -277,6 +259,25 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLivePreviewPanel() {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: titleController,
+      builder: (context, titleValue, _) {
+        return ValueListenableBuilder<TextEditingValue>(
+          valueListenable: contentController,
+          builder: (context, contentValue, __) {
+            return RepaintBoundary(
+              child: ArticlePreviewPanel(
+                title: titleValue.text.trim(),
+                markdown: contentValue.text,
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
