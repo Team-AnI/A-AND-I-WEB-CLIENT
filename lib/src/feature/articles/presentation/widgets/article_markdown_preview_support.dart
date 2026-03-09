@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:re_highlight/languages/dart.dart';
@@ -8,6 +10,10 @@ import 'package:re_highlight/styles/atom-one-dark.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 
 String normalizeMarkdownForPreview(String source) {
+  if (!source.contains('>\n')) {
+    return source;
+  }
+
   return source
       .replaceAllMapped(RegExp(r'>\s*\n([^\n])'), (m) => '> ${m.group(1)}')
       .replaceAllMapped(
@@ -119,6 +125,8 @@ MarkdownStyleSheet createArticlePreviewMarkdownStyle(BuildContext context) {
 }
 
 class ArticleMarkdownCodeSyntaxHighlighter extends SyntaxHighlighter {
+  static const int _cacheLimit = 120;
+
   ArticleMarkdownCodeSyntaxHighlighter() {
     highlighter.registerLanguage('dart', langDart);
     highlighter.registerLanguage('kotlin', langKotlin);
@@ -126,6 +134,7 @@ class ArticleMarkdownCodeSyntaxHighlighter extends SyntaxHighlighter {
   }
 
   final Highlight highlighter = Highlight();
+  final LinkedHashMap<String, TextSpan> _spanCache = LinkedHashMap();
 
   @override
   TextSpan format(String source) {
@@ -141,6 +150,15 @@ class ArticleMarkdownCodeSyntaxHighlighter extends SyntaxHighlighter {
       color: Color(0xFFE5E7EB),
     );
 
+    if (code.length > 4000) {
+      return TextSpan(text: code, style: baseStyle);
+    }
+
+    final cachedSpan = _spanCache[code];
+    if (cachedSpan != null) {
+      return cachedSpan;
+    }
+
     try {
       final result = highlighter.highlightAuto(
         code,
@@ -148,9 +166,21 @@ class ArticleMarkdownCodeSyntaxHighlighter extends SyntaxHighlighter {
       );
       final renderer = TextSpanRenderer(baseStyle, atomOneDarkTheme);
       result.render(renderer);
-      return renderer.span ?? const TextSpan(text: '', style: baseStyle);
+      final span = renderer.span ?? const TextSpan(text: '', style: baseStyle);
+      _rememberSpan(code, span);
+      return span;
     } catch (_) {
-      return TextSpan(text: code, style: baseStyle);
+      final span = TextSpan(text: code, style: baseStyle);
+      _rememberSpan(code, span);
+      return span;
     }
+  }
+
+  void _rememberSpan(String code, TextSpan span) {
+    _spanCache[code] = span;
+    if (_spanCache.length <= _cacheLimit) {
+      return;
+    }
+    _spanCache.remove(_spanCache.keys.first);
   }
 }

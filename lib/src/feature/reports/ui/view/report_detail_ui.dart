@@ -25,7 +25,6 @@ class ReportDetailUI extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(reportDetailViewModelProvider(id));
     final isDarkMode = ref.watch(studyDarkModeProvider);
-
     final backgroundColor =
         isDarkMode ? const Color(0xFF0A0A0A) : const Color(0xFFF8F9FA);
 
@@ -65,8 +64,7 @@ class ReportDetailUI extends HookConsumerWidget {
         ViewStatus.success => SingleChildScrollView(
             child: ResponsiveLayout(
               mobile: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                 child: ProblemDetailView(
                   report: state.report!,
                   endAt: endAt,
@@ -74,8 +72,7 @@ class ReportDetailUI extends HookConsumerWidget {
                 ),
               ),
               tablet: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 48, horizontal: 48),
+                padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 48),
                 child: ProblemDetailView(
                   report: state.report!,
                   endAt: endAt,
