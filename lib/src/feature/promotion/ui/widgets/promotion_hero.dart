@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:a_and_i_report_web_server/src/core/widgets/responsive_layout.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 class PromotionHero extends ConsumerWidget {
   const PromotionHero({super.key});
 
   @override
-  Widget @override
   build(BuildContext context, WidgetRef ref) {
     precacheImage(
         const AssetImage(

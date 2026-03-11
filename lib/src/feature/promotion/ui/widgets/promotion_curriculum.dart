@@ -18,13 +18,6 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
   bool isCalled = false;
 
   @override
-  State<PromotionCurriculum> createState() => _PromotionCurriculumState();
-}
-
-class _PromotionCurriculumState extends State<PromotionCurriculum> {
-  bool isCalled = false;
-
-  @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
 

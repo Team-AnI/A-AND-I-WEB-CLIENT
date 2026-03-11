@@ -27,8 +27,6 @@ class PromotionSchedule extends ConsumerStatefulWidget {
 }
 
 class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
-  bool isCalled = false;
-
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
@@ -204,42 +202,36 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
                                   date: '모집 기간',
                                   content: '2026.01.16 (월) - 2026.03.15 (일)',
                                   icon: Icons.calendar_month_rounded,
-                                  delay: 0,
                                 ),
                                 _buildTimelineItem(
                                   isMobile: isMobile,
                                   date: '선발 과정',
                                   content: '서류 접수 → 대면 인터뷰 → 최종 합격',
                                   icon: Icons.playlist_add_check_circle,
-                                  delay: 100,
                                 ),
                                 _buildTimelineItem(
                                   isMobile: isMobile,
                                   date: '인터뷰',
                                   content: '2026.03.18 (수)',
                                   icon: Icons.people_alt_rounded,
-                                  delay: 200,
                                 ),
                                 _buildTimelineItem(
                                   isMobile: isMobile,
                                   date: '합격자 발표',
                                   content: '2026.03.19 (목)',
                                   icon: Icons.notifications_active_rounded,
-                                  delay: 300,
                                 ),
                                 _buildTimelineItem(
                                   isMobile: isMobile,
                                   date: '네트워킹',
                                   content: '2026.03.20 (금)',
                                   icon: Icons.celebration_rounded,
-                                  delay: 400,
                                 ),
                                 _buildTimelineItem(
                                   isMobile: isMobile,
                                   date: '오리엔테이션',
                                   content: '2026.03.21 (토)',
                                   icon: Icons.school_rounded,
-                                  delay: 500,
                                   isLast: true,
                                 ),
                               ],
@@ -259,8 +251,6 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
                         child: const PromotionBottomBar(),
                       ),
                     ),
-                  ),
-
                     const SizedBox(height: 24),
 
                     AnimateOnVisible(
@@ -308,83 +298,7 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
     required String date,
     required String content,
     required IconData icon,
-    required int delay,
     bool isLast = false,
-  }) {
-    final timelineStep = Container(
-      margin: EdgeInsets.only(bottom: isLast ? 0 : 32),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon Box
-          Container(
-            width: isMobile ? 56 : 72,
-            height: isMobile ? 56 : 72,
-            decoration: BoxDecoration(
-              color: const Color(0xFF000000), // Black background to hide line
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFF3B82F6),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF3B82F6).withOpacity(0.3),
-                  blurRadius: 12,
-                ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              size: isMobile ? 24 : 32,
-              color: const Color(0xFF3B82F6),
-            ),
-          ),
-
-          SizedBox(width: isMobile ? 20 : 32),
-
-          // Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    date,
-                    style: TextStyle(
-                      fontSize: isMobile ? 12 : 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF3B82F6),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    content,
-                    style: TextStyle(
-                      fontSize: isMobile ? 16 : 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    return timelineStep;
-  }
-
-  Widget _buildTimelineItem({
-    required String date,
-    required String content,
-    required IconData icon,
-    Color? color,
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: isLast ? 0 : 32),
@@ -450,24 +364,6 @@ class _PromotionScheduleState extends ConsumerState<PromotionSchedule> {
           ),
         ],
       ),
-    );
-
-    return AnimateOnVisible(
-      uniqueKey: 'timeline_$date',
-      delay: Duration(milliseconds: 500 + delay),
-      effects: [
-        FadeEffect(
-          delay: Duration(milliseconds: 500 + delay),
-          duration: 600.ms,
-        ),
-        MoveEffect(
-          delay: Duration(milliseconds: 500 + delay),
-          duration: 600.ms,
-          begin: const Offset(30, 0),
-          end: Offset.zero,
-        ),
-      ],
-      child: timelineStep,
     );
   }
 }

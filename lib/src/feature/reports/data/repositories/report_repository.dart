@@ -14,11 +14,7 @@ abstract class ReportRepository {
   /// 특정 ID의 과제 상세 정보를 조회합니다.
   ///
   /// [id]는 과제의 UUID이며, [authorization] 헤더가 필요합니다.
-<<<<<<< HEAD
   @GET("/v1/report/{id}")
-=======
-  @GET("/api/report/{id}")
->>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })

@@ -92,65 +92,52 @@ class _PromotionPageState extends ConsumerState<PromotionPage> {
     final shouldBeVisible = !_isBottomBarVisible;
 
     return Scaffold(
-      backgroundColor: Colors.black, // 전체 배경색 통일
-      body: Stack(
-        children: [
-          ListView(
-            controller: _scrollController,
-            // cacheExtent를 넉넉하게 주어 스크롤 시 미리 빌드되도록 함 (버벅임 방지)
-            cacheExtent: 1000,
-            children: [
-              const RepaintBoundary(child: PromotionHero()),
-              const SizedBox(
-                height: 100,
-              ),
-              const RepaintBoundary(child: PromotionIntro()),
-              const RepaintBoundary(child: PromotionMentors()),
-              const RepaintBoundary(child: PromotionCurriculum()),
-              RepaintBoundary(
-                child: PromotionSchedule(
-                  bottomBarKey: _bottomBarKey,
-                  isStaticBarVisible: _isBottomBarVisible,
+        backgroundColor: Colors.black, // 전체 배경색 통일
+        body: Stack(
+          children: [
+            ListView(
+              controller: _scrollController,
+              // cacheExtent를 넉넉하게 주어 스크롤 시 미리 빌드되도록 함 (버벅임 방지)
+              cacheExtent: 1000,
+              children: [
+                const RepaintBoundary(child: PromotionHero()),
+                const SizedBox(
+                  height: 100,
                 ),
-              ),
-            ],
-          ),
-          Positioned(
-            bottom: 30,
-            left: 0,
-            right: 0,
-            child: AnimatedSlide(
-              offset: shouldSlideUp ? Offset.zero : const Offset(0, 2),
-              duration: 300.ms,
-              curve: Curves.easeInOut,
-              child: IgnorePointer(
-                ignoring: !shouldBeVisible,
-                child: Opacity(
-                  opacity: shouldBeVisible ? 1.0 : 0.0,
-                  child: const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.0),
-                      child: PromotionBottomBar(),
+                const RepaintBoundary(child: PromotionIntro()),
+                const RepaintBoundary(child: PromotionMentors()),
+                const RepaintBoundary(child: PromotionCurriculum()),
+                RepaintBoundary(
+                  child: PromotionSchedule(
+                    bottomBarKey: _bottomBarKey,
+                    isStaticBarVisible: _isBottomBarVisible,
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              bottom: 30,
+              left: 0,
+              right: 0,
+              child: AnimatedSlide(
+                offset: shouldSlideUp ? Offset.zero : const Offset(0, 2),
+                duration: 300.ms,
+                curve: Curves.easeInOut,
+                child: IgnorePointer(
+                  ignoring: !shouldBeVisible,
+                  child: Opacity(
+                    opacity: shouldBeVisible ? 1.0 : 0.0,
+                    child: const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.0),
+                        child: PromotionBottomBar(),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(
-              height: screenHeight,
-              child: const PromotionMentors(),
-            ),
-            SizedBox(
-              height: screenHeight,
-              child: const PromotionCurriculum(),
-            ),
-            SizedBox(
-              height: screenHeight,
-              child: const PromotionSchedule(),
-            ),
+            )
           ],
-        ),
-      ),
-    )
+        ));
   }
 }

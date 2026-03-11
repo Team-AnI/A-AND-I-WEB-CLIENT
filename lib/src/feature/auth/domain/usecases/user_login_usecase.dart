@@ -8,15 +8,9 @@ import 'package:dio/dio.dart';
 /// 사용자 로그인을 처리하는 UseCase 구현체입니다.
 ///
 /// **비즈니스 로직:**
-<<<<<<< HEAD
 /// 1. [authRepository.login]을 호출하여 서버 인증을 수행합니다.
 /// 2. 발급받은 액세스 토큰을 [authRepository.saveToken]으로 저장합니다.
 /// 3. 저장한 토큰으로 `/v1/me`를 조회해 사용자 상세 정보를 확보합니다.
-=======
-/// 1. 이미 로그인된 상태인지(토큰 존재 여부) 확인합니다.
-/// 2. [authRepository.login]을 호출하여 서버 인증을 수행합니다.
-/// 3. 발급받은 액세스 토큰을 [authRepository.saveToken]을 통해 저장합니다.
->>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
 final class UserLoginUsecaseImpl implements UserLoginUsecase {
   final AuthRepository authRepository;
 
@@ -26,10 +20,6 @@ final class UserLoginUsecaseImpl implements UserLoginUsecase {
 
   /// 로그인을 수행합니다.
   ///
-<<<<<<< HEAD
-=======
-  /// 이미 로그인되어 있는 경우 예외를 발생시킵니다.
->>>>>>> 58bdcff (feat: Add Dart Doc comments for codebase documentation)
   /// 네트워크 오류 등 실패 시 예외를 던집니다.
   @override
   Future<UserLoginResult> call(LoginRequestDto dto) async {

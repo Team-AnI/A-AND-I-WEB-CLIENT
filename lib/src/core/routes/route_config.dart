@@ -31,7 +31,6 @@ part 'route_config.g.dart';
 /// - 로그인되지 않은 사용자가 보호된 페이지(`/report` 등)에 접근하면 `/sign-in`으로 이동합니다.
 /// - 이미 로그인된 사용자가 로그인 페이지(`/sign-in`)에 접근하면 `/report`로 이동합니다.
 /// - `/promotion` 페이지는 로그인 여부와 관계없이 접근 가능합니다.
-/// - `/promotion` 페이지는 로그인 여부와 관계없이 접근 가능합니다.
 ///
 /// **정의된 라우트:**
 /// - `/`: 루트 경로. 인증 상태에 따라 `/report` 또는 `/sign-in`으로 리다이렉트합니다.
@@ -87,7 +86,7 @@ GoRouter goRouter(Ref ref) {
         name: "A&I",
         pageBuilder: (context, state) {
           html.document.title = "A&I";
-          return NoTransitionPage(child: const PromotionPage());
+          return NoTransitionPage(child: const HomePage());
         },
       ),
       GoRoute(
@@ -172,22 +171,6 @@ GoRouter goRouter(Ref ref) {
         pageBuilder: (context, state) {
           html.document.title = "내 강좌 | A&I";
           return NoTransitionPage(child: const CourseListView());
-        },
-      ),
-      GoRoute(
-        path: '/promotion',
-        name: "2026 팀 A&I 모집안내",
-        pageBuilder: (context, state) {
-          html.document.title = "2026 팀 A&I 모집안내";
-          return NoTransitionPage(child: const PromotionPage());
-        },
-      ),
-      GoRoute(
-        path: '/faq',
-        name: "자주 묻는 질문 | A&I",
-        pageBuilder: (context, state) {
-          html.document.title = "자주 묻는 질문 | A&I";
-          return NoTransitionPage(child: const FAQLightPage());
         },
       ),
       GoRoute(
