@@ -3,14 +3,20 @@
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/level.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/report.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'report_detail_response_dto.freezed.dart';
-part 'report_detail_response_dto.g.dart';
+/// 코스 과제 상세 API 응답 DTO입니다.
+class ReportDetailResponseDto {
+  /// 코스 과제 상세 API 응답 DTO를 생성합니다.
+  const ReportDetailResponseDto({
+    required this.success,
+    this.data,
+    this.error,
+    this.timestamp,
+  });
 
 /// 코스 과제 상세 API 응답 DTO입니다.
 @freezed
-abstract class ReportDetailResponseDto with _$ReportDetailResponseDto {
+class ReportDetailResponseDto with void _$ReportDetailResponseDto {
   /// 코스 과제 상세 API 응답 DTO를 생성합니다.
   const factory ReportDetailResponseDto({
     required bool success,
@@ -209,7 +215,7 @@ ReportDetailApiErrorDto? _parseError(Object? rawError) {
 
 /// 과제 상세 API 에러 DTO입니다.
 @freezed
-abstract class ReportDetailApiErrorDto with _$ReportDetailApiErrorDto {
+class ReportDetailApiErrorDto with void _$ReportDetailApiErrorDto {
   /// 과제 상세 API 에러 DTO를 생성합니다.
   const factory ReportDetailApiErrorDto({
     String? code,

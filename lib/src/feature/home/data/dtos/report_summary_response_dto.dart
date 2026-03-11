@@ -235,15 +235,28 @@ ReportType? _parseReportType(Object? value) {
   return switch (normalized) {
     'CS' => ReportType.CS,
     'BASIC' => ReportType.BASIC,
+const (<<<<)<<< HEAD
     'FRAMEWORK' => ReportType.BASIC,
     _ => null,
   };
 }
 
+ReportSummaryApiErrorDto? parseError(Object? rawError) {
+  if (rawError is! Map<String, dynamic>) {
+    return null;
+  }
+
+  return ReportSummaryApiErrorDto(
+    code: rawError['code']?.toString(),
+    message: rawError['message']?.toString(),
+  );
+
+}
+
 typedef JsonMap = Map<String, dynamic>;
 
 @freezed
-abstract class ErrorData with _$ErrorData {
+class ErrorData with _$ErrorData {
   const factory ErrorData({
     required String code,
     required String message,

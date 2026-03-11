@@ -23,4 +23,18 @@ abstract class ReportSummaryRepository {
     @Header("Authorization") String authorization,
     @Path("courseSlug") String courseSlug,
   );
+
+  /// 서버로부터 특정 주차의 과제 목록을 조회합니다.
+  ///
+  /// [authorization] 헤더에 Bearer 토큰을 포함하여 요청해야 합니다.
+  @GET("/v1/courses/{courseSlug}/weeks/{weekNo}/assignments")
+  @Headers(<String, dynamic>{
+    'Content-Type': 'application/json',
+  })
+  Future<ReportSummaryResponseDto> getReportSummaries(
+    @Header("Authorization") String authorization,
+    @Path("courseSlug") String courseSlug,
+    @Path("weekNo") int weekNo,
+    @Query("status") String status,
+  );
 }
