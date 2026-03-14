@@ -466,24 +466,6 @@ class _CourseSectionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: palette.activeBadgeBackground,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: palette.activeBadgeBorder),
-                ),
-                child: Text(
-                  'ACTIVE',
-                  style: TextStyle(
-                    color: palette.activeBadgeText,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
             ],
           ),
           SizedBox(height: isMobile ? 22 : 30),
@@ -867,9 +849,6 @@ class _Palette {
     required this.logoBackground,
     required this.logoForeground,
     required this.iconBackground,
-    required this.activeBadgeBackground,
-    required this.activeBadgeBorder,
-    required this.activeBadgeText,
     required this.doneBadgeBackground,
     required this.doneBadgeBorder,
     required this.doneBadgeText,
@@ -889,9 +868,6 @@ class _Palette {
   final Color logoBackground;
   final Color logoForeground;
   final Color iconBackground;
-  final Color activeBadgeBackground;
-  final Color activeBadgeBorder;
-  final Color activeBadgeText;
   final Color doneBadgeBackground;
   final Color doneBadgeBorder;
   final Color doneBadgeText;
@@ -913,9 +889,6 @@ class _Palette {
         logoBackground: Color(0xFFF5F5F5),
         logoForeground: Color(0xFF111111),
         iconBackground: Color(0xFF18181B),
-        activeBadgeBackground: Color(0xFF27272A),
-        activeBadgeBorder: Color(0xFF3F3F46),
-        activeBadgeText: Color(0xFFD4D4D8),
         doneBadgeBackground: Color(0xFF27272A),
         doneBadgeBorder: Color(0xFF3F3F46),
         doneBadgeText: Color(0xFFD4D4D8),
@@ -937,9 +910,6 @@ class _Palette {
       logoBackground: Color(0xFF111111),
       logoForeground: Color(0xFFFFFFFF),
       iconBackground: Color(0xFFFFFFFF),
-      activeBadgeBackground: Color(0xFFF4F4F5),
-      activeBadgeBorder: Color(0xFFE4E4E7),
-      activeBadgeText: Color(0xFF71717A),
       doneBadgeBackground: Color(0xFFF4F4F5),
       doneBadgeBorder: Color(0xFFE4E4E7),
       doneBadgeText: Color(0xFF71717A),
