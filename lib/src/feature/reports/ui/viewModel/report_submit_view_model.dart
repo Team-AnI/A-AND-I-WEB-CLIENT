@@ -87,10 +87,13 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
       return false;
     }
 
-    // TODO(choseoungeun): assignment detail 응답에 problemId가 항상 내려오면 fallback을 제거합니다.
-    final resolvedProblemId = problemId?.trim().isNotEmpty == true
-        ? problemId!.trim()
-        : 'quiz-101';
+    // TODO(choseoungeun): assignment detail 응답에 judge catalog 기준 problemId가
+    // 항상 내려오면 임시 fallback을 제거합니다.
+    final normalizedProblemId = problemId?.trim();
+    final resolvedProblemId =
+        normalizedProblemId != null && normalizedProblemId.startsWith('quiz-')
+            ? normalizedProblemId
+            : 'quiz-101';
 
     state = state.copyWith(
       isSubmitting: true,
