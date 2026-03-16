@@ -33,8 +33,17 @@ Report? _parseReport(Object? rawData) {
   final attributes = metadata is Map<String, dynamic>
       ? metadata['attributes']
       : null;
+  final requirements = metadata is Map<String, dynamic>
+      ? metadata['requirements']
+      : null;
+  final learningGoals = metadata is Map<String, dynamic>
+      ? metadata['learningGoals']
+      : null;
+  final examples = metadata is Map<String, dynamic>
+      ? metadata['examples']
+      : null;
 
-  final id = rawData['id']?.toString();
+  final id = rawData['assignmentId']?.toString() ?? rawData['id']?.toString();
   final problemId = attributes is Map<String, dynamic>
       ? attributes['problemId']?.toString()
       : rawData['problemId']?.toString();
@@ -44,14 +53,13 @@ Report? _parseReport(Object? rawData) {
   final content = metadata is Map<String, dynamic>
       ? metadata['description']?.toString()
       : null;
-  final learningGoals = metadata is Map<String, dynamic>
-      ? metadata['learningGoals']
-      : null;
   final level = _parseLevel(
     metadata is Map<String, dynamic> ? metadata['difficulty'] : null,
   );
   final reportType = _parseReportType(
-    attributes is Map<String, dynamic> ? attributes['reportType'] : null,
+    attributes is Map<String, dynamic>
+        ? attributes['legacyReportType'] ?? attributes['reportType']
+        : null,
   );
   final week = _asInt(rawData['weekNo']);
 
@@ -69,32 +77,80 @@ Report? _parseReport(Object? rawData) {
     problemId: problemId,
     title: title,
     content: content,
-    requirement: const <SeqString>[],
-    objects: _parseSeqStrings(learningGoals),
-    exampleIo: const <ExampleIO>[],
+    requirement: _parseRequirements(requirements),
+    objects: _parseLearningGoals(learningGoals),
+    exampleIo: _parseExamples(examples),
     reportType: reportType,
     week: week,
     level: level,
   );
 }
 
-List<SeqString> _parseSeqStrings(Object? value) {
+List<SeqString> _parseRequirements(Object? value) {
   if (value is! List) {
     return const <SeqString>[];
   }
 
   final result = <SeqString>[];
-  for (var index = 0; index < value.length; index++) {
-    final item = value[index];
-    final content = item?.toString();
-    if (content == null || content.isEmpty) {
+  for (final item in value.whereType<Map<String, dynamic>>()) {
+    final seq = _asInt(item['sortOrder']);
+    final content = item['requirementText']?.toString();
+    if (seq == null || content == null || content.isEmpty) {
       continue;
     }
 
     result.add(
       SeqString(
-        seq: index + 1,
+        seq: seq,
         content: content,
+      ),
+    );
+  }
+  return result;
+}
+
+List<SeqString> _parseLearningGoals(Object? value) {
+  if (value is! List) {
+    return const <SeqString>[];
+  }
+
+  final result = <SeqString>[];
+  for (final item in value.whereType<Map<String, dynamic>>()) {
+    final seq = _asInt(item['sortOrder']);
+    final content = item['learningGoalText']?.toString();
+    if (seq == null || content == null || content.isEmpty) {
+      continue;
+    }
+
+    result.add(
+      SeqString(
+        seq: seq,
+        content: content,
+      ),
+    );
+  }
+  return result;
+}
+
+List<ExampleIO> _parseExamples(Object? value) {
+  if (value is! List) {
+    return const <ExampleIO>[];
+  }
+
+  final result = <ExampleIO>[];
+  for (final item in value.whereType<Map<String, dynamic>>()) {
+    final seq = _asInt(item['seq']);
+    final input = item['inputText']?.toString();
+    final output = item['outputText']?.toString();
+    if (seq == null || input == null || output == null) {
+      continue;
+    }
+
+    result.add(
+      ExampleIO(
+        seq: seq,
+        input: input,
+        output: output,
       ),
     );
   }
@@ -121,9 +177,9 @@ Level? _parseLevel(Object? value) {
   }
 
   return switch (normalized) {
-    'VERYHIGH' => Level.VERYHIGH,
+    'VERY_HIGH' || 'VERYHIGH' => Level.VERYHIGH,
     'HIGH' => Level.HIGH,
-    'MEDIUM' => Level.MEDIUM,
+    'MID' || 'MEDIUM' => Level.MEDIUM,
     'LOW' => Level.LOW,
     _ => null,
   };
@@ -138,6 +194,7 @@ ReportType? _parseReportType(Object? value) {
   return switch (normalized) {
     'CS' => ReportType.CS,
     'BASIC' => ReportType.BASIC,
+    'FRAMEWORK' => ReportType.BASIC,
     _ => null,
   };
 }
