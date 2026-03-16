@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/submission_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/providers/create_submission_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/providers/get_submission_result_usecase_provider.dart';
@@ -125,14 +126,16 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
       _startPolling(response.submissionId);
       return true;
     } catch (error) {
+      final message = ApiErrorMapper.map(
+        error,
+        fallbackMessage: '소스 코드 제출에 실패했습니다.',
+      );
       state = state.copyWith(
         isSubmitting: false,
         isPolling: false,
         submissionStatus: SubmissionStatus.error,
-        errorMsg: error.toString().replaceFirst('Exception: ', ''),
-        feedbacks: <String>[
-          error.toString().replaceFirst('Exception: ', ''),
-        ],
+        errorMsg: message,
+        feedbacks: <String>[message],
       );
       return false;
     }
@@ -165,11 +168,16 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
 
       _applyResult(result);
     } catch (error) {
+      final message = ApiErrorMapper.map(
+        error,
+        fallbackMessage: '채점 결과를 불러오지 못했습니다.',
+      );
       _pollingTimer?.cancel();
       state = state.copyWith(
         isPolling: false,
         submissionStatus: SubmissionStatus.error,
-        errorMsg: error.toString().replaceFirst('Exception: ', ''),
+        errorMsg: message,
+        feedbacks: <String>[message],
       );
     }
   }
