@@ -49,7 +49,7 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
         child: SingleChildScrollView(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1080),
+              constraints: const BoxConstraints(maxWidth: 896),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: isMobile ? 18 : 24),
                 child: Column(
@@ -261,11 +261,10 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
     final resolvedImageUrl = _resolveProfileImageUrl(profileImageUrl);
 
     return Padding(
-      padding: EdgeInsets.only(top: isMobile ? 16 : 22),
+      padding: const EdgeInsets.only(top: 18),
       child: Row(
         children: [
           _TopNavAction(

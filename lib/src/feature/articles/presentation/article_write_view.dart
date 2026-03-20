@@ -33,9 +33,9 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
   late final TextEditingController contentController;
   late final FocusNode contentFocusNode;
   late final UndoHistoryController contentUndoController;
+  final GlobalKey _markdownAreaKey = GlobalKey();
   Timer? _autoSaveTimer;
   bool _isAutoSaving = false;
-  final GlobalKey _markdownAreaKey = GlobalKey();
   bool _isMarkdownDragOver = false;
   web.EventListener? _webDragOverListener;
   web.EventListener? _webDropListener;
@@ -54,14 +54,14 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
     contentController = TextEditingController(text: initialMarkdown);
     contentFocusNode = FocusNode();
     contentUndoController = UndoHistoryController();
-    _startAutoSaveTimer();
     _bindWebDropListeners();
+    _startAutoSaveTimer();
   }
 
   @override
   void dispose() {
-    _unbindWebDropListeners();
     _autoSaveTimer?.cancel();
+    _unbindWebDropListeners();
     titleController.dispose();
     contentController.dispose();
     contentFocusNode.dispose();
@@ -488,7 +488,7 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
 
   Future<Uint8List> _readWebFileBytes(web.File file) async {
     final jsArrayBuffer = await file.arrayBuffer().toDart;
-    return Uint8List.view(jsArrayBuffer.toDart);
+    return jsArrayBuffer.toDart.asUint8List();
   }
 
   String _resolveDroppedFileName(web.File file, Uint8List bytes) {

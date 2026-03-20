@@ -1,27 +1,120 @@
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/level.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_summary.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_type.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'report_summary_response_dto.freezed.dart';
-part 'report_summary_response_dto.g.dart';
+/// 주차 목록 API 응답 DTO입니다.
+class WeekListResponseDto {
+  /// 주차 목록 API 응답 DTO를 생성합니다.
+  const WeekListResponseDto({
+    required this.success,
+    required this.data,
+    this.error,
+    this.timestamp,
+  });
 
-/// 코스 목차 API 응답 DTO입니다.
-@freezed
-abstract class CourseOutlineResponseDto with _$CourseOutlineResponseDto {
-  /// 코스 목차 API 응답 DTO를 생성합니다.
-  const factory CourseOutlineResponseDto({
-    required bool success,
-    CourseOutlineDataDto? data,
-    ErrorData? error,
-    String? timestamp,
-  }) = _CourseOutlineResponseDto;
+  /// 요청 성공 여부입니다.
+  final bool success;
 
-  const CourseOutlineResponseDto._();
+  /// 주차 목록입니다.
+  final List<CourseWeekDto> data;
+
+  /// 에러 정보입니다.
+  final ReportSummaryApiErrorDto? error;
+
+  /// 응답 시각입니다.
+  final String? timestamp;
 
   /// JSON 응답을 DTO로 변환합니다.
-  factory CourseOutlineResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$CourseOutlineResponseDtoFromJson(json);
+  factory WeekListResponseDto.fromJson(Map<String, dynamic> json) {
+    final rawData = json['data'];
+
+    return WeekListResponseDto(
+      success: json['success'] == true,
+      data: rawData is List
+          ? rawData
+              .whereType<Map<String, dynamic>>()
+              .map(CourseWeekDto.fromJson)
+              .toList(growable: false)
+          : const <CourseWeekDto>[],
+      error: ReportSummaryApiErrorDto.fromNullableJson(json['error']),
+      timestamp: json['timestamp']?.toString(),
+    );
+  }
+}
+
+/// 주차 정보 DTO입니다.
+class CourseWeekDto {
+  /// 주차 정보 DTO를 생성합니다.
+  const CourseWeekDto({
+    required this.id,
+    required this.weekNo,
+    required this.title,
+    required this.startDate,
+    required this.endDate,
+  });
+
+  /// 주차 ID입니다.
+  final String id;
+
+  /// 주차 번호입니다.
+  final int weekNo;
+
+  /// 주차 제목입니다.
+  final String title;
+
+  /// 시작일입니다.
+  final DateTime? startDate;
+
+  /// 종료일입니다.
+  final DateTime? endDate;
+
+  /// JSON 응답을 DTO로 변환합니다.
+  factory CourseWeekDto.fromJson(Map<String, dynamic> json) {
+    return CourseWeekDto(
+      id: json['id']?.toString() ?? '',
+      weekNo: _asInt(json['weekNo']) ?? 0,
+      title: json['title']?.toString() ?? '',
+      startDate: _parseDateTime(json['startDate']),
+      endDate: _parseDateTime(json['endDate']),
+    );
+  }
+}
+
+/// 코스 목차 API 응답 DTO입니다.
+class CourseOutlineResponseDto {
+  /// 코스 목차 API 응답 DTO를 생성합니다.
+  const CourseOutlineResponseDto({
+    required this.success,
+    this.data,
+    this.error,
+    this.timestamp,
+  });
+
+  /// 요청 성공 여부입니다.
+  final bool success;
+
+  /// 목차 데이터입니다.
+  final CourseOutlineDataDto? data;
+
+  /// 에러 정보입니다.
+  final ReportSummaryApiErrorDto? error;
+
+  /// 응답 시각입니다.
+  final String? timestamp;
+
+  /// JSON 응답을 DTO로 변환합니다.
+  factory CourseOutlineResponseDto.fromJson(Map<String, dynamic> json) {
+    final rawData = json['data'];
+
+    return CourseOutlineResponseDto(
+      success: json['success'] == true,
+      data: rawData is Map<String, dynamic>
+          ? CourseOutlineDataDto.fromJson(rawData)
+          : null,
+      error: ReportSummaryApiErrorDto.fromNullableJson(json['error']),
+      timestamp: json['timestamp']?.toString(),
+    );
+  }
 
   /// 목차 응답을 화면용 요약 목록으로 변환합니다.
   List<ReportSummary> toSummaries() {
@@ -36,72 +129,156 @@ abstract class CourseOutlineResponseDto with _$CourseOutlineResponseDto {
     }
 
     return outline.assignments
-        .map(
-          (assignment) => assignment.toSummary(reportType),
-        )
+        .map((assignment) => assignment.toSummary(reportType))
         .whereType<ReportSummary>()
         .toList(growable: false);
   }
 }
 
 /// 코스 목차 데이터 DTO입니다.
-@freezed
-abstract class CourseOutlineDataDto with _$CourseOutlineDataDto {
+class CourseOutlineDataDto {
   /// 코스 목차 데이터 DTO를 생성합니다.
-  const factory CourseOutlineDataDto({
-    required CourseOutlineHeaderDto course,
-    @Default(0) int totalAssignments,
-    @Default(<CourseOutlineAssignmentDto>[]) List<CourseOutlineAssignmentDto> assignments,
-  }) = _CourseOutlineDataDto;
+  const CourseOutlineDataDto({
+    required this.course,
+    required this.totalAssignments,
+    required this.assignments,
+  });
+
+  /// 코스 헤더 정보입니다.
+  final CourseOutlineHeaderDto course;
+
+  /// 총 과제 수입니다.
+  final int totalAssignments;
+
+  /// 과제 목록입니다.
+  final List<CourseOutlineAssignmentDto> assignments;
 
   /// JSON 응답을 DTO로 변환합니다.
-  factory CourseOutlineDataDto.fromJson(Map<String, dynamic> json) =>
-      _$CourseOutlineDataDtoFromJson(json);
+  factory CourseOutlineDataDto.fromJson(Map<String, dynamic> json) {
+    final rawAssignments = json['assignments'];
+
+    return CourseOutlineDataDto(
+      course: CourseOutlineHeaderDto.fromJson(
+        json['course'] is Map<String, dynamic>
+            ? json['course'] as Map<String, dynamic>
+            : const <String, dynamic>{},
+      ),
+      totalAssignments: _asInt(json['totalAssignments']) ?? 0,
+      assignments: rawAssignments is List
+          ? rawAssignments
+              .whereType<Map<String, dynamic>>()
+              .map(CourseOutlineAssignmentDto.fromJson)
+              .toList(growable: false)
+          : const <CourseOutlineAssignmentDto>[],
+    );
+  }
 }
 
 /// 목차 헤더 코스 DTO입니다.
-@freezed
-abstract class CourseOutlineHeaderDto with _$CourseOutlineHeaderDto {
+class CourseOutlineHeaderDto {
   /// 목차 헤더 코스 DTO를 생성합니다.
-  const factory CourseOutlineHeaderDto({
-    required String id,
-    required String slug,
-    required String fieldTag,
-    required String title,
-    required String description,
-    required String phase,
-  }) = _CourseOutlineHeaderDto;
+  const CourseOutlineHeaderDto({
+    required this.id,
+    required this.slug,
+    required this.fieldTag,
+    required this.title,
+    required this.description,
+    required this.phase,
+  });
+
+  /// 코스 ID입니다.
+  final String id;
+
+  /// 코스 슬러그입니다.
+  final String slug;
+
+  /// 필드 태그입니다.
+  final String fieldTag;
+
+  /// 코스 제목입니다.
+  final String title;
+
+  /// 코스 설명입니다.
+  final String description;
+
+  /// 코스 단계입니다.
+  final String phase;
 
   /// JSON 응답을 DTO로 변환합니다.
-  factory CourseOutlineHeaderDto.fromJson(Map<String, dynamic> json) =>
-      _$CourseOutlineHeaderDtoFromJson(json);
+  factory CourseOutlineHeaderDto.fromJson(Map<String, dynamic> json) {
+    return CourseOutlineHeaderDto(
+      id: json['id']?.toString() ?? '',
+      slug: json['slug']?.toString() ?? '',
+      fieldTag: json['fieldTag']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      phase: json['phase']?.toString() ?? '',
+    );
+  }
 }
 
 /// 목차 과제 항목 DTO입니다.
-@freezed
-abstract class CourseOutlineAssignmentDto with _$CourseOutlineAssignmentDto {
+class CourseOutlineAssignmentDto {
   /// 목차 과제 항목 DTO를 생성합니다.
-  const factory CourseOutlineAssignmentDto({
-    required String assignmentId,
-    required int weekNo,
-    required int orderInWeek,
-    required String title,
-    required String difficulty,
-    required DateTime startAt,
-    required DateTime endAt,
-    @Default(false) bool checked,
-  }) = _CourseOutlineAssignmentDto;
+  const CourseOutlineAssignmentDto({
+    required this.assignmentId,
+    required this.weekNo,
+    required this.orderInWeek,
+    required this.title,
+    required this.difficulty,
+    required this.startAt,
+    required this.endAt,
+    required this.checked,
+  });
 
-  const CourseOutlineAssignmentDto._();
+  /// 과제 ID입니다.
+  final String assignmentId;
+
+  /// 주차 번호입니다.
+  final int weekNo;
+
+  /// 주차 내 정렬 순서입니다.
+  final int orderInWeek;
+
+  /// 과제 제목입니다.
+  final String title;
+
+  /// 난이도 문자열입니다.
+  final String difficulty;
+
+  /// 시작 시각입니다.
+  final DateTime? startAt;
+
+  /// 종료 시각입니다.
+  final DateTime? endAt;
+
+  /// 체크 여부입니다.
+  final bool checked;
 
   /// JSON 응답을 DTO로 변환합니다.
-  factory CourseOutlineAssignmentDto.fromJson(Map<String, dynamic> json) =>
-      _$CourseOutlineAssignmentDtoFromJson(json);
+  factory CourseOutlineAssignmentDto.fromJson(Map<String, dynamic> json) {
+    return CourseOutlineAssignmentDto(
+      assignmentId: json['assignmentId']?.toString() ?? '',
+      weekNo: _asInt(json['weekNo']) ?? 0,
+      orderInWeek: _asInt(json['orderInWeek']) ?? 0,
+      title: json['title']?.toString() ?? '',
+      difficulty: json['difficulty']?.toString() ?? '',
+      startAt: _parseDateTime(json['startAt']),
+      endAt: _parseDateTime(json['endAt']),
+      checked: json['checked'] == true,
+    );
+  }
 
   /// 화면용 요약 엔티티로 변환합니다.
   ReportSummary? toSummary(ReportType reportType) {
     final level = _parseLevel(difficulty);
-    if (level == null) {
+    final resolvedEndAt = endAt;
+
+    if (assignmentId.isEmpty ||
+        title.isEmpty ||
+        weekNo <= 0 ||
+        level == null ||
+        resolvedEndAt == null) {
       return null;
     }
 
@@ -112,23 +289,32 @@ abstract class CourseOutlineAssignmentDto with _$CourseOutlineAssignmentDto {
       title: title,
       level: level,
       reportType: reportType,
-      endAt: endAt,
+      endAt: resolvedEndAt,
     );
   }
 }
 
 /// 주차별 과제 목록 API 응답 DTO입니다.
-@freezed
-abstract class ReportSummaryResponseDto with _$ReportSummaryResponseDto {
+class ReportSummaryResponseDto {
   /// 주차별 과제 목록 API 응답 DTO를 생성합니다.
-  const factory ReportSummaryResponseDto({
-    required bool success,
-    required List<ReportSummary> data,
-    ErrorData? error,
-    String? timestamp,
-  }) = _ReportSummaryResponseDto;
+  const ReportSummaryResponseDto({
+    required this.success,
+    required this.data,
+    this.error,
+    this.timestamp,
+  });
 
-  const ReportSummaryResponseDto._();
+  /// 요청 성공 여부입니다.
+  final bool success;
+
+  /// 과제 요약 목록입니다.
+  final List<ReportSummary> data;
+
+  /// 에러 정보입니다.
+  final ReportSummaryApiErrorDto? error;
+
+  /// 응답 시각입니다.
+  final String? timestamp;
 
   /// JSON 응답을 DTO로 변환합니다.
   factory ReportSummaryResponseDto.fromJson(Map<String, dynamic> json) {
@@ -143,52 +329,81 @@ abstract class ReportSummaryResponseDto with _$ReportSummaryResponseDto {
               .whereType<ReportSummary>()
               .toList(growable: false)
           : const <ReportSummary>[],
-      error: json['error'] is Map<String, dynamic>
-          ? ErrorData.fromJson(json['error'] as Map<String, dynamic>)
-          : null,
+      error: ReportSummaryApiErrorDto.fromNullableJson(json['error']),
       timestamp: json['timestamp']?.toString(),
     );
   }
+}
 
-  static ReportSummary? _toSummary(Map<String, dynamic> json) {
-    final metadata = json['metadata'];
-    final attributes =
-        metadata is Map<String, dynamic> ? metadata['attributes'] : null;
+/// 과제 목록 API 에러 DTO입니다.
+class ReportSummaryApiErrorDto {
+  /// 과제 목록 API 에러 DTO를 생성합니다.
+  const ReportSummaryApiErrorDto({
+    this.code,
+    this.message,
+  });
 
-    final id = json['assignmentId']?.toString() ?? json['id']?.toString();
-    final week = _asInt(json['weekNo']);
-    final seq = _asInt(json['orderInWeek']) ?? 0;
-    final title =
-        metadata is Map<String, dynamic> ? metadata['title']?.toString() : null;
-    final level = _parseLevel(
-      metadata is Map<String, dynamic> ? metadata['difficulty'] : null,
+  /// 서버 에러 코드입니다.
+  final String? code;
+
+  /// 사용자에게 표시할 수 있는 에러 메시지입니다.
+  final String? message;
+
+  /// JSON 응답을 DTO로 변환합니다.
+  factory ReportSummaryApiErrorDto.fromJson(Map<String, dynamic> json) {
+    return ReportSummaryApiErrorDto(
+      code: json['code']?.toString(),
+      message: json['message']?.toString(),
     );
-    final reportType = _parseReportType(
-      attributes is Map<String, dynamic>
-          ? attributes['legacyReportType'] ?? attributes['reportType']
-          : null,
-    );
-    final endAt = _parseDateTime(json['endAt']);
+  }
 
-    if (id == null ||
-        week == null ||
-        title == null ||
-        level == null ||
-        reportType == null ||
-        endAt == null) {
+  /// nullable JSON을 DTO로 변환합니다.
+  static ReportSummaryApiErrorDto? fromNullableJson(Object? rawError) {
+    if (rawError is! Map<String, dynamic>) {
       return null;
     }
 
-    return ReportSummary(
-      id: id,
-      week: week,
-      seq: seq,
-      title: title,
-      level: level,
-      reportType: reportType,
-      endAt: endAt,
-    );
+    return ReportSummaryApiErrorDto.fromJson(rawError);
   }
+}
+
+ReportSummary? _toSummary(Map<String, dynamic> json) {
+  final metadata = json['metadata'];
+  final metadataMap = metadata is Map<String, dynamic> ? metadata : null;
+  final attributes = metadataMap?['attributes'];
+  final attributesMap = attributes is Map<String, dynamic> ? attributes : null;
+
+  final id = json['assignmentId']?.toString() ?? json['id']?.toString();
+  final week = _asInt(json['weekNo']);
+  final seq = _asInt(json['orderInWeek']) ?? 0;
+  final title = metadataMap?['title']?.toString() ?? json['title']?.toString();
+  final level = _parseLevel(metadataMap?['difficulty'] ?? json['difficulty']);
+  final reportType = _parseReportType(
+    attributesMap?['legacyReportType'] ??
+        attributesMap?['reportType'] ??
+        json['reportType'],
+  );
+  final endAt = _parseDateTime(json['endAt']);
+
+  if (id == null ||
+      week == null ||
+      title == null ||
+      title.isEmpty ||
+      level == null ||
+      reportType == null ||
+      endAt == null) {
+    return null;
+  }
+
+  return ReportSummary(
+    id: id,
+    week: week,
+    seq: seq,
+    title: title,
+    level: level,
+    reportType: reportType,
+    endAt: endAt,
+  );
 }
 
 int? _asInt(Object? value) {
@@ -234,20 +449,7 @@ ReportType? _parseReportType(Object? value) {
 
   return switch (normalized) {
     'CS' => ReportType.CS,
-    'BASIC' => ReportType.BASIC,
-    'FRAMEWORK' => ReportType.BASIC,
+    'BASIC' || 'FRAMEWORK' => ReportType.BASIC,
     _ => null,
   };
-}
-
-typedef JsonMap = Map<String, dynamic>;
-
-@freezed
-abstract class ErrorData with _$ErrorData {
-  const factory ErrorData({
-    required String code,
-    required String message,
-  }) = _ErrorData;
-
-  factory ErrorData.fromJson(JsonMap json) => _$ErrorDataFromJson(json);
 }

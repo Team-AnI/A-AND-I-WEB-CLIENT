@@ -28,7 +28,6 @@ final class GetReportDetailUsecaseImpl implements GetReportDetailUsecase {
     }
 
     final authorization = 'Bearer $token';
-
     try {
       final response = await reportRepository.getReportDetailById(
         courseSlug,
