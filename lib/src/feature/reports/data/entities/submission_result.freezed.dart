@@ -489,7 +489,9 @@ mixin _$SubmissionTestCaseResult {
   String? get status;
   double? get timeMs;
   double? get memoryMb;
+  @JsonKey(fromJson: _asNullableString)
   String? get output;
+  @JsonKey(fromJson: _asNullableString)
   String? get error;
 
   /// Create a copy of SubmissionTestCaseResult
@@ -539,8 +541,8 @@ abstract mixin class $SubmissionTestCaseResultCopyWith<$Res> {
       String? status,
       double? timeMs,
       double? memoryMb,
-      String? output,
-      String? error});
+      @JsonKey(fromJson: _asNullableString) String? output,
+      @JsonKey(fromJson: _asNullableString) String? error});
 }
 
 /// @nodoc
@@ -683,8 +685,13 @@ extension SubmissionTestCaseResultPatterns on SubmissionTestCaseResult {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(int? caseId, String? status, double? timeMs,
-            double? memoryMb, String? output, String? error)?
+    TResult Function(
+            int? caseId,
+            String? status,
+            double? timeMs,
+            double? memoryMb,
+            @JsonKey(fromJson: _asNullableString) String? output,
+            @JsonKey(fromJson: _asNullableString) String? error)?
         $default, {
     required TResult orElse(),
   }) {
@@ -713,8 +720,13 @@ extension SubmissionTestCaseResultPatterns on SubmissionTestCaseResult {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(int? caseId, String? status, double? timeMs,
-            double? memoryMb, String? output, String? error)
+    TResult Function(
+            int? caseId,
+            String? status,
+            double? timeMs,
+            double? memoryMb,
+            @JsonKey(fromJson: _asNullableString) String? output,
+            @JsonKey(fromJson: _asNullableString) String? error)
         $default,
   ) {
     final _that = this;
@@ -739,8 +751,13 @@ extension SubmissionTestCaseResultPatterns on SubmissionTestCaseResult {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(int? caseId, String? status, double? timeMs,
-            double? memoryMb, String? output, String? error)?
+    TResult? Function(
+            int? caseId,
+            String? status,
+            double? timeMs,
+            double? memoryMb,
+            @JsonKey(fromJson: _asNullableString) String? output,
+            @JsonKey(fromJson: _asNullableString) String? error)?
         $default,
   ) {
     final _that = this;
@@ -762,8 +779,8 @@ class _SubmissionTestCaseResult implements SubmissionTestCaseResult {
       this.status,
       this.timeMs,
       this.memoryMb,
-      this.output,
-      this.error});
+      @JsonKey(fromJson: _asNullableString) this.output,
+      @JsonKey(fromJson: _asNullableString) this.error});
   factory _SubmissionTestCaseResult.fromJson(Map<String, dynamic> json) =>
       _$SubmissionTestCaseResultFromJson(json);
 
@@ -776,8 +793,10 @@ class _SubmissionTestCaseResult implements SubmissionTestCaseResult {
   @override
   final double? memoryMb;
   @override
+  @JsonKey(fromJson: _asNullableString)
   final String? output;
   @override
+  @JsonKey(fromJson: _asNullableString)
   final String? error;
 
   /// Create a copy of SubmissionTestCaseResult
@@ -834,8 +853,8 @@ abstract mixin class _$SubmissionTestCaseResultCopyWith<$Res>
       String? status,
       double? timeMs,
       double? memoryMb,
-      String? output,
-      String? error});
+      @JsonKey(fromJson: _asNullableString) String? output,
+      @JsonKey(fromJson: _asNullableString) String? error});
 }
 
 /// @nodoc

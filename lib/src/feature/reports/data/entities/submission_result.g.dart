@@ -43,8 +43,8 @@ _SubmissionTestCaseResult _$SubmissionTestCaseResultFromJson(
       status: json['status'] as String?,
       timeMs: (json['timeMs'] as num?)?.toDouble(),
       memoryMb: (json['memoryMb'] as num?)?.toDouble(),
-      output: json['output'] as String?,
-      error: json['error'] as String?,
+      output: _asNullableString(json['output']),
+      error: _asNullableString(json['error']),
     );
 
 Map<String, dynamic> _$SubmissionTestCaseResultToJson(

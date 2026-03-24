@@ -1,14 +1,11 @@
-import 'dart:async';
-
 import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/report.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/submission_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_submit_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ReportSubmitResultView extends HookConsumerWidget {
+class ReportSubmitResultView extends ConsumerWidget {
   final Report report;
   final bool isDarkMode;
 
@@ -21,20 +18,6 @@ class ReportSubmitResultView extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(reportSubmitViewModelProvider(report));
-    final notifier = ref.read(reportSubmitViewModelProvider(report).notifier);
-    final historyProblemId = _resolveHistoryProblemId(
-      report: report,
-      state: state,
-    );
-
-    useEffect(() {
-      if (!state.isSubmitting && !state.isPolling) {
-        unawaited(
-          notifier.loadSubmissionHistory(problemId: historyProblemId),
-        );
-      }
-      return null;
-    }, [historyProblemId, state.isSubmitting, state.isPolling]);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,6 +41,21 @@ class ReportSubmitResultView extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         _SummaryCard(state: state, isDarkMode: isDarkMode),
+        if (state.isHistoryLoading) ...[
+          const SizedBox(height: 20),
+          _HistoryNoticeCard(
+            message: '가장 최근 채점 기록을 불러오는 중입니다.',
+            isDarkMode: isDarkMode,
+          ),
+        ],
+        if (state.historyErrorMsg.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          _HistoryNoticeCard(
+            message: state.historyErrorMsg,
+            isDarkMode: isDarkMode,
+            isError: true,
+          ),
+        ],
         const SizedBox(height: 20),
         _TestCaseResultsCard(state: state, isDarkMode: isDarkMode),
         const SizedBox(height: 20),
@@ -73,6 +71,50 @@ class ReportSubmitResultView extends HookConsumerWidget {
           _PreviousSubmissionHistoryCard(state: state, isDarkMode: isDarkMode),
         ],
       ],
+    );
+  }
+}
+
+class _HistoryNoticeCard extends StatelessWidget {
+  const _HistoryNoticeCard({
+    required this.message,
+    required this.isDarkMode,
+    this.isError = false,
+  });
+
+  final String message;
+  final bool isDarkMode;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = isError
+        ? (isDarkMode ? const Color(0xFF3F1D1D) : const Color(0xFFFEF2F2))
+        : (isDarkMode ? const Color(0xFF27272A) : const Color(0xFFF8FAFC));
+    final borderColor = isError
+        ? const Color(0xFFFCA5A5)
+        : (isDarkMode ? const Color(0xFF3F3F46) : const Color(0xFFE5E7EB));
+    final textColor = isError
+        ? (isDarkMode ? const Color(0xFFFECACA) : const Color(0xFFB91C1C))
+        : (isDarkMode ? const Color(0xFFE5E7EB) : const Color(0xFF334155));
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Text(
+        message,
+        style: TextStyle(
+          fontSize: 13,
+          height: 1.6,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
     );
   }
 }
@@ -1165,23 +1207,6 @@ List<String> _displayFeedbacks(List<String> feedbacks) {
   return feedbacks
       .where((feedback) => !testCasePattern.hasMatch(feedback.trim()))
       .toList(growable: false);
-}
-
-String _resolveHistoryProblemId({
-  required Report report,
-  required ReportSubmitState state,
-}) {
-  final historyProblemId = state.historyProblemId?.trim();
-  if (historyProblemId != null && historyProblemId.isNotEmpty) {
-    return historyProblemId;
-  }
-
-  final reportProblemId = report.problemId?.trim();
-  if (reportProblemId != null && reportProblemId.isNotEmpty) {
-    return reportProblemId;
-  }
-
-  return report.id;
 }
 
 _LanguageEffectMeta _languageEffectMeta(String? rawLanguage) {

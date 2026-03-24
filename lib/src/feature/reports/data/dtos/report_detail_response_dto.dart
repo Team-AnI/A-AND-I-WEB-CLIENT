@@ -84,8 +84,11 @@ Report? _parseReport(Object? rawData) {
   final codeTemplates = metadataMap?['codeTemplates'];
 
   final id = rawData['assignmentId']?.toString() ?? rawData['id']?.toString();
-  final problemId = attributesMap?['problemId']?.toString() ??
-      rawData['problemId']?.toString();
+  final problemId = _extractProblemId(
+    rawData: rawData,
+    metadataMap: metadataMap,
+    attributesMap: attributesMap,
+  );
   final title = metadataMap?['title']?.toString();
   final content = metadataMap?['description']?.toString();
   final level = _parseLevel(metadataMap?['difficulty']);
@@ -122,6 +125,35 @@ Report? _parseReport(Object? rawData) {
     week: week,
     level: level,
   );
+}
+
+String? _extractProblemId({
+  required Map<String, dynamic> rawData,
+  required Map<String, dynamic>? metadataMap,
+  required Map<String, dynamic>? attributesMap,
+}) {
+  final candidates = <Object?>[
+    attributesMap?['problemId'],
+    attributesMap?['gradingProblemId'],
+    attributesMap?['judgeProblemId'],
+    attributesMap?['problemUuid'],
+    metadataMap?['problemId'],
+    metadataMap?['gradingProblemId'],
+    metadataMap?['judgeProblemId'],
+    rawData['problemId'],
+    rawData['gradingProblemId'],
+    rawData['judgeProblemId'],
+    rawData['problemUuid'],
+  ];
+
+  for (final candidate in candidates) {
+    final value = candidate?.toString().trim();
+    if (value != null && value.isNotEmpty) {
+      return value;
+    }
+  }
+
+  return null;
 }
 
 List<SeqString> _parseRequirements(Object? value) {
@@ -177,8 +209,7 @@ List<ExampleIO> _parseExamples(Object? value) {
       continue;
     }
 
-    final seq =
-        _asInt(item['seq']) ?? _asInt(item['sortOrder']) ?? index + 1;
+    final seq = _asInt(item['seq']) ?? _asInt(item['sortOrder']) ?? index + 1;
     final input = item['inputText']?.toString() ?? _parseInputValues(item);
     final output = item['outputText']?.toString() ?? _parseOutputValues(item);
     if (input == null || input.isEmpty || output == null || output.isEmpty) {

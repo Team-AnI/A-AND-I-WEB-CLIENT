@@ -6,6 +6,7 @@ import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/repo
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/submission_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/providers/create_submission_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/providers/get_my_problem_submissions_usecase_provider.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/providers/get_submission_result_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/providers/stream_submission_events_usecase_provider.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -128,12 +129,42 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
           return bTime.compareTo(aTime);
         });
 
+      final latestSubmissionSummary =
+          sortedSubmissions.isEmpty ? null : sortedSubmissions.first;
+      SubmissionResult? latestSubmissionDetail;
+      if (latestSubmissionSummary != null) {
+        try {
+          latestSubmissionDetail = await ref
+              .read(getSubmissionResultUsecaseProvider)
+              .call(latestSubmissionSummary.submissionId);
+        } catch (_) {
+          latestSubmissionDetail = null;
+        }
+      }
+
+      final latestSubmission =
+          latestSubmissionDetail ?? latestSubmissionSummary;
+      final resolvedSubmissions = latestSubmissionDetail == null
+          ? sortedSubmissions
+          : [
+              latestSubmissionDetail,
+              ...sortedSubmissions.skip(1),
+            ];
+
       state = state.copyWith(
         isHistoryLoading: false,
         hasLoadedHistory: true,
-        previousSubmissions: sortedSubmissions,
+        previousSubmissions: resolvedSubmissions,
         historyErrorMsg: '',
+        submitCount: resolvedSubmissions.length,
       );
+
+      if (latestSubmission != null) {
+        _applyHistoricalResultSnapshot(
+          latestSubmission,
+          submissionCount: resolvedSubmissions.length,
+        );
+      }
     } catch (error) {
       state = state.copyWith(
         isHistoryLoading: false,
@@ -381,6 +412,47 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
       testCaseResults: nextTestCaseResults,
       errorMsg: '',
     );
+  }
+
+  void _applyHistoricalResultSnapshot(
+    SubmissionResult result, {
+    required int submissionCount,
+  }) {
+    final resolvedLanguage = result.language == null
+        ? state.latestSubmittedLanguage
+        : SubmitLanguageX.fromApiValue(result.language!) ??
+            state.latestSubmittedLanguage;
+    final feedbacks = _buildHistoricalFeedbacks(result);
+    final nextStatus = _mapSubmissionStatus(result.status);
+    final score = _calculateScore(
+      testCaseResults: result.testCases,
+      finalStatus: nextStatus,
+    );
+
+    state = state.copyWith(
+      isPolling: false,
+      submissionStatus: nextStatus,
+      latestSubmittedLanguage: resolvedLanguage,
+      submittedAt: result.createdAt ?? state.submittedAt,
+      submitCount: submissionCount,
+      score: score,
+      feedbacks: feedbacks,
+      testCaseResults: result.testCases,
+      submissionId: result.submissionId,
+      latestVerdict: result.status,
+      errorMsg: '',
+    );
+  }
+
+  List<String> _buildHistoricalFeedbacks(SubmissionResult result) {
+    final feedbacks = <String>['가장 최근 채점 기록을 불러왔습니다.'];
+    if (result.testCases.isNotEmpty) {
+      feedbacks.addAll(
+        result.testCases.map(_formatTestCaseResultLine),
+      );
+    }
+    feedbacks.add(_completionMessage(_mapSubmissionStatus(result.status)));
+    return feedbacks;
   }
 
   SubmissionResult? _parseSubmissionResult(String payload) {

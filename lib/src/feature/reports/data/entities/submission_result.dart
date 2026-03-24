@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'submission_result.freezed.dart';
@@ -29,10 +31,19 @@ sealed class SubmissionTestCaseResult with _$SubmissionTestCaseResult {
     String? status,
     double? timeMs,
     double? memoryMb,
-    String? output,
-    String? error,
+    @JsonKey(fromJson: _asNullableString) String? output,
+    @JsonKey(fromJson: _asNullableString) String? error,
   }) = _SubmissionTestCaseResult;
 
   factory SubmissionTestCaseResult.fromJson(Map<String, dynamic> json) =>
       _$SubmissionTestCaseResultFromJson(json);
+}
+
+String? _asNullableString(Object? value) {
+  if (value == null) {
+    return null;
+  }
+
+  final normalized = value.toString();
+  return normalized.isEmpty ? null : normalized;
 }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class ProblemNavTabs extends StatelessWidget {
-  final ValueNotifier<int> selectedTab;
+  final int selectedTab;
+  final ValueChanged<int> onSelectTab;
   final bool isDarkMode;
   const ProblemNavTabs({
     super.key,
     required this.selectedTab,
+    required this.onSelectTab,
     this.isDarkMode = false,
   });
 
@@ -15,22 +17,22 @@ class ProblemNavTabs extends StatelessWidget {
       children: [
         _TabItem(
           label: '문제',
-          isActive: selectedTab.value == 0,
-          onTap: () => selectedTab.value = 0,
+          isActive: selectedTab == 0,
+          onTap: () => onSelectTab(0),
           isDarkMode: isDarkMode,
         ),
         const SizedBox(width: 48),
         _TabItem(
           label: '제출',
-          isActive: selectedTab.value == 1,
-          onTap: () => selectedTab.value = 1,
+          isActive: selectedTab == 1,
+          onTap: () => onSelectTab(1),
           isDarkMode: isDarkMode,
         ),
         const SizedBox(width: 48),
         _TabItem(
           label: '결과',
-          isActive: selectedTab.value == 2,
-          onTap: () => selectedTab.value = 2,
+          isActive: selectedTab == 2,
+          onTap: () => onSelectTab(2),
           isDarkMode: isDarkMode,
         ),
       ],

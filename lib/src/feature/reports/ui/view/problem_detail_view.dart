@@ -10,11 +10,13 @@ import 'package:a_and_i_report_web_server/src/feature/reports/ui/view/problem_na
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/view/problem_section_header.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/view/report_submit_result_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/view/source_code_submit_view.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_submit_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/widgets/problem_level_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ProblemDetailView extends HookWidget {
+class ProblemDetailView extends HookConsumerWidget {
   final Report report;
   final DateTime? endAt;
   final bool isDarkMode;
@@ -26,15 +28,33 @@ class ProblemDetailView extends HookWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selectedTab = useState(0);
+    final historyProblemId = report.problemId?.trim().isNotEmpty == true
+        ? report.problemId!.trim()
+        : report.id.trim();
+
+    void selectTab(int nextTab) {
+      selectedTab.value = nextTab;
+      if (nextTab == 2 && historyProblemId.isNotEmpty) {
+        unawaited(
+          ref
+              .read(reportSubmitViewModelProvider(report).notifier)
+              .loadSubmissionHistory(
+                problemId: historyProblemId,
+                forceRefresh: true,
+              ),
+        );
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _HeaderCard(
           report: report,
-          selectedTab: selectedTab,
+          selectedTab: selectedTab.value,
+          onSelectTab: selectTab,
           endAt: endAt,
           isDarkMode: isDarkMode,
         ),
@@ -42,7 +62,7 @@ class ProblemDetailView extends HookWidget {
           report: report,
           selectedTab: selectedTab.value,
           isDarkMode: isDarkMode,
-          onMoveToResultTab: () => selectedTab.value = 2,
+          onMoveToResultTab: () => selectTab(2),
         ),
         const SizedBox(height: 64),
         const BottomLogo(),
@@ -53,13 +73,15 @@ class ProblemDetailView extends HookWidget {
 
 class _HeaderCard extends StatelessWidget {
   final Report report;
-  final ValueNotifier<int> selectedTab;
+  final int selectedTab;
+  final ValueChanged<int> onSelectTab;
   final DateTime? endAt;
   final bool isDarkMode;
 
   const _HeaderCard({
     required this.report,
     required this.selectedTab,
+    required this.onSelectTab,
     this.endAt,
     required this.isDarkMode,
   });
@@ -122,7 +144,11 @@ class _HeaderCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 32),
-          ProblemNavTabs(selectedTab: selectedTab, isDarkMode: isDarkMode),
+          ProblemNavTabs(
+            selectedTab: selectedTab,
+            onSelectTab: onSelectTab,
+            isDarkMode: isDarkMode,
+          ),
         ],
       ),
     );
