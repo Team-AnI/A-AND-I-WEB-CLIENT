@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:flutter/material.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 
@@ -183,12 +184,11 @@ class ArticleEditorPanel extends StatelessWidget {
                         undoController: contentUndoController,
                         maxLines: null,
                         keyboardType: TextInputType.multiline,
-                        style: const TextStyle(
+                        style: vscodeCodeTextStyle(const TextStyle(
                           color: Color(0xFF374151),
                           fontSize: 16,
                           height: 1.7,
-                          fontFamily: 'monospace',
-                        ),
+                        )),
                         decoration: const InputDecoration(
                           hintText: '당신의 이야기를 적어주세요',
                           hintStyle: TextStyle(color: Color(0xFF9CA3AF)),

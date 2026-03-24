@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:re_highlight/languages/dart.dart';
@@ -8,6 +9,7 @@ import 'package:re_highlight/languages/python.dart';
 import 'package:re_highlight/re_highlight.dart';
 import 'package:re_highlight/styles/atom-one-dark.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 String normalizeMarkdownForPreview(String source) {
   if (!source.contains('>\n')) {
@@ -102,14 +104,13 @@ MarkdownStyleSheet createArticlePreviewMarkdownStyle(BuildContext context) {
       fontSize: 16,
       fontWeight: FontWeight.w700,
     ),
-    code: const TextStyle(
+    code: vscodeCodeTextStyle(const TextStyle(
       fontSize: 14,
       height: 1.45,
-      fontFamily: 'monospace',
       color: Color(0xFF111827),
       backgroundColor: Color(0xFFEFF1F5),
       fontWeight: FontWeight.w600,
-    ),
+    )),
     codeblockPadding: const EdgeInsets.all(14),
     codeblockDecoration: BoxDecoration(
       color: const Color(0xFF111827),
@@ -143,12 +144,11 @@ class ArticleMarkdownCodeSyntaxHighlighter extends SyntaxHighlighter {
       return const TextSpan(text: '');
     }
 
-    const baseStyle = TextStyle(
+    final baseStyle = vscodeCodeTextStyle(const TextStyle(
       fontSize: 13,
       height: 1.6,
-      fontFamily: 'monospace',
       color: Color(0xFFE5E7EB),
-    );
+    ));
 
     if (code.length > 4000) {
       return TextSpan(text: code, style: baseStyle);
@@ -166,7 +166,7 @@ class ArticleMarkdownCodeSyntaxHighlighter extends SyntaxHighlighter {
       );
       final renderer = TextSpanRenderer(baseStyle, atomOneDarkTheme);
       result.render(renderer);
-      final span = renderer.span ?? const TextSpan(text: '', style: baseStyle);
+      final span = renderer.span ?? TextSpan(text: '', style: baseStyle);
       _rememberSpan(code, span);
       return span;
     } catch (_) {
@@ -183,4 +183,47 @@ class ArticleMarkdownCodeSyntaxHighlighter extends SyntaxHighlighter {
     }
     _spanCache.remove(_spanCache.keys.first);
   }
+}
+
+Future<void> launchArticleMarkdownLink(
+  BuildContext context,
+  String? href,
+) async {
+  final uri = _resolveArticleMarkdownUri(href);
+  if (uri == null) {
+    return;
+  }
+
+  final launched = await launchUrl(
+    uri,
+    mode: LaunchMode.platformDefault,
+    webOnlyWindowName: '_blank',
+  );
+  if (!launched && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('링크를 열 수 없습니다.')),
+    );
+  }
+}
+
+Uri? _resolveArticleMarkdownUri(String? href) {
+  final raw = href?.trim();
+  if (raw == null || raw.isEmpty) {
+    return null;
+  }
+
+  if (raw.startsWith('//')) {
+    return Uri.tryParse('https:$raw');
+  }
+
+  final parsed = Uri.tryParse(raw);
+  if (parsed != null && parsed.hasScheme) {
+    return parsed;
+  }
+
+  if (raw.startsWith('/')) {
+    return Uri.base.resolve(raw);
+  }
+
+  return Uri.tryParse('https://$raw');
 }

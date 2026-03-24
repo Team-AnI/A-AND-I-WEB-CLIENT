@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -85,13 +86,12 @@ class _IOExample extends StatelessWidget {
             ),
             child: SelectableText(
               input,
-              style: TextStyle(
-                fontFamily: 'monospace',
+              style: vscodeCodeTextStyle(TextStyle(
                 fontSize: 13,
                 color:
                     isDarkMode ? const Color(0xFFE5E7EB) : const Color(0xFF000000),
                 height: 1.6,
-              ),
+              )),
             ),
           ),
           const SizedBox(height: 24),
@@ -115,13 +115,12 @@ class _IOExample extends StatelessWidget {
             ),
             child: Text(
               output,
-              style: TextStyle(
-                fontFamily: 'monospace',
+              style: vscodeCodeTextStyle(TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color:
                     isDarkMode ? const Color(0xFFF5F5F5) : const Color(0xFF000000),
-              ),
+              )),
             ),
           ),
         ],

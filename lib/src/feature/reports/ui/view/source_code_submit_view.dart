@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/report.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_submit_view_model.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +26,8 @@ class SourceCodeSubmitView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final submitState = ref.watch(reportSubmitViewModelProvider(report.id));
-    final notifier =
-        ref.read(reportSubmitViewModelProvider(report.id).notifier);
+    final submitState = ref.watch(reportSubmitViewModelProvider(report));
+    final notifier = ref.read(reportSubmitViewModelProvider(report).notifier);
     final showValidationError = useState(false);
     final isProgrammaticUpdate = useRef(false);
 
@@ -66,8 +66,7 @@ class SourceCodeSubmitView extends HookConsumerWidget {
         Future<void>(() {
           if (!context.mounted) return;
 
-          final latestState =
-              ref.read(reportSubmitViewModelProvider(report.id));
+          final latestState = ref.read(reportSubmitViewModelProvider(report));
           if (latestState.selectedLanguage != language) {
             return;
           }
@@ -209,7 +208,7 @@ class SourceCodeSubmitView extends HookConsumerWidget {
                   autocompleteSymbols: true,
                   style: CodeEditorStyle(
                     fontSize: 13,
-                    fontFamily: 'monospace',
+                    fontFamily: kVsCodeCodeFontFamily,
                     backgroundColor: const Color(0xFF0B1020),
                     textColor: const Color(0xFFE5E7EB),
                     cursorColor: const Color(0xFF93C5FD),
@@ -224,17 +223,15 @@ class SourceCodeSubmitView extends HookConsumerWidget {
                         DefaultCodeLineNumber(
                           controller: editingController,
                           notifier: notifier,
-                          textStyle: const TextStyle(
+                          textStyle: vscodeCodeTextStyle(const TextStyle(
                             fontSize: 11,
                             color: Color(0xFF6B7280),
-                            fontFamily: 'monospace',
-                          ),
-                          focusedTextStyle: const TextStyle(
+                          )),
+                          focusedTextStyle: vscodeCodeTextStyle(const TextStyle(
                             fontSize: 11,
                             color: Color(0xFF9CA3AF),
                             fontWeight: FontWeight.w700,
-                            fontFamily: 'monospace',
-                          ),
+                          )),
                         ),
                         if (lang != SubmitLanguage.python)
                           DefaultCodeChunkIndicator(
@@ -286,7 +283,7 @@ class SourceCodeSubmitView extends HookConsumerWidget {
                           : report.id,
                     );
                     final latestState =
-                        ref.read(reportSubmitViewModelProvider(report.id));
+                        ref.read(reportSubmitViewModelProvider(report));
                     if (latestState.errorMsg.isNotEmpty && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(latestState.errorMsg)),

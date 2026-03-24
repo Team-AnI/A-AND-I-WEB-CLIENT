@@ -16,6 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$ReportSubmitState {
   SubmitLanguage get selectedLanguage;
   Map<SubmitLanguage, String> get draftCodeByLanguage;
+  Map<SubmitLanguage, String> get templateCodeByLanguage;
   SubmissionStatus get submissionStatus;
   String get latestSubmittedCode;
   SubmitLanguage? get latestSubmittedLanguage;
@@ -53,6 +54,8 @@ mixin _$ReportSubmitState {
                 other.selectedLanguage == selectedLanguage) &&
             const DeepCollectionEquality()
                 .equals(other.draftCodeByLanguage, draftCodeByLanguage) &&
+            const DeepCollectionEquality()
+                .equals(other.templateCodeByLanguage, templateCodeByLanguage) &&
             (identical(other.submissionStatus, submissionStatus) ||
                 other.submissionStatus == submissionStatus) &&
             (identical(other.latestSubmittedCode, latestSubmittedCode) ||
@@ -97,6 +100,7 @@ mixin _$ReportSubmitState {
         runtimeType,
         selectedLanguage,
         const DeepCollectionEquality().hash(draftCodeByLanguage),
+        const DeepCollectionEquality().hash(templateCodeByLanguage),
         submissionStatus,
         latestSubmittedCode,
         latestSubmittedLanguage,
@@ -120,7 +124,7 @@ mixin _$ReportSubmitState {
 
   @override
   String toString() {
-    return 'ReportSubmitState(selectedLanguage: $selectedLanguage, draftCodeByLanguage: $draftCodeByLanguage, submissionStatus: $submissionStatus, latestSubmittedCode: $latestSubmittedCode, latestSubmittedLanguage: $latestSubmittedLanguage, submittedAt: $submittedAt, submitCount: $submitCount, score: $score, feedbacks: $feedbacks, testCaseResults: $testCaseResults, previousSubmissions: $previousSubmissions, submissionId: $submissionId, streamUrl: $streamUrl, historyProblemId: $historyProblemId, latestVerdict: $latestVerdict, isSubmitting: $isSubmitting, isPolling: $isPolling, isHistoryLoading: $isHistoryLoading, hasLoadedHistory: $hasLoadedHistory, errorMsg: $errorMsg, historyErrorMsg: $historyErrorMsg)';
+    return 'ReportSubmitState(selectedLanguage: $selectedLanguage, draftCodeByLanguage: $draftCodeByLanguage, templateCodeByLanguage: $templateCodeByLanguage, submissionStatus: $submissionStatus, latestSubmittedCode: $latestSubmittedCode, latestSubmittedLanguage: $latestSubmittedLanguage, submittedAt: $submittedAt, submitCount: $submitCount, score: $score, feedbacks: $feedbacks, testCaseResults: $testCaseResults, previousSubmissions: $previousSubmissions, submissionId: $submissionId, streamUrl: $streamUrl, historyProblemId: $historyProblemId, latestVerdict: $latestVerdict, isSubmitting: $isSubmitting, isPolling: $isPolling, isHistoryLoading: $isHistoryLoading, hasLoadedHistory: $hasLoadedHistory, errorMsg: $errorMsg, historyErrorMsg: $historyErrorMsg)';
   }
 }
 
@@ -133,6 +137,7 @@ abstract mixin class $ReportSubmitStateCopyWith<$Res> {
   $Res call(
       {SubmitLanguage selectedLanguage,
       Map<SubmitLanguage, String> draftCodeByLanguage,
+      Map<SubmitLanguage, String> templateCodeByLanguage,
       SubmissionStatus submissionStatus,
       String latestSubmittedCode,
       SubmitLanguage? latestSubmittedLanguage,
@@ -169,6 +174,7 @@ class _$ReportSubmitStateCopyWithImpl<$Res>
   $Res call({
     Object? selectedLanguage = null,
     Object? draftCodeByLanguage = null,
+    Object? templateCodeByLanguage = null,
     Object? submissionStatus = null,
     Object? latestSubmittedCode = null,
     Object? latestSubmittedLanguage = freezed,
@@ -197,6 +203,10 @@ class _$ReportSubmitStateCopyWithImpl<$Res>
       draftCodeByLanguage: null == draftCodeByLanguage
           ? _self.draftCodeByLanguage
           : draftCodeByLanguage // ignore: cast_nullable_to_non_nullable
+              as Map<SubmitLanguage, String>,
+      templateCodeByLanguage: null == templateCodeByLanguage
+          ? _self.templateCodeByLanguage
+          : templateCodeByLanguage // ignore: cast_nullable_to_non_nullable
               as Map<SubmitLanguage, String>,
       submissionStatus: null == submissionStatus
           ? _self.submissionStatus
@@ -374,6 +384,7 @@ extension ReportSubmitStatePatterns on ReportSubmitState {
     TResult Function(
             SubmitLanguage selectedLanguage,
             Map<SubmitLanguage, String> draftCodeByLanguage,
+            Map<SubmitLanguage, String> templateCodeByLanguage,
             SubmissionStatus submissionStatus,
             String latestSubmittedCode,
             SubmitLanguage? latestSubmittedLanguage,
@@ -402,6 +413,7 @@ extension ReportSubmitStatePatterns on ReportSubmitState {
         return $default(
             _that.selectedLanguage,
             _that.draftCodeByLanguage,
+            _that.templateCodeByLanguage,
             _that.submissionStatus,
             _that.latestSubmittedCode,
             _that.latestSubmittedLanguage,
@@ -444,6 +456,7 @@ extension ReportSubmitStatePatterns on ReportSubmitState {
     TResult Function(
             SubmitLanguage selectedLanguage,
             Map<SubmitLanguage, String> draftCodeByLanguage,
+            Map<SubmitLanguage, String> templateCodeByLanguage,
             SubmissionStatus submissionStatus,
             String latestSubmittedCode,
             SubmitLanguage? latestSubmittedLanguage,
@@ -471,6 +484,7 @@ extension ReportSubmitStatePatterns on ReportSubmitState {
         return $default(
             _that.selectedLanguage,
             _that.draftCodeByLanguage,
+            _that.templateCodeByLanguage,
             _that.submissionStatus,
             _that.latestSubmittedCode,
             _that.latestSubmittedLanguage,
@@ -512,6 +526,7 @@ extension ReportSubmitStatePatterns on ReportSubmitState {
     TResult? Function(
             SubmitLanguage selectedLanguage,
             Map<SubmitLanguage, String> draftCodeByLanguage,
+            Map<SubmitLanguage, String> templateCodeByLanguage,
             SubmissionStatus submissionStatus,
             String latestSubmittedCode,
             SubmitLanguage? latestSubmittedLanguage,
@@ -539,6 +554,7 @@ extension ReportSubmitStatePatterns on ReportSubmitState {
         return $default(
             _that.selectedLanguage,
             _that.draftCodeByLanguage,
+            _that.templateCodeByLanguage,
             _that.submissionStatus,
             _that.latestSubmittedCode,
             _that.latestSubmittedLanguage,
@@ -570,6 +586,7 @@ class _ReportSubmitState implements ReportSubmitState {
   const _ReportSubmitState(
       {required this.selectedLanguage,
       required final Map<SubmitLanguage, String> draftCodeByLanguage,
+      required final Map<SubmitLanguage, String> templateCodeByLanguage,
       this.submissionStatus = SubmissionStatus.notSubmitted,
       this.latestSubmittedCode = '',
       this.latestSubmittedLanguage,
@@ -592,6 +609,7 @@ class _ReportSubmitState implements ReportSubmitState {
       this.errorMsg = '',
       this.historyErrorMsg = ''})
       : _draftCodeByLanguage = draftCodeByLanguage,
+        _templateCodeByLanguage = templateCodeByLanguage,
         _feedbacks = feedbacks,
         _testCaseResults = testCaseResults,
         _previousSubmissions = previousSubmissions;
@@ -605,6 +623,15 @@ class _ReportSubmitState implements ReportSubmitState {
       return _draftCodeByLanguage;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_draftCodeByLanguage);
+  }
+
+  final Map<SubmitLanguage, String> _templateCodeByLanguage;
+  @override
+  Map<SubmitLanguage, String> get templateCodeByLanguage {
+    if (_templateCodeByLanguage is EqualUnmodifiableMapView)
+      return _templateCodeByLanguage;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_templateCodeByLanguage);
   }
 
   @override
@@ -695,6 +722,8 @@ class _ReportSubmitState implements ReportSubmitState {
                 other.selectedLanguage == selectedLanguage) &&
             const DeepCollectionEquality()
                 .equals(other._draftCodeByLanguage, _draftCodeByLanguage) &&
+            const DeepCollectionEquality().equals(
+                other._templateCodeByLanguage, _templateCodeByLanguage) &&
             (identical(other.submissionStatus, submissionStatus) ||
                 other.submissionStatus == submissionStatus) &&
             (identical(other.latestSubmittedCode, latestSubmittedCode) ||
@@ -740,6 +769,7 @@ class _ReportSubmitState implements ReportSubmitState {
         runtimeType,
         selectedLanguage,
         const DeepCollectionEquality().hash(_draftCodeByLanguage),
+        const DeepCollectionEquality().hash(_templateCodeByLanguage),
         submissionStatus,
         latestSubmittedCode,
         latestSubmittedLanguage,
@@ -763,7 +793,7 @@ class _ReportSubmitState implements ReportSubmitState {
 
   @override
   String toString() {
-    return 'ReportSubmitState(selectedLanguage: $selectedLanguage, draftCodeByLanguage: $draftCodeByLanguage, submissionStatus: $submissionStatus, latestSubmittedCode: $latestSubmittedCode, latestSubmittedLanguage: $latestSubmittedLanguage, submittedAt: $submittedAt, submitCount: $submitCount, score: $score, feedbacks: $feedbacks, testCaseResults: $testCaseResults, previousSubmissions: $previousSubmissions, submissionId: $submissionId, streamUrl: $streamUrl, historyProblemId: $historyProblemId, latestVerdict: $latestVerdict, isSubmitting: $isSubmitting, isPolling: $isPolling, isHistoryLoading: $isHistoryLoading, hasLoadedHistory: $hasLoadedHistory, errorMsg: $errorMsg, historyErrorMsg: $historyErrorMsg)';
+    return 'ReportSubmitState(selectedLanguage: $selectedLanguage, draftCodeByLanguage: $draftCodeByLanguage, templateCodeByLanguage: $templateCodeByLanguage, submissionStatus: $submissionStatus, latestSubmittedCode: $latestSubmittedCode, latestSubmittedLanguage: $latestSubmittedLanguage, submittedAt: $submittedAt, submitCount: $submitCount, score: $score, feedbacks: $feedbacks, testCaseResults: $testCaseResults, previousSubmissions: $previousSubmissions, submissionId: $submissionId, streamUrl: $streamUrl, historyProblemId: $historyProblemId, latestVerdict: $latestVerdict, isSubmitting: $isSubmitting, isPolling: $isPolling, isHistoryLoading: $isHistoryLoading, hasLoadedHistory: $hasLoadedHistory, errorMsg: $errorMsg, historyErrorMsg: $historyErrorMsg)';
   }
 }
 
@@ -778,6 +808,7 @@ abstract mixin class _$ReportSubmitStateCopyWith<$Res>
   $Res call(
       {SubmitLanguage selectedLanguage,
       Map<SubmitLanguage, String> draftCodeByLanguage,
+      Map<SubmitLanguage, String> templateCodeByLanguage,
       SubmissionStatus submissionStatus,
       String latestSubmittedCode,
       SubmitLanguage? latestSubmittedLanguage,
@@ -814,6 +845,7 @@ class __$ReportSubmitStateCopyWithImpl<$Res>
   $Res call({
     Object? selectedLanguage = null,
     Object? draftCodeByLanguage = null,
+    Object? templateCodeByLanguage = null,
     Object? submissionStatus = null,
     Object? latestSubmittedCode = null,
     Object? latestSubmittedLanguage = freezed,
@@ -842,6 +874,10 @@ class __$ReportSubmitStateCopyWithImpl<$Res>
       draftCodeByLanguage: null == draftCodeByLanguage
           ? _self._draftCodeByLanguage
           : draftCodeByLanguage // ignore: cast_nullable_to_non_nullable
+              as Map<SubmitLanguage, String>,
+      templateCodeByLanguage: null == templateCodeByLanguage
+          ? _self._templateCodeByLanguage
+          : templateCodeByLanguage // ignore: cast_nullable_to_non_nullable
               as Map<SubmitLanguage, String>,
       submissionStatus: null == submissionStatus
           ? _self.submissionStatus

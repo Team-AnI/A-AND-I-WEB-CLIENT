@@ -3,6 +3,7 @@ import 'package:a_and_i_report_web_server/src/feature/articles/presentation/arti
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_detail_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_list_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_write_view.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/activate/ui/activate_page.dart';
 import 'package:a_and_i_report_web_server/src/feature/course/presentation/course_list_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/promotion/ui/faq_light_page.dart';
@@ -65,6 +66,7 @@ GoRouter goRouter(Ref ref) {
       if (isUnauthenticated &&
           (location.startsWith('/report') ||
               location.startsWith('/course') ||
+              location.startsWith('/materials') ||
               location.startsWith('/my-account'))) {
         final fromPath = state.uri.toString();
         return '/sign-in?from=${Uri.encodeComponent(fromPath)}';
@@ -128,21 +130,34 @@ GoRouter goRouter(Ref ref) {
         name: "블로그 | A&I",
         pageBuilder: (context, state) {
           html.document.title = "블로그 | A&I";
-          return NoTransitionPage(child: const ArticleListView());
+          return NoTransitionPage(
+            child: const ArticleListView(postType: PostType.blog),
+          );
         },
         routes: [
           GoRoute(
             path: 'write',
             pageBuilder: (context, state) {
               html.document.title = "블로그 작성 | A&I";
-              return NoTransitionPage(child: const ArticleWriteView());
+              return NoTransitionPage(
+                child: const ArticleWriteView(
+                  postType: PostType.blog,
+                  listPath: '/articles',
+                  confirmPath: '/articles/confirm',
+                ),
+              );
             },
           ),
           GoRoute(
             path: 'confirm',
             pageBuilder: (context, state) {
               html.document.title = "블로그 출간 설정 | A&I";
-              return NoTransitionPage(child: const ArticleConfirmView());
+              return NoTransitionPage(
+                child: const ArticleConfirmView(
+                  postType: PostType.blog,
+                  listPath: '/articles',
+                ),
+              );
             },
           ),
           GoRoute(
@@ -151,7 +166,69 @@ GoRouter goRouter(Ref ref) {
               final id = state.pathParameters['id']!;
               html.document.title = "블로그 상세 | A&I";
               return NoTransitionPage(
-                child: ArticleDetailView(id: id),
+                child: ArticleDetailView(
+                  id: id,
+                  postType: PostType.blog,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/materials',
+        name: "강의자료 | A&I",
+        pageBuilder: (context, state) {
+          html.document.title = "강의자료 | A&I";
+          return NoTransitionPage(
+            child: const ArticleListView(
+              postType: PostType.lecture,
+              pageTitle: '강의자료',
+              pageSubtitle: 'A&I 강의자료를 한곳에서 확인하세요.',
+              listPath: '/materials',
+              detailBasePath: '/materials',
+              showWriteButton: false,
+            ),
+          );
+        },
+        routes: [
+          GoRoute(
+            path: 'write',
+            pageBuilder: (context, state) {
+              html.document.title = "강의자료 작성 | A&I";
+              return NoTransitionPage(
+                child: const ArticleWriteView(
+                  postType: PostType.lecture,
+                  listPath: '/materials',
+                  confirmPath: '/materials/confirm',
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: 'confirm',
+            pageBuilder: (context, state) {
+              html.document.title = "강의자료 출간 설정 | A&I";
+              return NoTransitionPage(
+                child: const ArticleConfirmView(
+                  postType: PostType.lecture,
+                  listPath: '/materials',
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: ':id',
+            pageBuilder: (context, state) {
+              final id = state.pathParameters['id']!;
+              html.document.title = "강의자료 상세 | A&I";
+              return NoTransitionPage(
+                child: ArticleDetailView(
+                  id: id,
+                  postType: PostType.lecture,
+                  listPath: '/materials',
+                  listLabel: '강의자료',
+                ),
               );
             },
           ),

@@ -1,6 +1,7 @@
 import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_event.dart';
@@ -25,12 +26,23 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 final myWrittenPostsProvider =
     FutureProvider.autoDispose.family<List<Post>, String>(
   (ref, userId) async {
-    final response = await ref.read(getPostListUsecaseProvider).call(
-          page: 0,
-          size: 100,
-        );
+    final responses = await Future.wait<PostPage>([
+      ref.read(getPostListUsecaseProvider).call(
+            page: 0,
+            size: 100,
+            type: PostType.blog,
+          ),
+      ref.read(getPostListUsecaseProvider).call(
+            page: 0,
+            size: 100,
+            type: PostType.lecture,
+          ),
+    ]);
     final normalizedUserId = userId.trim();
-    final posts = response.items.where((post) {
+    final posts = <Post>[
+      ...responses[0].items,
+      ...responses[1].items,
+    ].where((post) {
       final authorId = post.author.id.trim();
       if (authorId != normalizedUserId) {
         return false;
@@ -480,6 +492,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
               onGoIntro: () => context.go('/promotion'),
               onGoEducation: () => context.go('/course'),
               onGoPosts: () => context.go('/articles'),
+              onGoMaterials: () => context.go('/materials'),
               onGoMyAccount: () => context.go('/my-account'),
               onLogin: () => context.go('/sign-in'),
               onLogout: () async {
@@ -945,7 +958,7 @@ class UserWrittenPostSection extends StatelessWidget {
   }
 }
 
-class UserWrittenPostCard extends StatelessWidget {
+class UserWrittenPostCard extends ConsumerWidget {
   const UserWrittenPostCard({
     super.key,
     required this.post,
@@ -954,12 +967,12 @@ class UserWrittenPostCard extends StatelessWidget {
   final Post post;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
 
     return InkWell(
-      onTap: () => context.go('/articles/${post.id}'),
+      onTap: () => context.go('${_resolvePostListPath(post.type)}/${post.id}'),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
@@ -997,6 +1010,27 @@ class UserWrittenPostCard extends StatelessWidget {
                       letterSpacing: 0.6,
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                _UserPostTypeBadge(type: post.type),
+                const SizedBox(width: 8),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    ref
+                        .read(articleWriteViewModelProvider.notifier)
+                        .startEditing(post);
+                    context.go('${_resolvePostListPath(post.type)}/write');
+                  },
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('수정'),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -1101,7 +1135,7 @@ class UserDraftPostCard extends ConsumerWidget {
     return InkWell(
       onTap: () {
         ref.read(articleWriteViewModelProvider.notifier).startEditing(post);
-        context.go('/articles/write');
+        context.go('${_resolvePostListPath(post.type)}/write');
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -1142,6 +1176,27 @@ class UserDraftPostCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
+                _UserPostTypeBadge(type: post.type),
+                const SizedBox(width: 8),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    ref
+                        .read(articleWriteViewModelProvider.notifier)
+                        .startEditing(post);
+                    context.go('${_resolvePostListPath(post.type)}/write');
+                  },
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('수정'),
+                ),
+                const SizedBox(width: 8),
                 Text(
                   _formatKoreanDate(post.updatedAt),
                   style: TextStyle(
@@ -1175,6 +1230,36 @@ class UserDraftPostCard extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UserPostTypeBadge extends StatelessWidget {
+  const _UserPostTypeBadge({
+    required this.type,
+  });
+
+  final PostType type;
+
+  @override
+  Widget build(BuildContext context) {
+    final isLecture = type == PostType.lecture;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isLecture ? const Color(0xFFECFDF3) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        type.label,
+        style: TextStyle(
+          color: isLecture ? const Color(0xFF047857) : const Color(0xFF1D4ED8),
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.2,
         ),
       ),
     );
@@ -1252,4 +1337,13 @@ String _extractSummary(String markdown) {
   }
 
   return '${plainText.substring(0, maxLength)}...';
+}
+
+String _resolvePostListPath(PostType type) {
+  switch (type) {
+    case PostType.blog:
+      return '/articles';
+    case PostType.lecture:
+      return '/materials';
+  }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:a_and_i_report_web_server/src/core/widgets/bottom_logo.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/widgets/report_status_widget.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/report.dart';
@@ -312,13 +313,12 @@ class _DeadlineTimer extends HookWidget {
             children: [
               TextSpan(
                 text: '$h:$m:$s',
-                style: TextStyle(
-                  fontFamily: 'monospace',
+                style: vscodeCodeTextStyle(TextStyle(
                   fontWeight: FontWeight.w600,
                   color: isDarkMode
                       ? const Color(0xFFE5E7EB)
                       : const Color(0xFF000000),
-                ),
+                )),
               ),
             ],
           ),

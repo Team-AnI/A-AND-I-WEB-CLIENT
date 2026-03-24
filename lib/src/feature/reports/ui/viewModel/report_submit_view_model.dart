@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/report.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/submission_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/providers/create_submission_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/providers/get_my_problem_submissions_usecase_provider.dart';
@@ -28,6 +29,7 @@ abstract class ReportSubmitState with _$ReportSubmitState {
   const factory ReportSubmitState({
     required SubmitLanguage selectedLanguage,
     required Map<SubmitLanguage, String> draftCodeByLanguage,
+    required Map<SubmitLanguage, String> templateCodeByLanguage,
     @Default(SubmissionStatus.notSubmitted) SubmissionStatus submissionStatus,
     @Default('') String latestSubmittedCode,
     SubmitLanguage? latestSubmittedLanguage,
@@ -50,14 +52,13 @@ abstract class ReportSubmitState with _$ReportSubmitState {
     @Default('') String historyErrorMsg,
   }) = _ReportSubmitState;
 
-  factory ReportSubmitState.initial() {
+  factory ReportSubmitState.initial(List<CodeTemplate> codeTemplates) {
+    final resolvedTemplates = _resolveTemplateCodeByLanguage(codeTemplates);
+
     return ReportSubmitState(
       selectedLanguage: SubmitLanguage.python,
-      draftCodeByLanguage: {
-        SubmitLanguage.kotlin: SubmitLanguage.kotlin.template,
-        SubmitLanguage.dart: SubmitLanguage.dart.template,
-        SubmitLanguage.python: SubmitLanguage.python.template,
-      },
+      draftCodeByLanguage: resolvedTemplates,
+      templateCodeByLanguage: resolvedTemplates,
     );
   }
 }
@@ -69,8 +70,9 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
 
   ReportSubmitViewModel({
     required this.reportId,
+    required List<CodeTemplate> codeTemplates,
     required this.ref,
-  }) : super(ReportSubmitState.initial());
+  }) : super(ReportSubmitState.initial(codeTemplates));
 
   void selectLanguage(SubmitLanguage language) {
     state = state.copyWith(selectedLanguage: language);
@@ -87,7 +89,7 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
 
   void loadTemplateForCurrentLanguage() {
     final lang = state.selectedLanguage;
-    updateDraft(lang, lang.template);
+    updateDraft(lang, state.templateCodeByLanguage[lang] ?? lang.template);
   }
 
   Future<void> loadSubmissionHistory({
@@ -665,14 +667,46 @@ class _SubmissionStreamEnvelope {
 }
 
 final reportSubmitViewModelProvider = StateNotifierProvider.family<
-    ReportSubmitViewModel, ReportSubmitState, String>(
-  (ref, reportId) => ReportSubmitViewModel(
-    reportId: reportId,
+    ReportSubmitViewModel, ReportSubmitState, Report>(
+  (ref, report) => ReportSubmitViewModel(
+    reportId: report.id,
+    codeTemplates: report.codeTemplates,
     ref: ref,
   ),
 );
 
+Map<SubmitLanguage, String> _resolveTemplateCodeByLanguage(
+  List<CodeTemplate> codeTemplates,
+) {
+  final templates = <SubmitLanguage, String>{
+    SubmitLanguage.kotlin: SubmitLanguage.kotlin.template,
+    SubmitLanguage.dart: SubmitLanguage.dart.template,
+    SubmitLanguage.python: SubmitLanguage.python.template,
+  };
+
+  for (final codeTemplate in codeTemplates) {
+    final language = SubmitLanguageX.fromApiValue(codeTemplate.language);
+    if (language == null) {
+      continue;
+    }
+
+    templates[language] = codeTemplate.functionTemplate;
+  }
+
+  return templates;
+}
+
 extension SubmitLanguageX on SubmitLanguage {
+  static SubmitLanguage? fromApiValue(String rawLanguage) {
+    final normalized = rawLanguage.trim().toUpperCase();
+    return switch (normalized) {
+      'KOTLIN' => SubmitLanguage.kotlin,
+      'DART' => SubmitLanguage.dart,
+      'PYTHON' => SubmitLanguage.python,
+      _ => null,
+    };
+  }
+
   String get label => switch (this) {
         SubmitLanguage.kotlin => 'Kotlin',
         SubmitLanguage.dart => 'Dart',

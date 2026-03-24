@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
@@ -20,7 +21,16 @@ const String articleWriteDefaultTitle = '';
 const String articleWriteDefaultMarkdown = '';
 
 class ArticleWriteView extends ConsumerStatefulWidget {
-  const ArticleWriteView({super.key});
+  const ArticleWriteView({
+    super.key,
+    this.postType = PostType.blog,
+    this.listPath = '/articles',
+    this.confirmPath = '/articles/confirm',
+  });
+
+  final PostType postType;
+  final String listPath;
+  final String confirmPath;
 
   @override
   ConsumerState<ArticleWriteView> createState() => ArticleWriteViewState();
@@ -43,6 +53,11 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
   @override
   void initState() {
     super.initState();
+    Future<void>.microtask(() {
+      ref.read(articleWriteViewModelProvider.notifier).prepareForRoute(
+            widget.postType,
+          );
+    });
     final composeState = ref.read(articleWriteViewModelProvider);
     final initialTitle = composeState.title.isEmpty
         ? articleWriteDefaultTitle
@@ -80,12 +95,16 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
       );
     }
 
-    final canManageArticles = canManageArticlesWithRole(userState.resolvedRole);
-    if (!canManageArticles) {
-      return const _ArticleWritePermissionDeniedView();
-    }
-
     final composeState = ref.watch(articleWriteViewModelProvider);
+    final canManageArticles = canManageArticlesWithRole(userState.resolvedRole);
+    final currentUserId = userState.userId?.trim();
+    final isEditingOwnPost = composeState.postId.trim().isNotEmpty &&
+        currentUserId != null &&
+        currentUserId.isNotEmpty &&
+        currentUserId == composeState.editingAuthorId.trim();
+    if (!canManageArticles && !isEditingOwnPost) {
+      return _ArticleWritePermissionDeniedView(listPath: widget.listPath);
+    }
     final isEditingPublished = composeState.postId.trim().isNotEmpty &&
         composeState.editingPostStatus.trim().toLowerCase() == 'published';
     final width = MediaQuery.of(context).size.width;
@@ -155,7 +174,7 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
                             contentController: contentController,
                             contentFocusNode: contentFocusNode,
                             contentUndoController: contentUndoController,
-                            onExit: () => context.go('/articles'),
+                            onExit: () => context.go(widget.listPath),
                             onBold: onTapBold,
                             onItalic: onTapItalic,
                             onStrikethrough: onTapStrikethrough,
@@ -180,7 +199,7 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
                           contentController: contentController,
                           contentFocusNode: contentFocusNode,
                           contentUndoController: contentUndoController,
-                          onExit: () => context.go('/articles'),
+                          onExit: () => context.go(widget.listPath),
                           onBold: onTapBold,
                           onItalic: onTapItalic,
                           onStrikethrough: onTapStrikethrough,
@@ -614,7 +633,7 @@ class ArticleWriteViewState extends ConsumerState<ArticleWriteView> {
 
   void onTapGoConfirm(BuildContext context) {
     _syncDraft();
-    context.go('/articles/confirm');
+    context.go(widget.confirmPath);
   }
 
   void _syncDraft() {
@@ -683,7 +702,11 @@ class ArticleSaveDraftIntent extends Intent {
 }
 
 class _ArticleWritePermissionDeniedView extends StatelessWidget {
-  const _ArticleWritePermissionDeniedView();
+  const _ArticleWritePermissionDeniedView({
+    required this.listPath,
+  });
+
+  final String listPath;
 
   @override
   Widget build(BuildContext context) {
@@ -704,7 +727,7 @@ class _ArticleWritePermissionDeniedView extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: () => context.go('/articles'),
+                onPressed: () => context.go(listPath),
                 child: const Text('목록으로 이동'),
               ),
             ],

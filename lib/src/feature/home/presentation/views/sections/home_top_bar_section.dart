@@ -15,6 +15,7 @@ class HomeTopBarSection extends StatelessWidget {
     required this.onGoIntro,
     required this.onGoEducation,
     required this.onGoPosts,
+    required this.onGoMaterials,
     required this.onGoFaq,
     required this.onGoMyAccount,
     required this.onLogin,
@@ -29,6 +30,7 @@ class HomeTopBarSection extends StatelessWidget {
   final VoidCallback onGoIntro;
   final VoidCallback onGoEducation;
   final VoidCallback onGoPosts;
+  final VoidCallback onGoMaterials;
   final VoidCallback onGoFaq;
   final VoidCallback onGoMyAccount;
   final VoidCallback onLogin;
@@ -69,6 +71,8 @@ class HomeTopBarSection extends StatelessWidget {
                   HomeTopBarNavButton(text: '스터디', onTap: onGoEducation),
                   const SizedBox(width: 30),
                   HomeTopBarNavButton(text: '블로그', onTap: onGoPosts),
+                  const SizedBox(width: 30),
+                  HomeTopBarNavButton(text: '강의자료', onTap: onGoMaterials),
                   const SizedBox(width: 30),
                   HomeTopBarNavButton(text: '자주묻는질문', onTap: onGoFaq),
                   const Spacer(),
@@ -340,6 +344,16 @@ class HomeTopBarSection extends StatelessWidget {
         ),
       ),
       const PopupMenuItem<String>(
+        value: 'materials',
+        child: Text(
+          '강의자료',
+          style: TextStyle(
+            color: HomeTheme.textMain,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      const PopupMenuItem<String>(
         value: 'faq',
         child: Text(
           'FAQ',
@@ -392,6 +406,10 @@ class HomeTopBarSection extends StatelessWidget {
     }
     if (value == 'blog') {
       onGoPosts();
+      return;
+    }
+    if (value == 'materials') {
+      onGoMaterials();
       return;
     }
     if (value == 'faq') {

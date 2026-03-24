@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/report.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/submission_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_submit_view_model.dart';
@@ -19,9 +20,8 @@ class ReportSubmitResultView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(reportSubmitViewModelProvider(report.id));
-    final notifier =
-        ref.read(reportSubmitViewModelProvider(report.id).notifier);
+    final state = ref.watch(reportSubmitViewModelProvider(report));
+    final notifier = ref.read(reportSubmitViewModelProvider(report).notifier);
     final historyProblemId = _resolveHistoryProblemId(
       report: report,
       state: state,
@@ -560,14 +560,13 @@ class _TestCaseResultRow extends StatelessWidget {
               ),
               child: Text(
                 detailText,
-                style: TextStyle(
+                style: vscodeCodeTextStyle(TextStyle(
                   fontSize: 12,
                   height: 1.6,
                   color: isDarkMode
                       ? const Color(0xFFE4E4E7)
                       : const Color(0xFF334155),
-                  fontFamily: 'monospace',
-                ),
+                )),
               ),
             ),
           ],
@@ -775,12 +774,11 @@ class _SubmittedCodeCard extends StatelessWidget {
             ),
             child: SelectableText(
               state.latestSubmittedCode,
-              style: const TextStyle(
+              style: vscodeCodeTextStyle(const TextStyle(
                 color: Color(0xFFE5E7EB),
                 fontSize: 12,
                 height: 1.6,
-                fontFamily: 'monospace',
-              ),
+              )),
             ),
           ),
         ],

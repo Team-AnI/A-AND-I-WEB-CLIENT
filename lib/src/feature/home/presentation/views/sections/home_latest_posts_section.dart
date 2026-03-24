@@ -1,4 +1,5 @@
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -11,8 +12,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 final homeLatestPostsProvider = FutureProvider.autoDispose<List<Post>>((
   ref,
 ) async {
-  final page =
-      await ref.read(getPostListUsecaseProvider).call(page: 0, size: 20);
+  final page = await ref.read(getPostListUsecaseProvider).call(
+        page: 0,
+        size: 20,
+        type: PostType.blog,
+      );
   return page.items.where((post) => _isPublished(post.status)).toList();
 });
 
