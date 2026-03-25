@@ -1287,10 +1287,13 @@ String? _resultHeadline(SubmissionStatus status) {
 
 String _formatDateTime(DateTime? dateTime) {
   if (dateTime == null) return '-';
-  final y = dateTime.year.toString().padLeft(4, '0');
-  final m = dateTime.month.toString().padLeft(2, '0');
-  final d = dateTime.day.toString().padLeft(2, '0');
-  final h = dateTime.hour.toString().padLeft(2, '0');
-  final min = dateTime.minute.toString().padLeft(2, '0');
+  final kst = dateTime.isUtc
+      ? dateTime.add(const Duration(hours: 9))
+      : dateTime.toUtc().add(const Duration(hours: 9));
+  final y = kst.year.toString().padLeft(4, '0');
+  final m = kst.month.toString().padLeft(2, '0');
+  final d = kst.day.toString().padLeft(2, '0');
+  final h = kst.hour.toString().padLeft(2, '0');
+  final min = kst.minute.toString().padLeft(2, '0');
   return '$y-$m-$d $h:$min';
 }
