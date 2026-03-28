@@ -130,7 +130,9 @@ class _CourseListViewState extends ConsumerState<CourseListView> {
         ),
       ],
       data: (courses) {
-        final sortedCourses = List<Course>.of(courses)
+        final sortedCourses = courses
+            .where((course) => isCourseVisible(course.startDate))
+            .toList()
           ..sort(
             (prev, curr) => prev.metadata.title.compareTo(curr.metadata.title),
           );

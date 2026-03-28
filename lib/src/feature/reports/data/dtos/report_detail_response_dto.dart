@@ -210,11 +210,10 @@ List<ExampleIO> _parseExamples(Object? value) {
     }
 
     final seq = _asInt(item['seq']) ?? _asInt(item['sortOrder']) ?? index + 1;
-    final input = item['inputText']?.toString() ?? _parseInputValues(item);
-    final output = item['outputText']?.toString() ?? _parseOutputValues(item);
-    if (input == null || input.isEmpty || output == null || output.isEmpty) {
-      continue;
-    }
+    final input =
+        item['inputText']?.toString() ?? _parseInputValues(item) ?? '';
+    final output =
+        item['outputText']?.toString() ?? _parseOutputValues(item) ?? '';
 
     result.add(ExampleIO(seq: seq, input: input, output: output));
   }

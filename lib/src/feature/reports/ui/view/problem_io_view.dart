@@ -46,6 +46,11 @@ class _IOExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasInput = input.trim().isNotEmpty;
+    final hasOutput = output.trim().isNotEmpty;
+    final displayInput = hasInput ? input : '입력 파라미터가 존재하지 않습니다.';
+    final displayOutput = hasOutput ? output : '반환값이 존재하지 않습니다.';
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 40),
       child: Column(
@@ -65,17 +70,18 @@ class _IOExample extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              InkWell(
-                onTap: () async {
-                  await Clipboard.setData(ClipboardData(text: input));
-                  showGlobalSnackBar('예제 입력 $index를 복사했습니다.');
-                },
-                borderRadius: BorderRadius.circular(6),
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(Icons.copy, size: 14, color: Color(0xFF6B7280)),
+              if (hasInput)
+                InkWell(
+                  onTap: () async {
+                    await Clipboard.setData(ClipboardData(text: input));
+                    showGlobalSnackBar('예제 입력 $index를 복사했습니다.');
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.copy, size: 14, color: Color(0xFF6B7280)),
+                  ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -94,7 +100,7 @@ class _IOExample extends StatelessWidget {
               ),
             ),
             child: SelectableText(
-              input,
+              displayInput,
               style: vscodeCodeTextStyle(TextStyle(
                 fontSize: 13,
                 color: isDarkMode
@@ -127,7 +133,7 @@ class _IOExample extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              output,
+              displayOutput,
               style: vscodeCodeTextStyle(TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,

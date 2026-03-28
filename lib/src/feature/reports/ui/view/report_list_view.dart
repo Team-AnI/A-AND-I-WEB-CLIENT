@@ -504,10 +504,26 @@ class _WeekGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dividerColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+      ),
+      child: ExpansionTile(
+        key: PageStorageKey<String>(
+          'week-group-$courseSlug-${weekGroup.week}',
+        ),
+        initiallyExpanded: weekGroup.isProgress,
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(top: 10),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        iconColor: palette.textMuted,
+        collapsedIconColor: palette.textMuted,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        collapsedShape:
+            const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        title: Row(
           children: [
             Text(
               '${weekGroup.week}주차 과제',
@@ -524,22 +540,23 @@ class _WeekGroupCard extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        Column(
-          children: weekGroup.reports.map((report) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: report == weekGroup.reports.last ? 0 : 8,
-              ),
-              child: _ReportTile(
-                palette: palette,
-                report: report,
-                courseSlug: courseSlug,
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+        children: [
+          Column(
+            children: weekGroup.reports.map((report) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: report == weekGroup.reports.last ? 0 : 8,
+                ),
+                child: _ReportTile(
+                  palette: palette,
+                  report: report,
+                  courseSlug: courseSlug,
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 }

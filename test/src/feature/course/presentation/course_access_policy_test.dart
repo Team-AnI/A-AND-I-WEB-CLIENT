@@ -2,6 +2,28 @@ import 'package:a_and_i_report_web_server/src/feature/course/presentation/course
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('isCourseVisible', () {
+    test('시작일이 오늘이면 노출한다', () {
+      expect(
+        isCourseVisible(
+          '2026-03-27',
+          now: DateTime.parse('2026-03-27T00:00:00.000Z'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('시작일이 미래면 노출하지 않는다', () {
+      expect(
+        isCourseVisible(
+          '2026-03-28',
+          now: DateTime.parse('2026-03-27T23:59:59.000Z'),
+        ),
+        isFalse,
+      );
+    });
+  });
+
   group('isCourseClosed', () {
     test('날짜만 있는 종료일은 해당 날짜가 끝날 때까지 열려 있다', () {
       expect(
