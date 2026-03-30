@@ -1,10 +1,7 @@
-import 'dart:ui';
-
 import 'package:a_and_i_report_web_server/src/core/widgets/responsive_layout.dart';
 import 'package:a_and_i_report_web_server/src/core/widgets/animate_on_visible.dart';
 import 'package:a_and_i_report_web_server/src/feature/promotion/ui/widgets/gradient_border.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class Mentor {
@@ -229,10 +226,10 @@ class MentorCard extends StatelessWidget {
             end: const Alignment(1.0, 1.3),
             stops: const [.09, .29, .78, .90],
             colors: [
-              Colors.white.withOpacity(0.2),
-              Colors.white.withOpacity(0.07),
-              Colors.white.withOpacity(0.07),
-              Colors.white.withOpacity(0.07),
+              Colors.white.withValues(alpha: 0.2),
+              Colors.white.withValues(alpha: 0.07),
+              Colors.white.withValues(alpha: 0.07),
+              Colors.white.withValues(alpha: 0.07),
             ],
           ),
         ),
@@ -244,8 +241,8 @@ class MentorCard extends StatelessWidget {
               begin: const Alignment(-1.0, -1.3),
               end: const Alignment(1.0, 1.3),
               colors: [
-                Colors.white.withOpacity(0.07),
-                Colors.white.withOpacity(0.04),
+                Colors.white.withValues(alpha: 0.07),
+                Colors.white.withValues(alpha: 0.04),
               ],
             ),
           ),

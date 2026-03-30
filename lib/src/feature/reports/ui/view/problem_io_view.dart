@@ -1,9 +1,16 @@
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
+import 'package:a_and_i_report_web_server/src/core/utils/app_messenger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ProblemIOView extends StatelessWidget {
   final List<(String, String)> contents;
-  const ProblemIOView({super.key, required this.contents});
+  final bool isDarkMode;
+  const ProblemIOView({
+    super.key,
+    required this.contents,
+    this.isDarkMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +20,12 @@ class ProblemIOView extends StatelessWidget {
         final index = entry.key + 1;
         final input = entry.value.$1;
         final output = entry.value.$2;
-        return _IOExample(index: index, input: input, output: output);
+        return _IOExample(
+          index: index,
+          input: input,
+          output: output,
+          isDarkMode: isDarkMode,
+        );
       }).toList(),
     );
   }
@@ -23,15 +35,22 @@ class _IOExample extends StatelessWidget {
   final int index;
   final String input;
   final String output;
+  final bool isDarkMode;
 
   const _IOExample({
     required this.index,
     required this.input,
     required this.output,
+    required this.isDarkMode,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasInput = input.trim().isNotEmpty;
+    final hasOutput = output.trim().isNotEmpty;
+    final displayInput = hasInput ? input : '입력 파라미터가 존재하지 않습니다.';
+    final displayOutput = hasOutput ? output : '반환값이 존재하지 않습니다.';
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 40),
       child: Column(
@@ -41,22 +60,28 @@ class _IOExample extends StatelessWidget {
             children: [
               Text(
                 '예제 입력 $index',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF6B7280),
+                  color: isDarkMode
+                      ? const Color(0xFFA1A1AA)
+                      : const Color(0xFF6B7280),
                   letterSpacing: 1.2,
                 ),
               ),
               const Spacer(),
-              InkWell(
-                onTap: () => Clipboard.setData(ClipboardData(text: input)),
-                borderRadius: BorderRadius.circular(6),
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(Icons.copy, size: 14, color: Color(0xFF6B7280)),
+              if (hasInput)
+                InkWell(
+                  onTap: () async {
+                    await Clipboard.setData(ClipboardData(text: input));
+                    showGlobalSnackBar('예제 입력 $index를 복사했습니다.');
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.copy, size: 14, color: Color(0xFF6B7280)),
+                  ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -64,27 +89,36 @@ class _IOExample extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+              color: isDarkMode
+                  ? const Color(0xFF27272A)
+                  : const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFF3F4F6)),
+              border: Border.all(
+                color: isDarkMode
+                    ? const Color(0xFF3F3F46)
+                    : const Color(0xFFF3F4F6),
+              ),
             ),
             child: SelectableText(
-              input,
-              style: const TextStyle(
-                fontFamily: 'monospace',
+              displayInput,
+              style: vscodeCodeTextStyle(TextStyle(
                 fontSize: 13,
-                color: Color(0xFF000000),
+                color: isDarkMode
+                    ? const Color(0xFFE5E7EB)
+                    : const Color(0xFF000000),
                 height: 1.6,
-              ),
+              )),
             ),
           ),
           const SizedBox(height: 24),
           Text(
             '예제 출력 $index',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF6B7280),
+              color: isDarkMode
+                  ? const Color(0xFFA1A1AA)
+                  : const Color(0xFF6B7280),
               letterSpacing: 1.2,
             ),
           ),
@@ -93,17 +127,20 @@ class _IOExample extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
+              color: isDarkMode
+                  ? const Color(0xFF3F3F46)
+                  : const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              output,
-              style: const TextStyle(
-                fontFamily: 'monospace',
+              displayOutput,
+              style: vscodeCodeTextStyle(TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF000000),
-              ),
+                color: isDarkMode
+                    ? const Color(0xFFF5F5F5)
+                    : const Color(0xFF000000),
+              )),
             ),
           ),
         ],

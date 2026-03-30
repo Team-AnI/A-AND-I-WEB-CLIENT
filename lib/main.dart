@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:a_and_i_report_web_server/src/core/routes/route_config.dart';
 import 'package:a_and_i_report_web_server/src/core/theme/app_theme.dart';
 import 'package:a_and_i_report_web_server/src/core/utils/logger.dart';
+import 'package:a_and_i_report_web_server/src/core/utils/app_messenger.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:a_and_i_report_web_server/firebase_options.dart';
@@ -26,15 +27,39 @@ Future<void> main() async {
 ///
 /// [MaterialApp.router]를 사용하여 [goRouterProvider]에서 정의된 라우팅 설정을 적용합니다.
 /// 앱 전반에 걸친 테마([theme])와 디버그 배너 설정을 관리합니다.
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    // Viewport 크기 변경 시 강제 rebuild
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final goRouter = ref.watch(goRouterProvider);
     return MaterialApp.router(
       title: "A&I",
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       routerConfig: goRouter,
       theme: theme,
       scrollBehavior: const AppScrollBehavior(),

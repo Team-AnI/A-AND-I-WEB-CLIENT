@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:flutter/material.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 
@@ -16,6 +17,8 @@ class ArticleEditorPanel extends StatelessWidget {
     required this.onCodeBlock,
     required this.onImage,
     required this.onLink,
+    this.markdownAreaKey,
+    this.isMarkdownDragOver = false,
   });
 
   final TextEditingController titleController;
@@ -30,6 +33,8 @@ class ArticleEditorPanel extends StatelessWidget {
   final VoidCallback onCodeBlock;
   final VoidCallback onImage;
   final VoidCallback onLink;
+  final Key? markdownAreaKey;
+  final bool isMarkdownDragOver;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +93,7 @@ class ArticleEditorPanel extends StatelessWidget {
                       letterSpacing: -1.2,
                     ),
                     decoration: InputDecoration(
-                      hintText: '제목을 입력하세요',
+                      hintText: '제목',
                       hintStyle: TextStyle(
                         color: const Color(0xFFD1D5DB),
                         fontSize: isMobile ? 30 : 42,
@@ -154,27 +159,42 @@ class ArticleEditorPanel extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: isMobile ? 300 : 520,
-                    ),
-                    child: TextField(
-                      controller: contentController,
-                      focusNode: contentFocusNode,
-                      undoController: contentUndoController,
-                      maxLines: null,
-                      keyboardType: TextInputType.multiline,
-                      style: const TextStyle(
-                        color: Color(0xFF374151),
-                        fontSize: 16,
-                        height: 1.7,
-                        fontFamily: 'monospace',
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    decoration: BoxDecoration(
+                      color: isMarkdownDragOver
+                          ? const Color(0xFFF9FAFB)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isMarkdownDragOver
+                            ? const Color(0xFF9CA3AF)
+                            : Colors.transparent,
                       ),
-                      decoration: const InputDecoration(
-                        hintText: '당신의 이야기를 적어보세요...',
-                        hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: ConstrainedBox(
+                      key: markdownAreaKey,
+                      constraints: BoxConstraints(
+                        minHeight: isMobile ? 300 : 520,
+                      ),
+                      child: TextField(
+                        controller: contentController,
+                        focusNode: contentFocusNode,
+                        undoController: contentUndoController,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
+                        style: vscodeCodeTextStyle(const TextStyle(
+                          color: Color(0xFF374151),
+                          fontSize: 16,
+                          height: 1.7,
+                        )),
+                        decoration: const InputDecoration(
+                          hintText: '당신의 이야기를 적어주세요',
+                          hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
                       ),
                     ),
                   ),

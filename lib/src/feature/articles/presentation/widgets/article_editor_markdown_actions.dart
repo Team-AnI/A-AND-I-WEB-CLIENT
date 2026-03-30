@@ -63,9 +63,8 @@ class ArticleEditorMarkdownActions {
         ? '코드를 입력하세요'
         : text.substring(selection.start, selection.end);
     final replacement = '```\n$selectedText\n```';
-    final cursorOffset = selection.isCollapsed
-        ? '```\n'.length
-        : replacement.length;
+    final cursorOffset =
+        selection.isCollapsed ? '```\n'.length : replacement.length;
 
     replaceSelection(
       controller,
@@ -86,6 +85,23 @@ class ArticleEditorMarkdownActions {
       selection,
       '![이미지 설명](https://)',
       selectionOffset: '![이미지 설명]('.length,
+    );
+    focusNode.requestFocus();
+  }
+
+  static void applyUploadedImage(
+    TextEditingController controller,
+    FocusNode focusNode, {
+    required String imageUrl,
+    String altText = '이미지',
+  }) {
+    final selection = safeSelection(controller);
+    final replacement = '![$altText]($imageUrl)';
+    replaceSelection(
+      controller,
+      selection,
+      replacement,
+      selectionOffset: replacement.length,
     );
     focusNode.requestFocus();
   }
@@ -125,7 +141,8 @@ class ArticleEditorMarkdownActions {
         selection,
         replacement,
         selectionBaseOffset: selection.start + prefix.length,
-        selectionExtentOffset: selection.start + prefix.length + placeholder.length,
+        selectionExtentOffset:
+            selection.start + prefix.length + placeholder.length,
       );
       focusNode.requestFocus();
       return;
@@ -138,7 +155,8 @@ class ArticleEditorMarkdownActions {
       selection,
       replacement,
       selectionBaseOffset: selection.start + prefix.length,
-      selectionExtentOffset: selection.start + prefix.length + selectedText.length,
+      selectionExtentOffset:
+          selection.start + prefix.length + selectedText.length,
     );
     focusNode.requestFocus();
   }
@@ -149,8 +167,10 @@ class ArticleEditorMarkdownActions {
       final offset = controller.text.length;
       return TextSelection.collapsed(offset: offset);
     }
-    final start = selection.start <= selection.end ? selection.start : selection.end;
-    final end = selection.end >= selection.start ? selection.end : selection.start;
+    final start =
+        selection.start <= selection.end ? selection.start : selection.end;
+    final end =
+        selection.end >= selection.start ? selection.end : selection.start;
     return TextSelection(baseOffset: start, extentOffset: end);
   }
 
@@ -163,7 +183,8 @@ class ArticleEditorMarkdownActions {
     int? selectionExtentOffset,
   }) {
     final text = controller.text;
-    final newText = text.replaceRange(selection.start, selection.end, replacement);
+    final newText =
+        text.replaceRange(selection.start, selection.end, replacement);
     final base = selectionBaseOffset ??
         (selection.start + (selectionOffset ?? replacement.length));
     final extent = selectionExtentOffset ?? base;

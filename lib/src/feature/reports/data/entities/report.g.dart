@@ -8,6 +8,7 @@ part of 'report.dart';
 
 _Report _$ReportFromJson(Map<String, dynamic> json) => _Report(
       id: json['id'] as String,
+      problemId: json['problemId'] as String?,
       title: json['title'] as String,
       content: json['content'] as String,
       requirement: (json['requirement'] as List<dynamic>)
@@ -19,6 +20,9 @@ _Report _$ReportFromJson(Map<String, dynamic> json) => _Report(
       exampleIo: (json['exampleIo'] as List<dynamic>)
           .map((e) => ExampleIO.fromJson(e as Map<String, dynamic>))
           .toList(),
+      codeTemplates: (json['codeTemplates'] as List<dynamic>)
+          .map((e) => CodeTemplate.fromJson(e as Map<String, dynamic>))
+          .toList(),
       reportType: $enumDecode(_$ReportTypeEnumMap, json['reportType']),
       week: (json['week'] as num).toInt(),
       level: $enumDecode(_$LevelEnumMap, json['level']),
@@ -26,11 +30,13 @@ _Report _$ReportFromJson(Map<String, dynamic> json) => _Report(
 
 Map<String, dynamic> _$ReportToJson(_Report instance) => <String, dynamic>{
       'id': instance.id,
+      'problemId': instance.problemId,
       'title': instance.title,
       'content': instance.content,
       'requirement': instance.requirement,
       'objects': instance.objects,
       'exampleIo': instance.exampleIo,
+      'codeTemplates': instance.codeTemplates,
       'reportType': _$ReportTypeEnumMap[instance.reportType]!,
       'week': instance.week,
       'level': _$LevelEnumMap[instance.level]!,
@@ -70,4 +76,16 @@ Map<String, dynamic> _$ExampleIOToJson(_ExampleIO instance) =>
       'seq': instance.seq,
       'input': instance.input,
       'output': instance.output,
+    };
+
+_CodeTemplate _$CodeTemplateFromJson(Map<String, dynamic> json) =>
+    _CodeTemplate(
+      language: json['language'] as String,
+      functionTemplate: json['functionTemplate'] as String,
+    );
+
+Map<String, dynamic> _$CodeTemplateToJson(_CodeTemplate instance) =>
+    <String, dynamic>{
+      'language': instance.language,
+      'functionTemplate': instance.functionTemplate,
     };

@@ -66,7 +66,8 @@ class AuthViewModel extends _$AuthViewModel {
               );
           state = state.copyWith(status: AuthenticationStatus.authenticated);
         } catch (e) {
-          state = state.copyWith(status: AuthenticationStatus.unauthenticated);
+          // 로그인 실패 시 상태 변경을 하지 않음 (불필요한 리다이렉트 방지)
+          // 에러는 UI 레벨에서 처리됨
           rethrow;
         }
         break;

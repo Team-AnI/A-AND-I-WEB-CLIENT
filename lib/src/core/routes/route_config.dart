@@ -3,7 +3,9 @@ import 'package:a_and_i_report_web_server/src/feature/articles/presentation/arti
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_detail_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_list_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/article_write_view.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/activate/ui/activate_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/course/presentation/course_list_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/promotion/ui/faq_light_page.dart';
 import 'package:a_and_i_report_web_server/src/feature/user/presentation/user_managerment_view.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +14,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/views/login_ui.dart';
-import 'package:a_and_i_report_web_server/src/feature/reports/ui/view/home_ui.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/ui/view/report_list_view.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/view/report_detail_ui.dart';
 import 'package:a_and_i_report_web_server/src/feature/promotion/ui/promotion_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -34,7 +36,7 @@ part 'route_config.g.dart';
 /// **정의된 라우트:**
 /// - `/`: 루트 경로. 인증 상태에 따라 `/report` 또는 `/sign-in`으로 리다이렉트합니다.
 /// - `/sign-in`: 로그인 화면 ([LoginUI]).
-/// - `/report`: 과제 목록 화면 ([HomeUI]).
+/// - `/report`: 과제 목록 화면 ([ReportListView]).
 ///   - `/report/:id`: 과제 상세 화면 ([ReportDetailUI]).
 /// - `/promotion`: 홍보 포스터 화면 ([PromotionPage]).
 ///
@@ -63,6 +65,8 @@ GoRouter goRouter(Ref ref) {
       // 1. 비로그인 상태인데 보호된 페이지로 접근하려 할 때
       if (isUnauthenticated &&
           (location.startsWith('/report') ||
+              location.startsWith('/course') ||
+              location.startsWith('/materials') ||
               location.startsWith('/my-account'))) {
         final fromPath = state.uri.toString();
         return '/sign-in?from=${Uri.encodeComponent(fromPath)}';
@@ -72,7 +76,7 @@ GoRouter goRouter(Ref ref) {
       if (isLoggedIn && location == '/sign-in') {
         final from = state.uri.queryParameters['from'];
         // from 파라미터가 있으면 그곳으로, 없으면 기본 페이지로 이동
-        return (from != null && from.isNotEmpty) ? from : '/report';
+        return (from != null && from.isNotEmpty) ? from : '/course';
       }
 
       // 리다이렉트가 필요 없는 경우 null 반환
@@ -126,21 +130,34 @@ GoRouter goRouter(Ref ref) {
         name: "블로그 | A&I",
         pageBuilder: (context, state) {
           html.document.title = "블로그 | A&I";
-          return NoTransitionPage(child: const ArticleListView());
+          return NoTransitionPage(
+            child: const ArticleListView(postType: PostType.blog),
+          );
         },
         routes: [
           GoRoute(
             path: 'write',
             pageBuilder: (context, state) {
               html.document.title = "블로그 작성 | A&I";
-              return NoTransitionPage(child: const ArticleWriteView());
+              return NoTransitionPage(
+                child: const ArticleWriteView(
+                  postType: PostType.blog,
+                  listPath: '/articles',
+                  confirmPath: '/articles/confirm',
+                ),
+              );
             },
           ),
           GoRoute(
             path: 'confirm',
             pageBuilder: (context, state) {
               html.document.title = "블로그 출간 설정 | A&I";
-              return NoTransitionPage(child: const ArticleConfirmView());
+              return NoTransitionPage(
+                child: const ArticleConfirmView(
+                  postType: PostType.blog,
+                  listPath: '/articles',
+                ),
+              );
             },
           ),
           GoRoute(
@@ -149,7 +166,69 @@ GoRouter goRouter(Ref ref) {
               final id = state.pathParameters['id']!;
               html.document.title = "블로그 상세 | A&I";
               return NoTransitionPage(
-                child: ArticleDetailView(id: id),
+                child: ArticleDetailView(
+                  id: id,
+                  postType: PostType.blog,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/materials',
+        name: "강의자료 | A&I",
+        pageBuilder: (context, state) {
+          html.document.title = "강의자료 | A&I";
+          return NoTransitionPage(
+            child: const ArticleListView(
+              postType: PostType.lecture,
+              pageTitle: '강의자료',
+              pageSubtitle: 'A&I 강의자료를 한곳에서 확인하세요.',
+              listPath: '/materials',
+              detailBasePath: '/materials',
+              writePath: '/materials/write',
+            ),
+          );
+        },
+        routes: [
+          GoRoute(
+            path: 'write',
+            pageBuilder: (context, state) {
+              html.document.title = "강의자료 작성 | A&I";
+              return NoTransitionPage(
+                child: const ArticleWriteView(
+                  postType: PostType.lecture,
+                  listPath: '/materials',
+                  confirmPath: '/materials/confirm',
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: 'confirm',
+            pageBuilder: (context, state) {
+              html.document.title = "강의자료 출간 설정 | A&I";
+              return NoTransitionPage(
+                child: const ArticleConfirmView(
+                  postType: PostType.lecture,
+                  listPath: '/materials',
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: ':id',
+            pageBuilder: (context, state) {
+              final id = state.pathParameters['id']!;
+              html.document.title = "강의자료 상세 | A&I";
+              return NoTransitionPage(
+                child: ArticleDetailView(
+                  id: id,
+                  postType: PostType.lecture,
+                  listPath: '/materials',
+                  listLabel: '강의자료',
+                ),
               );
             },
           ),
@@ -164,23 +243,47 @@ GoRouter goRouter(Ref ref) {
         },
       ),
       GoRoute(
-        path: '/report',
-        name: "멘토링 | A&I",
+        path: '/course',
+        name: "코스 목록 | A&I",
         pageBuilder: (context, state) {
+          html.document.title = "내 강좌 | A&I";
+          return NoTransitionPage(child: const CourseListView());
+        },
+      ),
+      GoRoute(
+        path: '/report',
+        name: "report-home",
+        pageBuilder: (context, state) {
+          final courseSlug = state.uri.queryParameters['courseSlug'] ?? '';
           html.document.title = "멘토링 | A&I";
-          return NoTransitionPage(child: const HomeUI());
+          return NoTransitionPage(
+            child: ReportListView(courseSlug: courseSlug),
+          );
         },
         routes: [
           GoRoute(
             path: ':id',
+            name: '멘토링 | A&I',
             pageBuilder: (context, state) {
+              final courseSlug = state.uri.queryParameters['courseSlug'] ?? '';
               final endAtMs = state.uri.queryParameters['endAt'];
+              final week = state.uri.queryParameters['week'];
+              final seq = state.uri.queryParameters['seq'];
+              final parsedEndAtMs =
+                  endAtMs != null ? int.tryParse(endAtMs) : null;
+              final parsedWeek = week != null ? int.tryParse(week) : null;
+              final parsedSeq = seq != null ? int.tryParse(seq) : null;
+              html.document.title = "멘토링 | A&I";
+
               return NoTransitionPage(
                 child: ReportDetailUI(
+                  courseSlug: courseSlug,
                   id: state.pathParameters['id']!,
-                  endAt: endAtMs != null
-                      ? DateTime.fromMillisecondsSinceEpoch(int.parse(endAtMs))
+                  endAt: parsedEndAtMs != null
+                      ? DateTime.fromMillisecondsSinceEpoch(parsedEndAtMs)
                       : null,
+                  week: parsedWeek,
+                  seq: parsedSeq,
                 ),
               );
             },

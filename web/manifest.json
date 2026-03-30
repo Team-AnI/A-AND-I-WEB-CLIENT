@@ -2,11 +2,12 @@
     "name": "a_and_i_report_web_server",
     "short_name": "a_and_i_report_web_server",
     "start_url": ".",
-    "display": "standalone",
+    
+  "display": "standalone",
+    "orientation": "portrait",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
     "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
         {

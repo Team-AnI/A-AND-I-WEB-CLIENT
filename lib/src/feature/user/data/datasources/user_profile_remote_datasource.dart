@@ -183,12 +183,16 @@ class UserProfileRemoteDatasource {
     final profileImage = userData['profileImageUrl']?.toString() ??
         userData['profileImagePath']?.toString() ??
         userData['profileImage']?.toString();
+    final publicCode = userData['publicCode']?.toString() ??
+        userData['public_code']?.toString() ??
+        userData['publiccode']?.toString();
 
     return User(
       id: id,
       role: role,
       nickname: nickname,
       profileImageUrl: profileImage,
+      publicCode: publicCode,
     );
   }
 }

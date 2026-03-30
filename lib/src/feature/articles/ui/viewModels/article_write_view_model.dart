@@ -1,0 +1,510 @@
+import 'dart:typed_data';
+
+import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/collaborator_lookup_user.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/create_post_payload.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/image_upload_payload.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/patch_post_payload.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_state.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'article_write_view_model.g.dart';
+
+/// 게시글 작성/출간 상태를 관리하는 ViewModel입니다.
+@Riverpod(keepAlive: true)
+class ArticleWriteViewModel extends _$ArticleWriteViewModel {
+  String _lastSavedDraftTitle = '';
+  String _lastSavedDraftContentMarkdown = '';
+
+  @override
+  ArticleWriteState build() {
+    return const ArticleWriteState();
+  }
+
+  /// 라우트에 맞는 게시글 종류를 준비합니다.
+  void prepareForRoute(PostType postType) {
+    if (state.postId.trim().isNotEmpty || state.postType == postType) {
+      return;
+    }
+
+    state = state.copyWith(
+      postType: postType,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 작성 중인 게시글 종류를 변경합니다.
+  void setPostType(PostType postType) {
+    if (state.postType == postType) {
+      return;
+    }
+
+    state = state.copyWith(
+      postType: postType,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 작성 중인 초안의 제목/본문을 동기화합니다.
+  void syncDraft({
+    required String title,
+    required String contentMarkdown,
+  }) {
+    state = state.copyWith(
+      title: title,
+      contentMarkdown: contentMarkdown,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 포스트 요약을 업데이트합니다.
+  void setSummary(String summary) {
+    state = state.copyWith(
+      summary: summary,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 썸네일 URL을 업데이트합니다.
+  void setThumbnailUrl(String? thumbnailUrl) {
+    state = state.copyWith(
+      thumbnailUrl: thumbnailUrl,
+      thumbnailBytes: null,
+      thumbnailFileName: null,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 썸네일 이미지를 로컬에서 선택합니다.
+  void setThumbnailImage({
+    required String fileName,
+    required Uint8List bytes,
+  }) {
+    state = state.copyWith(
+      thumbnailUrl: null,
+      thumbnailBytes: bytes,
+      thumbnailFileName: fileName,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 태그를 추가합니다.
+  void addTag(String tag) {
+    final normalized = tag.trim();
+    if (normalized.isEmpty) {
+      return;
+    }
+    final alreadyExists = state.tags.any(
+      (value) => value.toLowerCase() == normalized.toLowerCase(),
+    );
+    if (alreadyExists) {
+      return;
+    }
+    state = state.copyWith(
+      tags: <String>[...state.tags, normalized],
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 태그를 제거합니다.
+  void removeTag(String tag) {
+    state = state.copyWith(
+      tags: state.tags.where((value) => value != tag).toList(),
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 이미지 바이트를 업로드하고 URL을 반환합니다.
+  Future<String?> uploadImage({
+    required String fileName,
+    required Uint8List bytes,
+  }) async {
+    try {
+      _ensureCanManageCurrentPost();
+      state = state.copyWith(
+        isUploadingImage: true,
+        errorMsg: '',
+        successMsg: '',
+      );
+      final result = await ref.read(imageRepositoryProvider).uploadImage(
+            payload: ImageUploadPayload(
+              fileName: fileName,
+              bytes: bytes,
+            ),
+          );
+      state = state.copyWith(
+        isUploadingImage: false,
+        errorMsg: '',
+      );
+      return result.url;
+    } catch (e) {
+      state = state.copyWith(
+        isUploadingImage: false,
+        errorMsg: e.toString(),
+      );
+      return null;
+    }
+  }
+
+  /// 현재 작성 내용을 임시저장합니다.
+  Future<bool> saveDraft({
+    required String title,
+    required String contentMarkdown,
+    String? summary,
+  }) async {
+    final isEditingPublishedPost = _isEditingPublishedPost();
+    return _submit(
+      title: title,
+      contentMarkdown: contentMarkdown,
+      summary: summary,
+      status: 'Draft',
+      successMsg: isEditingPublishedPost ? '수정사항이 임시저장되었습니다.' : '임시저장되었습니다.',
+    );
+  }
+
+  /// 현재 작성 내용을 자동 임시저장합니다.
+  ///
+  /// 제목/본문이 변경된 경우에만 저장을 시도합니다.
+  Future<bool> autoSaveDraft({
+    required String title,
+    required String contentMarkdown,
+  }) async {
+    if (state.isSubmitting || state.isUploadingImage) {
+      return false;
+    }
+
+    final normalizedTitle = title.trim();
+    final normalizedContent = contentMarkdown.trim();
+    if (normalizedTitle.isEmpty) {
+      return false;
+    }
+    if (!_hasDraftChanged(
+      title: normalizedTitle,
+      contentMarkdown: normalizedContent,
+    )) {
+      return false;
+    }
+
+    return saveDraft(
+      title: normalizedTitle,
+      contentMarkdown: normalizedContent,
+    );
+  }
+
+  /// 현재 작성 내용을 출간합니다.
+  Future<bool> publish({
+    required String title,
+    required String contentMarkdown,
+    String? summary,
+  }) async {
+    final isEditingPublishedPost = _isEditingPublishedPost();
+    return _submit(
+      title: title,
+      contentMarkdown: contentMarkdown,
+      summary: summary,
+      status: 'Published',
+      successMsg: isEditingPublishedPost ? '포스트가 수정되었습니다.' : '포스트가 출간되었습니다.',
+    );
+  }
+
+  /// 기존 게시글을 수정 모드로 전환합니다.
+  void startEditing(Post post) {
+    state = state.copyWith(
+      postId: post.id,
+      postType: post.type,
+      editingAuthorId: post.author.id,
+      editingPostStatus: post.status,
+      title: post.title,
+      contentMarkdown: post.contentMarkdown,
+      summary: post.summary ?? '',
+      tags: const <String>[],
+      collaborators: post.collaborators,
+      thumbnailUrl: post.thumbnailUrl,
+      thumbnailBytes: null,
+      thumbnailFileName: null,
+      isUploadingImage: false,
+      isSubmitting: false,
+      errorMsg: '',
+      successMsg: '',
+    );
+    _markDraftSaved(
+      title: post.title,
+      contentMarkdown: post.contentMarkdown,
+    );
+  }
+
+  /// 작성 상태를 초기화합니다.
+  void reset({
+    PostType postType = PostType.blog,
+  }) {
+    state = ArticleWriteState(postType: postType);
+    _markDraftSaved(
+      title: '',
+      contentMarkdown: '',
+    );
+  }
+
+  /// 공개 코드로 협업자를 조회합니다.
+  Future<CollaboratorLookupUser?> lookupCollaboratorByCode({
+    required String code,
+  }) async {
+    _ensureCanManageCurrentPost();
+    final normalizedCode = code.trim();
+    if (normalizedCode.isEmpty) {
+      return null;
+    }
+    return ref
+        .read(lookupCollaboratorByCodeUsecaseProvider)
+        .call(code: normalizedCode);
+  }
+
+  /// 조회된 협업자를 작성 상태에 추가합니다.
+  bool addCollaborator(CollaboratorLookupUser collaborator) {
+    final normalizedId = collaborator.id.trim();
+    final normalizedNickname = collaborator.nickname.trim();
+    if (normalizedId.isEmpty || normalizedNickname.isEmpty) {
+      return false;
+    }
+
+    final myUserId = ref.read(userViewModelProvider).userId?.trim();
+    if (myUserId != null && myUserId.isNotEmpty && myUserId == normalizedId) {
+      return false;
+    }
+
+    final alreadyExists =
+        state.collaborators.any((item) => item.id == normalizedId);
+    if (alreadyExists) {
+      return false;
+    }
+
+    final normalizedProfileImage = collaborator.profileImageUrl?.trim();
+    state = state.copyWith(
+      collaborators: <PostAuthor>[
+        ...state.collaborators,
+        PostAuthor(
+          id: normalizedId,
+          nickname: normalizedNickname,
+          profileImage:
+              normalizedProfileImage == null || normalizedProfileImage.isEmpty
+                  ? null
+                  : normalizedProfileImage,
+        ),
+      ],
+      errorMsg: '',
+      successMsg: '',
+    );
+    return true;
+  }
+
+  /// 작성 상태에서 협업자를 제거합니다.
+  void removeCollaborator(String collaboratorId) {
+    final normalizedId = collaboratorId.trim();
+    if (normalizedId.isEmpty) {
+      return;
+    }
+
+    state = state.copyWith(
+      collaborators:
+          state.collaborators.where((item) => item.id != normalizedId).toList(),
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  Future<bool> _submit({
+    required String title,
+    required String contentMarkdown,
+    String? summary,
+    required String status,
+    required String successMsg,
+  }) async {
+    final normalizedTitle = title.trim();
+    final normalizedContent = contentMarkdown.trim();
+    final normalizedSummary = (summary ?? state.summary).trim();
+    final summaryToUpload = normalizedSummary;
+    if (normalizedTitle.isEmpty) {
+      state = state.copyWith(errorMsg: '제목을 입력해주세요.', successMsg: '');
+      return false;
+    }
+    final isPublished = status.trim().toLowerCase() == 'published';
+    if (isPublished && normalizedContent.isEmpty) {
+      state = state.copyWith(errorMsg: '본문을 입력해주세요.', successMsg: '');
+      return false;
+    }
+
+    try {
+      _ensureCanManageCurrentPost();
+      final authorInfo = _resolveAuthorInfo();
+      state = state.copyWith(
+        isSubmitting: true,
+        title: normalizedTitle,
+        contentMarkdown: normalizedContent,
+        summary: normalizedSummary,
+        errorMsg: '',
+        successMsg: '',
+      );
+
+      final imageFileName = state.thumbnailFileName;
+      final imageBytes = state.thumbnailBytes;
+
+      if (state.postId.isEmpty) {
+        final createdPost = await ref.read(postRepositoryProvider).createPost(
+              payload: CreatePostPayload(
+                type: state.postType,
+                title: normalizedTitle,
+                contentMarkdown: normalizedContent,
+                summary: summaryToUpload,
+                authorId: authorInfo.id,
+                authorNickname: authorInfo.nickname,
+                authorProfileImageUrl: authorInfo.profileImageUrl,
+                status: status,
+                collaborators: state.collaborators,
+                imageFileName: imageFileName,
+                imageBytes: imageBytes,
+              ),
+            );
+
+        state = state.copyWith(
+          postId: createdPost.id,
+          postType: createdPost.type,
+          editingAuthorId: createdPost.author.id,
+          editingPostStatus: createdPost.status,
+          title: createdPost.title,
+          contentMarkdown: createdPost.contentMarkdown,
+          summary: summaryToUpload,
+          collaborators: createdPost.collaborators,
+          isSubmitting: false,
+          successMsg: successMsg,
+        );
+        _markDraftSaved(
+          title: createdPost.title,
+          contentMarkdown: createdPost.contentMarkdown,
+        );
+        _refreshPostCaches();
+        return true;
+      }
+
+      final patchedPost = await ref.read(postRepositoryProvider).patchPost(
+            postId: state.postId,
+            payload: PatchPostPayload(
+              type: state.postType,
+              title: normalizedTitle,
+              contentMarkdown: normalizedContent,
+              summary: summaryToUpload,
+              status: status,
+              collaborators: state.collaborators,
+              imageFileName: imageFileName,
+              imageBytes: imageBytes,
+            ),
+          );
+
+      state = state.copyWith(
+        postId: patchedPost.id,
+        postType: patchedPost.type,
+        editingAuthorId: patchedPost.author.id,
+        editingPostStatus: patchedPost.status,
+        title: patchedPost.title,
+        contentMarkdown: patchedPost.contentMarkdown,
+        summary: summaryToUpload,
+        collaborators: patchedPost.collaborators,
+        isSubmitting: false,
+        successMsg: successMsg,
+      );
+      _markDraftSaved(
+        title: patchedPost.title,
+        contentMarkdown: patchedPost.contentMarkdown,
+      );
+      _refreshPostCaches();
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMsg: e.toString(),
+        successMsg: '',
+      );
+      return false;
+    }
+  }
+
+  void _ensureCanManageCurrentPost() {
+    final userState = ref.read(userViewModelProvider);
+    if (canManageArticlesWithRole(userState.resolvedRole)) {
+      return;
+    }
+
+    final currentUserId = userState.userId?.trim();
+    final editingAuthorId = state.editingAuthorId.trim();
+    final isEditingOwnPost = state.postId.trim().isNotEmpty &&
+        currentUserId != null &&
+        currentUserId.isNotEmpty &&
+        currentUserId == editingAuthorId;
+    if (isEditingOwnPost) {
+      return;
+    }
+
+    throw Exception('작성자 본인 또는 ORGANIZER 이상 권한이 필요합니다.');
+  }
+
+  ({String id, String nickname, String? profileImageUrl}) _resolveAuthorInfo() {
+    final userState = ref.read(userViewModelProvider);
+    final userId = userState.userId;
+    if (userId == null || userId.isEmpty) {
+      throw Exception('사용자 정보를 확인할 수 없습니다.');
+    }
+    final nickname = userState.nickname;
+    if (nickname == null || nickname.trim().isEmpty) {
+      throw Exception('사용자 닉네임을 확인할 수 없습니다.');
+    }
+
+    return (
+      id: userId,
+      nickname: nickname.trim(),
+      profileImageUrl: userState.profileImageUrl?.trim(),
+    );
+  }
+
+  void _refreshPostCaches() {
+    ref.invalidate(articleListViewModelProvider(PostType.blog));
+    ref.invalidate(articleListViewModelProvider(PostType.lecture));
+    ref.invalidate(myDraftPostPageProvider);
+  }
+
+  bool _isEditingPublishedPost() {
+    final hasEditingTarget = state.postId.trim().isNotEmpty;
+    if (!hasEditingTarget) {
+      return false;
+    }
+    return state.editingPostStatus.trim().toLowerCase() == 'published';
+  }
+
+  bool _hasDraftChanged({
+    required String title,
+    required String contentMarkdown,
+  }) {
+    return title != _lastSavedDraftTitle ||
+        contentMarkdown != _lastSavedDraftContentMarkdown;
+  }
+
+  void _markDraftSaved({
+    required String title,
+    required String contentMarkdown,
+  }) {
+    _lastSavedDraftTitle = title.trim();
+    _lastSavedDraftContentMarkdown = contentMarkdown.trim();
+  }
+}

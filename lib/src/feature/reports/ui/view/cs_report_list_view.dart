@@ -1,9 +1,7 @@
-import 'package:a_and_i_report_web_server/src/core/extensions/report_type_filter_extension.dart';
-import 'package:a_and_i_report_web_server/src/core/extensions/week_filter_extension.dart';
-import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_type.dart';
+import 'package:a_and_i_report_web_server/src/feature/home/data/entities/course.dart';
 import 'package:a_and_i_report_web_server/src/core/widgets/responsive_layout.dart';
-import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_list_view_model.dart';
-import 'package:a_and_i_report_web_server/src/feature/reports/ui/widgets/report_list_widget.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/course_list_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/course_list_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -13,55 +11,116 @@ class CsReportListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reportListAsync = ref.watch(reportListViewModelProvider);
+    final courseListState = ref.watch(courseListViewModelProvider);
 
-    return reportListAsync.when(
-      data: (reportListState) {
-        final csReports =
-            reportListState.reports.getReportsAtType(type: ReportType.CS);
-
-        if (csReports.isEmpty) {
-          return SizedBox(
-            height: 153,
-            width: 1000,
-            child: Center(
-              child: Text(
-                "아직 과정이 준비되지 않았습니다.",
-                style: TextStyle(
-                  color: const Color(0xffAFAFAF),
-                  fontSize: ResponsiveLayout.isMobile(context) ? 13 : 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
-            children: List.generate(10, (index) {
-              final reports = csReports.getReportsAtWeek(week: index + 1);
-
-              if (reports.isEmpty) {
-                return Container();
-              } else {
-                return ReportListWidget(
-                    label: "${index + 1}주차 과제", reports: reports);
-              }
-            }),
-          ),
-        );
-      },
-      loading: () => const Center(
+    if (courseListState.status == CourseListViewStatus.loading) {
+      return const Center(
         child: CircularProgressIndicator(),
-      ),
-      error: (error, stack) => Center(
+      );
+    }
+
+    if (courseListState.status == CourseListViewStatus.error) {
+      return Center(
         child: Text(
-          '오류가 발생했습니다: ${error.toString()}',
-          style: const TextStyle(color: Colors.red),
+          '조회 가능한 코스가 없습니다.',
+          style: TextStyle(
+            color: const Color(0xffAFAFAF),
+            fontSize: ResponsiveLayout.isMobile(context) ? 13 : 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+
+    final courses = courseListState.courses;
+    Course? csCourse;
+    for (final course in courses) {
+      if (_isCsCourse(course)) {
+        csCourse = course;
+        break;
+      }
+    }
+
+    if (csCourse == null) {
+      return _EmptyCourseView();
+    }
+
+    return _CourseInfoView(course: csCourse);
+  }
+
+  bool _isCsCourse(Course course) {
+    final slug = course.slug.toLowerCase();
+    final title = course.metadata.title.toLowerCase();
+    final description = course.metadata.description.toLowerCase();
+    final fieldTag = course.fieldTag.toLowerCase();
+    final targetTrack = (course.targetTrack ?? '').toLowerCase();
+
+    return slug.contains('cs') ||
+        slug.contains('back') ||
+        title.contains('cs') ||
+        description.contains('computer science') ||
+        fieldTag == 'cs' ||
+        targetTrack == 'cs';
+  }
+}
+
+class _EmptyCourseView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 80,
+      child: Center(
+        child: Text(
+          '조회 가능한 코스가 없습니다.',
+          style: TextStyle(
+            color: const Color(0xffAFAFAF),
+            fontSize: ResponsiveLayout.isMobile(context) ? 13 : 15,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _CourseInfoView extends StatelessWidget {
+  final Course course;
+
+  const _CourseInfoView({required this.course});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = ResponsiveLayout.isMobile(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          course.metadata.title,
+          style: TextStyle(
+            color: const Color(0xFF111827),
+            fontSize: isMobile ? 16 : 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          course.metadata.description,
+          style: TextStyle(
+            color: const Color(0xFF6B7280),
+            fontSize: isMobile ? 12 : 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '기간: ${course.startDate} ~ ${course.endDate}',
+          style: TextStyle(
+            color: const Color(0xFF6B7280),
+            fontSize: isMobile ? 12 : 13,
+          ),
+        ),
+      ],
     );
   }
 }

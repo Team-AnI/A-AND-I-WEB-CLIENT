@@ -4,23 +4,52 @@ import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_vi
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_state.dart';
+import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/sections/home_footer_section.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/sections/home_top_bar_section.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ArticleListView extends ConsumerWidget {
-  const ArticleListView({super.key});
+class ArticleListView extends HookConsumerWidget {
+  const ArticleListView({
+    super.key,
+    this.postType = PostType.blog,
+    this.pageTitle = '게시글',
+    this.pageSubtitle = 'A&I 커뮤니티의 최신 기술 동향을 확인하세요.',
+    this.listPath = '/articles',
+    this.detailBasePath = '/articles',
+    this.showWriteButton = true,
+    this.writeButtonLabel = '글 작성',
+    this.writePath = '/articles/write',
+  });
+
+  final PostType postType;
+  final String pageTitle;
+  final String pageSubtitle;
+  final String listPath;
+  final String detailBasePath;
+  final bool showWriteButton;
+  final String writeButtonLabel;
+  final String writePath;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
-    final canShowWriteButton = isLoggedIn;
     final userState = ref.watch(userViewModelProvider);
+    final canShowWriteButton = showWriteButton &&
+        isLoggedIn &&
+        canManageArticlesWithRole(userState.resolvedRole);
     final nickname = userState.nickname ?? '동아리원';
+    final publicCode = userState.publicCode;
     final profileImageUrl = userState.profileImageUrl;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
@@ -31,211 +60,465 @@ class ArticleListView extends ConsumerWidget {
     final subtitleFontSize = isMobile ? 15.0 : (isTablet ? 16.0 : 18.0);
     final topPadding = isMobile ? 44.0 : (isTablet ? 54.0 : 64.0);
     final bottomPadding = isMobile ? 56.0 : (isTablet ? 64.0 : 72.0);
-    final sectionSpacing = isMobile ? 28.0 : 36.0;
     final cardGap = isMobile ? 20.0 : 24.0;
+    final articleListStateAsync =
+        ref.watch(articleListViewModelProvider(postType));
+    final articleListNotifier =
+        ref.read(articleListViewModelProvider(postType).notifier);
+
+    bool handleScrollNotification(ScrollNotification notification) {
+      if (notification.metrics.axis != Axis.vertical) {
+        return false;
+      }
+
+      final current = articleListStateAsync.valueOrNull;
+      if (current == null || current.isLoadingMore || !current.hasMore) {
+        return false;
+      }
+
+      final remainingExtent =
+          notification.metrics.maxScrollExtent - notification.metrics.pixels;
+      if (remainingExtent <= 480) {
+        articleListNotifier.loadMore();
+      }
+      return false;
+    }
 
     return Scaffold(
       backgroundColor: HomeTheme.background,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            elevation: 0,
-            backgroundColor: Colors.white.withValues(alpha: 0.92),
-            surfaceTintColor: Colors.transparent,
-            titleSpacing: 0,
-            title: HomeTopBarSection(
-              nickname: nickname,
-              profileImageUrl: profileImageUrl,
-              isLoggedIn: isLoggedIn,
-              onGoIntro: () => context.go('/promotion'),
-              onGoEducation: () => context.go('/report'),
-              onGoPosts: () => context.go('/articles'),
-              onGoMyAccount: () => context.go('/my-account'),
-              onLogin: () => context.go('/sign-in'),
-              onLogout: () async {
-                await ref
-                    .read(authViewModelProvider.notifier)
-                    .onEvent(const SignOut());
-                await ref
-                    .read(userViewModelProvider.notifier)
-                    .onEvent(const UserViewEvent.clear());
-              },
+      body: NotificationListener<ScrollNotification>(
+        onNotification: handleScrollNotification,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              elevation: 0,
+              backgroundColor: Colors.white.withValues(alpha: 0.92),
+              surfaceTintColor: Colors.transparent,
+              titleSpacing: 0,
+              title: HomeTopBarSection(
+                nickname: nickname,
+                publicCode: publicCode,
+                profileImageUrl: profileImageUrl,
+                isLoggedIn: isLoggedIn,
+                onGoIntro: () => context.go('/promotion'),
+                onGoEducation: () => context.go('/course'),
+                onGoPosts: () => context.go('/articles'),
+                onGoMaterials: () => context.go('/materials'),
+                onGoMyAccount: () => context.go('/my-account'),
+                onLogin: () => context.go('/sign-in'),
+                onLogout: () async {
+                  await ref
+                      .read(authViewModelProvider.notifier)
+                      .onEvent(const SignOut());
+                  await ref
+                      .read(userViewModelProvider.notifier)
+                      .onEvent(const UserViewEvent.clear());
+                },
+                onGoFaq: () => context.go('/faq'),
+                onGoHome: () => context.go("/"),
+              ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxWidth),
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontal,
-                    topPadding,
-                    horizontal,
-                    bottomPadding,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '게시글',
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1.1,
-                          color: HomeTheme.textMain,
-                        ),
-                      ),
-                      SizedBox(height: isMobile ? 8 : 12),
-                      Text(
-                        'A&I 커뮤니티의 최신 기술 동향, 연구 결과 및 활동 소식을 확인하세요.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: subtitleFontSize,
-                          height: 1.6,
-                          color: HomeTheme.textMuted,
-                        ),
-                      ),
-                      SizedBox(height: isMobile ? 16 : 20),
-                      if (canShowWriteButton)
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: FilledButton.icon(
-                            onPressed: () => context.go('/articles/write'),
-                            icon: const Icon(Icons.edit, size: 18),
-                            label: const Text('블로그 글 작성'),
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontal,
+                      topPadding,
+                      horizontal,
+                      bottomPadding,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          pageTitle,
+                          style: TextStyle(
+                            fontSize: titleFontSize,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -1.1,
+                            color: HomeTheme.textMain,
                           ),
                         ),
-                      SizedBox(height: sectionSpacing),
-                      Wrap(
-                        spacing: isMobile ? 6 : 8,
-                        runSpacing: isMobile ? 6 : 8,
-                        alignment: WrapAlignment.center,
-                        children: const [
-                          CategoryChipView(text: '전체', selected: true),
-                          CategoryChipView(text: '기술 블로그'),
-                          CategoryChipView(text: '공지사항'),
-                          CategoryChipView(text: '활동 후기'),
-                        ],
-                      ),
-                      SizedBox(height: isMobile ? 34 : 44),
-                      const ArticleCardView(
-                        id: '1',
-                        category: 'ARCHITECTURE',
-                        date: '2023년 10월 24일',
-                        title: 'LLM 아키텍처 탐구: 효율적인 추론을 향한 진화',
-                        summary:
-                            '최신 대규모 언어 모델 구조와 효율적인 추론을 향한 진화 과정을 심도 있게 다룹니다.',
-                        views: '1,240',
-                        comments: '12',
-                        icon: Icons.hub,
-                      ),
-                      SizedBox(height: cardGap),
-                      const ArticleCardView(
-                        id: '2',
-                        category: 'RESEARCH',
-                        date: '2023년 10월 20일',
-                        title: '신경망의 미래: 차세대 딥러닝 패러다임',
-                        summary:
-                            '프로덕션 환경에서 더욱 효율적이고 확장 가능한 신경망 아키텍처로의 전환을 분석합니다.',
-                        views: '980',
-                        comments: '8',
-                        icon: Icons.data_object,
-                      ),
-                      SizedBox(height: cardGap),
-                      const ArticleCardView(
-                        id: '3',
-                        category: 'PRACTICES',
-                        date: '2023년 10월 15일',
-                        title: '데이터 과학 베스트 프랙티스: 안정적인 파이프라인 구축',
-                        summary:
-                            '고품질 데이터 파이프라인 유지 및 대규모 프로젝트의 재현성 확보를 위한 필수 전략입니다.',
-                        views: '2,150',
-                        comments: '24',
-                        icon: Icons.storage,
-                      ),
-                      SizedBox(height: cardGap),
-                      const ArticleCardView(
-                        id: '4',
-                        category: 'COMMUNITY',
-                        date: '2023년 10월 10일',
-                        title: '2023 하계 해커톤 활동 후기',
-                        summary:
-                            '치열했던 48시간의 기록. A&I 멤버들이 함께 모여 실전 AI 문제를 해결했던 해커톤 현장을 공유합니다.',
-                        views: '850',
-                        comments: '15',
-                        icon: Icons.groups,
-                      ),
-                    ],
+                        SizedBox(height: isMobile ? 8 : 12),
+                        Text(
+                          pageSubtitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: subtitleFontSize,
+                            height: 1.6,
+                            color: HomeTheme.textMuted,
+                          ),
+                        ),
+                        SizedBox(height: isMobile ? 16 : 20),
+                        if (canShowWriteButton)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton.icon(
+                              onPressed: () {
+                                ref
+                                    .read(
+                                        articleWriteViewModelProvider.notifier)
+                                    .reset(postType: postType);
+                                context.go(writePath);
+                              },
+                              icon: const Icon(Icons.edit, size: 18),
+                              label: Text(writeButtonLabel),
+                            ),
+                          ),
+                        SizedBox(height: isMobile ? 34 : 44),
+                        ArticleCardListSection(
+                          articleListStateAsync: articleListStateAsync,
+                          cardGap: cardGap,
+                          detailBasePath: detailBasePath,
+                          onRetry: () => ref
+                              .read(articleListViewModelProvider(postType)
+                                  .notifier)
+                              .refresh(),
+                          onLoadMore: articleListNotifier.loadMore,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          const SliverToBoxAdapter(
-            child: HomeFooterSection(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class CategoryChipView extends StatelessWidget {
-  const CategoryChipView({
-    required this.text,
-    this.selected = false,
-  });
-
-  final String text;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 768;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 13 : 16,
-        vertical: isMobile ? 8 : 10,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: selected
-            ? HomeTheme.textMain
-            : Colors.black.withValues(alpha: 0.05),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: selected ? Colors.white : HomeTheme.textMuted,
-          fontSize: isMobile ? 13 : 14,
-          fontWeight: FontWeight.w600,
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: HomeFooterSection(),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
+class ArticleCardListSection extends StatelessWidget {
+  const ArticleCardListSection({
+    super.key,
+    required this.articleListStateAsync,
+    required this.cardGap,
+    required this.detailBasePath,
+    required this.onRetry,
+    required this.onLoadMore,
+  });
+
+  final AsyncValue<ArticleListState> articleListStateAsync;
+  final double cardGap;
+  final String detailBasePath;
+  final VoidCallback onRetry;
+  final Future<void> Function() onLoadMore;
+
+  @override
+  Widget build(BuildContext context) {
+    return articleListStateAsync.when(
+      data: (state) {
+        if (state.errorMsg.isNotEmpty) {
+          return _ArticleListFeedbackView(
+            message: '게시글 목록을 불러오지 못했습니다.',
+            actionLabel: '다시 시도',
+            onAction: onRetry,
+          );
+        }
+
+        if (state.items.isEmpty) {
+          return const _ArticleListFeedbackView(
+            message: '등록된 게시글이 없습니다.',
+          );
+        }
+
+        final children = <Widget>[];
+        for (var index = 0; index < state.items.length; index++) {
+          final post = state.items[index];
+          children.add(_buildCard(post));
+          if (index != state.items.length - 1) {
+            children.add(SizedBox(height: cardGap));
+          }
+        }
+
+        if (state.isLoadingMore ||
+            state.loadMoreErrorMsg.isNotEmpty ||
+            state.hasMore) {
+          if (children.isNotEmpty) {
+            children.add(SizedBox(height: cardGap));
+          }
+          children.add(
+            _ArticleListPaginationFooter(
+              isLoadingMore: state.isLoadingMore,
+              errorMsg: state.loadMoreErrorMsg,
+              hasMore: state.hasMore,
+              onRetry: onLoadMore,
+            ),
+          );
+        }
+
+        return Column(
+          children: children,
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (_, __) => _ArticleListFeedbackView(
+        message: '게시글 목록을 불러오지 못했습니다.',
+        actionLabel: '다시 시도',
+        onAction: onRetry,
+      ),
+    );
+  }
+
+  Widget _buildCard(Post post) {
+    return ArticleCardView(
+      id: post.id,
+      detailBasePath: detailBasePath,
+      category: _statusLabel(post.status),
+      date: _formatKoreanDate(post.createdAt),
+      title: post.title,
+      summary: _resolveSummary(post),
+      thumbnailUrl: _resolveThumbnailUrl(post),
+      authorNickname: post.author.nickname,
+      authorProfileImage: post.author.profileImage,
+      icon: _statusIcon(post.status),
+    );
+  }
+}
+
+class _ArticleListPaginationFooter extends StatelessWidget {
+  const _ArticleListPaginationFooter({
+    required this.isLoadingMore,
+    required this.errorMsg,
+    required this.hasMore,
+    required this.onRetry,
+  });
+
+  final bool isLoadingMore;
+  final String errorMsg;
+  final bool hasMore;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (errorMsg.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          children: [
+            const Text(
+              '게시글을 더 불러오지 못했습니다.',
+              style: TextStyle(
+                color: HomeTheme.textMuted,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: const Text('더 불러오기 다시 시도'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (hasMore) {
+      return const SizedBox(
+        height: 36,
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+class _ArticleListFeedbackView extends StatelessWidget {
+  const _ArticleListFeedbackView({
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        children: [
+          Text(
+            message,
+            style: const TextStyle(
+              color: HomeTheme.textMuted,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onAction,
+              child: Text(actionLabel!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+String _statusLabel(String status) {
+  final normalized = status.trim();
+  if (normalized.isEmpty) {
+    return 'UNKNOWN';
+  }
+  return normalized.toUpperCase();
+}
+
+String _formatKoreanDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  return '${local.year}년 ${local.month}월 ${local.day}일';
+}
+
+String _extractSummary(String markdown) {
+  final plainText = markdown
+      .replaceAll(RegExp(r'!\[[^\]]*\]\([^)]*\)'), ' ')
+      .replaceAll(RegExp(r'\[[^\]]*\]\([^)]*\)'), ' ')
+      .replaceAll(RegExp(r'[#>*`~_\-\[\]()]'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+
+  if (plainText.isEmpty) {
+    return '본문 내용이 없습니다.';
+  }
+
+  return _truncateSummary(
+    plainText,
+    maxLength: 30,
+  );
+}
+
+String _resolveSummary(Post post) {
+  final providedSummary = post.summary?.trim();
+  if (providedSummary != null && providedSummary.isNotEmpty) {
+    return _truncateSummary(
+      providedSummary,
+      maxLength: 120,
+    );
+  }
+  return _extractSummary(post.contentMarkdown);
+}
+
+String _truncateSummary(
+  String text, {
+  required int maxLength,
+}) {
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return '${text.substring(0, maxLength)}...';
+}
+
+String? _extractFirstImageUrl(String markdown) {
+  final match = RegExp(r'!\[[^\]]*\]\(([^)\s]+)').firstMatch(markdown);
+  if (match == null) {
+    return null;
+  }
+  final raw = (match.group(1) ?? '').trim();
+  final sanitized = raw.replaceAll('<', '').replaceAll('>', '');
+  final uri = Uri.tryParse(sanitized);
+  if (uri == null || !uri.hasScheme) {
+    return null;
+  }
+  if (uri.scheme != 'http' && uri.scheme != 'https') {
+    return null;
+  }
+  return sanitized;
+}
+
+String? _resolveThumbnailUrl(Post post) {
+  final fromField = _extractValidHttpUrl(post.thumbnailUrl);
+  if (fromField != null) {
+    return fromField;
+  }
+  return _extractFirstImageUrl(post.contentMarkdown);
+}
+
+String? _extractValidHttpUrl(String? rawUrl) {
+  final normalized = rawUrl?.trim();
+  if (normalized == null || normalized.isEmpty) {
+    return null;
+  }
+  final uri = Uri.tryParse(normalized);
+  if (uri == null || !uri.hasScheme) {
+    return null;
+  }
+  if (uri.scheme != 'http' && uri.scheme != 'https') {
+    return null;
+  }
+  return normalized;
+}
+
+String? _extractValidProfileImageUrl(String? rawUrl) {
+  return _extractValidHttpUrl(rawUrl);
+}
+
+IconData _statusIcon(String status) {
+  switch (status.toLowerCase()) {
+    case 'published':
+      return Icons.article;
+    case 'draft':
+      return Icons.edit_note;
+    default:
+      return Icons.description;
+  }
+}
+
 class ArticleCardView extends StatelessWidget {
   const ArticleCardView({
+    super.key,
     required this.id,
+    required this.detailBasePath,
     required this.category,
     required this.date,
     required this.title,
     required this.summary,
-    required this.views,
-    required this.comments,
+    required this.thumbnailUrl,
+    required this.authorNickname,
+    required this.authorProfileImage,
     required this.icon,
   });
 
   final String id;
+  final String detailBasePath;
   final String category;
   final String date;
   final String title;
   final String summary;
-  final String views;
-  final String comments;
+  final String? thumbnailUrl;
+  final String authorNickname;
+  final String? authorProfileImage;
   final IconData icon;
 
   @override
@@ -247,7 +530,7 @@ class ArticleCardView extends StatelessWidget {
     final previewWidth = isTablet ? 210.0 : 240.0;
     final previewHeight = isMobile ? 168.0 : 150.0;
     return InkWell(
-      onTap: () => context.go('/articles/$id'),
+      onTap: () => context.go('$detailBasePath/$id'),
       borderRadius: BorderRadius.circular(16),
       child: Flex(
         direction: stacked ? Axis.vertical : Axis.horizontal,
@@ -261,12 +544,9 @@ class ArticleCardView extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
             ),
-            child: Center(
-              child: Icon(
-                icon,
-                size: 56,
-                color: Colors.black.withValues(alpha: 0.14),
-              ),
+            child: _ArticleCardThumbnail(
+              thumbnailUrl: thumbnailUrl,
+              icon: icon,
             ),
           ),
           SizedBox(width: stacked ? 0 : 20, height: stacked ? 14 : 0),
@@ -276,8 +556,8 @@ class ArticleCardView extends StatelessWidget {
               date: date,
               title: title,
               summary: summary,
-              views: views,
-              comments: comments,
+              authorNickname: authorNickname,
+              authorProfileImage: authorProfileImage,
             )
           else
             Expanded(
@@ -286,11 +566,71 @@ class ArticleCardView extends StatelessWidget {
                 date: date,
                 title: title,
                 summary: summary,
-                views: views,
-                comments: comments,
+                authorNickname: authorNickname,
+                authorProfileImage: authorProfileImage,
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _ArticleCardThumbnail extends StatelessWidget {
+  const _ArticleCardThumbnail({
+    required this.thumbnailUrl,
+    required this.icon,
+  });
+
+  final String? thumbnailUrl;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = thumbnailUrl?.trim();
+    final hasThumbnail = url != null && url.isNotEmpty;
+    if (!hasThumbnail) {
+      return _ArticleCardThumbnailFallback(icon: icon);
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        placeholder: (context, _) => Container(
+          color: const Color(0xFFF3F4F6),
+          alignment: Alignment.center,
+          child: const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+        errorWidget: (context, _, __) {
+          return _ArticleCardThumbnailFallback(icon: icon);
+        },
+      ),
+    );
+  }
+}
+
+class _ArticleCardThumbnailFallback extends StatelessWidget {
+  const _ArticleCardThumbnailFallback({
+    required this.icon,
+  });
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Icon(
+        icon,
+        size: 56,
+        color: Colors.black.withValues(alpha: 0.14),
       ),
     );
   }
@@ -303,16 +643,16 @@ class ArticleCardContentView extends StatelessWidget {
     required this.date,
     required this.title,
     required this.summary,
-    required this.views,
-    required this.comments,
+    required this.authorNickname,
+    required this.authorProfileImage,
   });
 
   final String category;
   final String date;
   final String title;
   final String summary;
-  final String views;
-  final String comments;
+  final String authorNickname;
+  final String? authorProfileImage;
 
   @override
   Widget build(BuildContext context) {
@@ -321,6 +661,7 @@ class ArticleCardContentView extends StatelessWidget {
     final isTablet = width >= 768 && width < 1200;
     final titleFont = isMobile ? 22.0 : (isTablet ? 24.0 : 27.0);
     final bodyFont = isMobile ? 13.0 : 14.0;
+    final authorProfile = _extractValidProfileImageUrl(authorProfileImage);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,21 +728,22 @@ class ArticleCardContentView extends StatelessWidget {
         SizedBox(height: isMobile ? 8 : 10),
         Row(
           children: [
-            Icon(Icons.visibility, size: 16, color: HomeTheme.textMuted),
-            const SizedBox(width: 4),
-            Text(
-              views,
-              style: TextStyle(
-                color: HomeTheme.textMuted,
-                fontSize: isMobile ? 11 : 12,
-                fontWeight: FontWeight.w600,
-              ),
+            CircleAvatar(
+              radius: isMobile ? 10 : 11,
+              backgroundColor: Colors.black.withValues(alpha: 0.06),
+              backgroundImage:
+                  authorProfile == null ? null : NetworkImage(authorProfile),
+              child: authorProfile == null
+                  ? Icon(
+                      Icons.person,
+                      size: isMobile ? 11 : 12,
+                      color: HomeTheme.textMuted,
+                    )
+                  : null,
             ),
-            const SizedBox(width: 12),
-            Icon(Icons.chat_bubble, size: 14, color: HomeTheme.textMuted),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Text(
-              comments,
+              authorNickname,
               style: TextStyle(
                 color: HomeTheme.textMuted,
                 fontSize: isMobile ? 11 : 12,

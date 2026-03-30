@@ -1,0 +1,49 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'submission_result.freezed.dart';
+part 'submission_result.g.dart';
+
+/// 제출 채점 결과 엔티티입니다.
+@freezed
+sealed class SubmissionResult with _$SubmissionResult {
+  const factory SubmissionResult({
+    required String submissionId,
+    String? problemId,
+    String? language,
+    required String status,
+    @Default(<SubmissionTestCaseResult>[])
+    List<SubmissionTestCaseResult> testCases,
+    DateTime? createdAt,
+    DateTime? completedAt,
+  }) = _SubmissionResult;
+
+  factory SubmissionResult.fromJson(Map<String, dynamic> json) =>
+      _$SubmissionResultFromJson(json);
+}
+
+/// 테스트 케이스별 채점 결과 엔티티입니다.
+@freezed
+sealed class SubmissionTestCaseResult with _$SubmissionTestCaseResult {
+  const factory SubmissionTestCaseResult({
+    int? caseId,
+    String? status,
+    double? timeMs,
+    double? memoryMb,
+    @JsonKey(fromJson: _asNullableString) String? output,
+    @JsonKey(fromJson: _asNullableString) String? error,
+  }) = _SubmissionTestCaseResult;
+
+  factory SubmissionTestCaseResult.fromJson(Map<String, dynamic> json) =>
+      _$SubmissionTestCaseResultFromJson(json);
+}
+
+String? _asNullableString(Object? value) {
+  if (value == null) {
+    return null;
+  }
+
+  final normalized = value.toString();
+  return normalized.isEmpty ? null : normalized;
+}

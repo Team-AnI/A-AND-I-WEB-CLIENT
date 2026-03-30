@@ -61,7 +61,15 @@ class ReportListWidget extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
               onTap: () => context.go(
-                  "/report/${report.id}?endAt=${report.endAt.millisecondsSinceEpoch}"),
+                Uri(
+                  path: '/report/${report.id}',
+                  queryParameters: {
+                    'endAt': report.endAt.millisecondsSinceEpoch.toString(),
+                    'week': report.week.toString(),
+                    'seq': report.seq.toString(),
+                  },
+                ).toString(),
+              ),
               child: ReportTitleRow(
                 reportSummary: report,
                 indexLabel: "${report.week}-${report.seq}.",
