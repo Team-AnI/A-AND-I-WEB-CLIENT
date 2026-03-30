@@ -1,4 +1,5 @@
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/repositories/post_repository.dart';
 
 /// 게시글 목록 조회 유스케이스입니다.
@@ -13,7 +14,8 @@ class GetPostListUsecase {
   Future<PostPage> call({
     int page = 0,
     int size = 20,
+    PostType? type,
   }) {
-    return postRepository.getPosts(page: page, size: size);
+    return postRepository.getPosts(page: page, size: size, type: type);
   }
 }

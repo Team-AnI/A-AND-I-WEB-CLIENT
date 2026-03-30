@@ -80,16 +80,24 @@ Report? _parseReport(Object? rawData) {
   final attributesMap = attributes is Map<String, dynamic> ? attributes : null;
   final requirements = metadataMap?['requirements'];
   final learningGoals = metadataMap?['learningGoals'];
-  final examples = metadataMap?['examples'];
+  final testCases = metadataMap?['testCases'];
+  final codeTemplates = metadataMap?['codeTemplates'];
 
   final id = rawData['assignmentId']?.toString() ?? rawData['id']?.toString();
-  final problemId = attributesMap?['problemId']?.toString() ??
-      rawData['problemId']?.toString();
+  final problemId = _extractProblemId(
+    rawData: rawData,
+    metadataMap: metadataMap,
+    attributesMap: attributesMap,
+  );
   final title = metadataMap?['title']?.toString();
   final content = metadataMap?['description']?.toString();
   final level = _parseLevel(metadataMap?['difficulty']);
   final reportType = _parseReportType(
-    attributesMap?['legacyReportType'] ?? attributesMap?['reportType'],
+    attributesMap?['legacyReportType'] ??
+        attributesMap?['reportType'] ??
+        rawData['reportType'] ??
+        rawData['phase'] ??
+        rawData['courseSlug'],
   );
   final week = _asInt(rawData['weekNo']);
 
@@ -111,11 +119,41 @@ Report? _parseReport(Object? rawData) {
     content: content,
     requirement: _parseRequirements(requirements),
     objects: _parseLearningGoals(learningGoals),
-    exampleIo: _parseExamples(examples),
+    exampleIo: _parseExamples(testCases),
+    codeTemplates: _parseCodeTemplates(codeTemplates),
     reportType: reportType,
     week: week,
     level: level,
   );
+}
+
+String? _extractProblemId({
+  required Map<String, dynamic> rawData,
+  required Map<String, dynamic>? metadataMap,
+  required Map<String, dynamic>? attributesMap,
+}) {
+  final candidates = <Object?>[
+    attributesMap?['problemId'],
+    attributesMap?['gradingProblemId'],
+    attributesMap?['judgeProblemId'],
+    attributesMap?['problemUuid'],
+    metadataMap?['problemId'],
+    metadataMap?['gradingProblemId'],
+    metadataMap?['judgeProblemId'],
+    rawData['problemId'],
+    rawData['gradingProblemId'],
+    rawData['judgeProblemId'],
+    rawData['problemUuid'],
+  ];
+
+  for (final candidate in candidates) {
+    final value = candidate?.toString().trim();
+    if (value != null && value.isNotEmpty) {
+      return value;
+    }
+  }
+
+  return null;
 }
 
 List<SeqString> _parseRequirements(Object? value) {
@@ -160,17 +198,97 @@ List<ExampleIO> _parseExamples(Object? value) {
   }
 
   final result = <ExampleIO>[];
-  for (final item in value.whereType<Map<String, dynamic>>()) {
-    final seq = _asInt(item['seq']);
-    final input = item['inputText']?.toString();
-    final output = item['outputText']?.toString();
-    if (seq == null || input == null || output == null) {
+  for (var index = 0; index < value.length; index++) {
+    final item = value[index];
+    if (item is! Map<String, dynamic>) {
       continue;
     }
+
+    final visibility = item['visibility']?.toString().trim().toUpperCase();
+    if (visibility != null && visibility.isNotEmpty && visibility != 'PUBLIC') {
+      continue;
+    }
+
+    final seq = _asInt(item['seq']) ?? _asInt(item['sortOrder']) ?? index + 1;
+    final input =
+        item['inputText']?.toString() ?? _parseInputValues(item) ?? '';
+    final output =
+        item['outputText']?.toString() ?? _parseOutputValues(item) ?? '';
 
     result.add(ExampleIO(seq: seq, input: input, output: output));
   }
   return result;
+}
+
+List<CodeTemplate> _parseCodeTemplates(Object? value) {
+  if (value is! List) {
+    return const <CodeTemplate>[];
+  }
+
+  final result = <CodeTemplate>[];
+  for (final item in value.whereType<Map<String, dynamic>>()) {
+    final language = item['language']?.toString();
+    final functionTemplate = item['functionTemplate']?.toString();
+    if (language == null ||
+        language.isEmpty ||
+        functionTemplate == null ||
+        functionTemplate.isEmpty) {
+      continue;
+    }
+
+    result.add(
+      CodeTemplate(
+        language: language,
+        functionTemplate: functionTemplate,
+      ),
+    );
+  }
+
+  return result;
+}
+
+String? _parseInputValues(Map<String, dynamic> item) {
+  final inputValues = item['inputValues'];
+  if (inputValues is! List) {
+    return null;
+  }
+  return _formatVariableValues(inputValues);
+}
+
+String? _parseOutputValues(Map<String, dynamic> item) {
+  final outputValues = item['outputValues'];
+  if (outputValues is! List) {
+    return null;
+  }
+  return _formatVariableValues(outputValues);
+}
+
+String? _formatVariableValues(List<dynamic> rawValues) {
+  final values = rawValues
+      .map((value) => value?.toString() ?? '')
+      .where((value) => value.isNotEmpty)
+      .toList(growable: false);
+  if (values.isEmpty) {
+    return null;
+  }
+
+  return values
+      .asMap()
+      .entries
+      .map((entry) => '${_alphabetLabel(entry.key)} = ${entry.value}')
+      .join('\n');
+}
+
+String _alphabetLabel(int index) {
+  var current = index;
+  final buffer = StringBuffer();
+
+  do {
+    buffer.writeCharCode(97 + (current % 26));
+    current = (current ~/ 26) - 1;
+  } while (current >= 0);
+
+  return buffer.toString().split('').reversed.join();
 }
 
 int? _asInt(Object? value) {
@@ -205,6 +323,14 @@ ReportType? _parseReportType(Object? value) {
   final normalized = value?.toString().trim().toUpperCase();
   if (normalized == null || normalized.isEmpty) {
     return null;
+  }
+
+  if (normalized.contains('CS')) {
+    return ReportType.CS;
+  }
+
+  if (normalized.contains('BASIC') || normalized.contains('FRAMEWORK')) {
+    return ReportType.BASIC;
   }
 
   return switch (normalized) {

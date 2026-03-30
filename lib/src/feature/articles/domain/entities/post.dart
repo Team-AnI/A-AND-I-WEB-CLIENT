@@ -1,10 +1,12 @@
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 
-/// 블로그 게시글 요약 엔티티입니다.
+/// 게시글 요약 엔티티입니다.
 class Post {
   /// 게시글 요약 엔티티를 생성합니다.
   const Post({
     required this.id,
+    required this.type,
     required this.title,
     required this.contentMarkdown,
     this.summary,
@@ -18,6 +20,9 @@ class Post {
 
   /// 게시글 ID(UUID)입니다.
   final String id;
+
+  /// 게시글 종류입니다.
+  final PostType type;
 
   /// 게시글 제목입니다.
   final String title;

@@ -1,4 +1,5 @@
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/data/dtos/submission_api_payload_parser.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/submission_result.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/repositories/submission_repository.dart';
 
@@ -21,7 +22,8 @@ final class GetSubmissionResultUsecaseImpl
       submissionId,
       'Bearer $token',
     );
-    return response.toEntity();
+    return SubmissionApiPayloadParser.parseSubmissionResult(response)
+        ?.toEntity();
   }
 }
 

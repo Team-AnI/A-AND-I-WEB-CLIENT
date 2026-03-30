@@ -57,3 +57,10 @@ QA.md
 
 .omc/
 .omx/
+
+# 기획 명세서 관련 (스크립트, 산출물)
+scripts/
+doc/screenshots/
+PRODUCT_SPEC.md
+PRODUCT_SPEC.pptx
+PRODUCT_SPEC.docx

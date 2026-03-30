@@ -9,6 +9,7 @@ part of 'post_response_dto.dart';
 _PostResponseDto _$PostResponseDtoFromJson(Map<String, dynamic> json) =>
     _PostResponseDto(
       id: json['id'] as String,
+      type: json['type'] as String? ?? 'Blog',
       title: json['title'] as String,
       contentMarkdown: json['contentMarkdown'] as String,
       summary: json['summary'] as String?,
@@ -28,6 +29,7 @@ _PostResponseDto _$PostResponseDtoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$PostResponseDtoToJson(_PostResponseDto instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'type': instance.type,
       'title': instance.title,
       'contentMarkdown': instance.contentMarkdown,
       'summary': instance.summary,

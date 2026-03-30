@@ -1,6 +1,7 @@
 import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_event.dart';
@@ -25,12 +26,23 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 final myWrittenPostsProvider =
     FutureProvider.autoDispose.family<List<Post>, String>(
   (ref, userId) async {
-    final response = await ref.read(getPostListUsecaseProvider).call(
-          page: 0,
-          size: 100,
-        );
+    final responses = await Future.wait<PostPage>([
+      ref.read(getPostListUsecaseProvider).call(
+            page: 0,
+            size: 100,
+            type: PostType.blog,
+          ),
+      ref.read(getPostListUsecaseProvider).call(
+            page: 0,
+            size: 100,
+            type: PostType.lecture,
+          ),
+    ]);
     final normalizedUserId = userId.trim();
-    final posts = response.items.where((post) {
+    final posts = <Post>[
+      ...responses[0].items,
+      ...responses[1].items,
+    ].where((post) {
       final authorId = post.author.id.trim();
       if (authorId != normalizedUserId) {
         return false;
@@ -261,83 +273,129 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
 
     final passwords = await showDialog<Map<String, String>>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('비밀번호 변경'),
-        content: SizedBox(
-          width: 420,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: currentPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: '현재 비밀번호',
-                  hintText: '현재 비밀번호를 입력하세요',
-                ),
+      builder: (dialogContext) {
+        var isCurrentPasswordVisible = false;
+        var isNewPasswordVisible = false;
+        var isConfirmPasswordVisible = false;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('비밀번호 변경'),
+            content: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: currentPasswordController,
+                    obscureText: !isCurrentPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: '현재 비밀번호',
+                      hintText: '현재 비밀번호를 입력하세요',
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setDialogState(() {
+                            isCurrentPasswordVisible =
+                                !isCurrentPasswordVisible;
+                          });
+                        },
+                        icon: Icon(
+                          isCurrentPasswordVisible
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: newPasswordController,
+                    obscureText: !isNewPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: '새 비밀번호',
+                      hintText: '새 비밀번호를 입력하세요',
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setDialogState(() {
+                            isNewPasswordVisible = !isNewPasswordVisible;
+                          });
+                        },
+                        icon: Icon(
+                          isNewPasswordVisible
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: confirmPasswordController,
+                    obscureText: !isConfirmPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: '새 비밀번호 확인',
+                      hintText: '비밀번호를 다시 입력하세요',
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setDialogState(() {
+                            isConfirmPasswordVisible =
+                                !isConfirmPasswordVisible;
+                          });
+                        },
+                        icon: Icon(
+                          isConfirmPasswordVisible
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: newPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: '새 비밀번호',
-                  hintText: '새 비밀번호를 입력하세요',
-                ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('취소'),
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: '새 비밀번호 확인',
-                  hintText: '비밀번호를 다시 입력하세요',
-                ),
+              FilledButton(
+                onPressed: () {
+                  final currentPassword = currentPasswordController.text.trim();
+                  final password = newPasswordController.text.trim();
+                  final confirmPassword = confirmPasswordController.text.trim();
+
+                  if (currentPassword.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('현재 비밀번호를 입력해주세요.')),
+                    );
+                    return;
+                  }
+
+                  if (password.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('새 비밀번호를 입력해주세요.')),
+                    );
+                    return;
+                  }
+
+                  if (password != confirmPassword) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('비밀번호 확인이 일치하지 않습니다.')),
+                    );
+                    return;
+                  }
+
+                  Navigator.of(dialogContext).pop({
+                    'currentPassword': currentPassword,
+                    'newPassword': password,
+                  });
+                },
+                child: const Text('변경'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final currentPassword = currentPasswordController.text.trim();
-              final password = newPasswordController.text.trim();
-              final confirmPassword = confirmPasswordController.text.trim();
-
-              if (currentPassword.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('현재 비밀번호를 입력해주세요.')),
-                );
-                return;
-              }
-
-              if (password.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('새 비밀번호를 입력해주세요.')),
-                );
-                return;
-              }
-
-              if (password != confirmPassword) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('비밀번호 확인이 일치하지 않습니다.')),
-                );
-                return;
-              }
-
-              Navigator.of(dialogContext).pop({
-                'currentPassword': currentPassword,
-                'newPassword': password,
-              });
-            },
-            child: const Text('변경'),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     currentPasswordController.dispose();
@@ -434,6 +492,7 @@ class UserManagermentViewState extends ConsumerState<UserManagermentView> {
               onGoIntro: () => context.go('/promotion'),
               onGoEducation: () => context.go('/course'),
               onGoPosts: () => context.go('/articles'),
+              onGoMaterials: () => context.go('/materials'),
               onGoMyAccount: () => context.go('/my-account'),
               onLogin: () => context.go('/sign-in'),
               onLogout: () async {
@@ -899,7 +958,7 @@ class UserWrittenPostSection extends StatelessWidget {
   }
 }
 
-class UserWrittenPostCard extends StatelessWidget {
+class UserWrittenPostCard extends ConsumerWidget {
   const UserWrittenPostCard({
     super.key,
     required this.post,
@@ -908,12 +967,12 @@ class UserWrittenPostCard extends StatelessWidget {
   final Post post;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
 
     return InkWell(
-      onTap: () => context.go('/articles/${post.id}'),
+      onTap: () => context.go('${_resolvePostListPath(post.type)}/${post.id}'),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
@@ -951,6 +1010,27 @@ class UserWrittenPostCard extends StatelessWidget {
                       letterSpacing: 0.6,
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                _UserPostTypeBadge(type: post.type),
+                const SizedBox(width: 8),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    ref
+                        .read(articleWriteViewModelProvider.notifier)
+                        .startEditing(post);
+                    context.go('${_resolvePostListPath(post.type)}/write');
+                  },
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('수정'),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -1055,7 +1135,7 @@ class UserDraftPostCard extends ConsumerWidget {
     return InkWell(
       onTap: () {
         ref.read(articleWriteViewModelProvider.notifier).startEditing(post);
-        context.go('/articles/write');
+        context.go('${_resolvePostListPath(post.type)}/write');
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -1096,6 +1176,27 @@ class UserDraftPostCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
+                _UserPostTypeBadge(type: post.type),
+                const SizedBox(width: 8),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    ref
+                        .read(articleWriteViewModelProvider.notifier)
+                        .startEditing(post);
+                    context.go('${_resolvePostListPath(post.type)}/write');
+                  },
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('수정'),
+                ),
+                const SizedBox(width: 8),
                 Text(
                   _formatKoreanDate(post.updatedAt),
                   style: TextStyle(
@@ -1129,6 +1230,36 @@ class UserDraftPostCard extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UserPostTypeBadge extends StatelessWidget {
+  const _UserPostTypeBadge({
+    required this.type,
+  });
+
+  final PostType type;
+
+  @override
+  Widget build(BuildContext context) {
+    final isLecture = type == PostType.lecture;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isLecture ? const Color(0xFFECFDF3) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        type.label,
+        style: TextStyle(
+          color: isLecture ? const Color(0xFF047857) : const Color(0xFF1D4ED8),
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.2,
         ),
       ),
     );
@@ -1206,4 +1337,13 @@ String _extractSummary(String markdown) {
   }
 
   return '${plainText.substring(0, maxLength)}...';
+}
+
+String _resolvePostListPath(PostType type) {
+  switch (type) {
+    case PostType.blog:
+      return '/articles';
+    case PostType.lecture:
+      return '/materials';
+  }
 }

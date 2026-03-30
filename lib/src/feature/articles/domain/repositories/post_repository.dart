@@ -2,6 +2,7 @@ import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/p
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_page.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/create_post_payload.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 
 /// 게시글 조회 저장소 인터페이스입니다.
 abstract class PostRepository {
@@ -9,6 +10,7 @@ abstract class PostRepository {
   Future<PostPage> getPosts({
     int page = 0,
     int size = 20,
+    PostType? type,
     String? status,
   });
 
@@ -20,6 +22,7 @@ abstract class PostRepository {
   /// 게시글 상세를 조회합니다.
   Future<Post> getPost({
     required String postId,
+    required PostType type,
   });
 
   /// 게시글 일부를 수정합니다.
@@ -37,5 +40,6 @@ abstract class PostRepository {
   Future<PostPage> getDraftPosts({
     int page = 0,
     int size = 20,
+    PostType? type,
   });
 }

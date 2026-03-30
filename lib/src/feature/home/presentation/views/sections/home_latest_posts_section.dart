@@ -1,4 +1,5 @@
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -11,8 +12,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 final homeLatestPostsProvider = FutureProvider.autoDispose<List<Post>>((
   ref,
 ) async {
-  final page =
-      await ref.read(getPostListUsecaseProvider).call(page: 0, size: 20);
+  final page = await ref.read(getPostListUsecaseProvider).call(
+        page: 0,
+        size: 20,
+        type: PostType.blog,
+      );
   return page.items.where((post) => _isPublished(post.status)).toList();
 });
 
@@ -156,7 +160,7 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                     post: HomePostCardData(
                       date: _formatKoreanDate(post.createdAt),
                       title: post.title,
-                      summary: _extractSummary(post.contentMarkdown),
+                      summary: _resolveSummary(post),
                       thumbnailUrl: _resolveThumbnailUrl(post),
                       authorNickname: post.author.nickname,
                       authorProfileImage: post.author.profileImage,
@@ -329,12 +333,32 @@ String _extractSummary(String markdown) {
     return '본문 내용이 없습니다.';
   }
 
-  const maxLength = 120;
-  if (plainText.length <= maxLength) {
-    return plainText;
+  return _truncateSummary(
+    plainText,
+    maxLength: 120,
+  );
+}
+
+String _resolveSummary(Post post) {
+  final providedSummary = post.summary?.trim();
+  if (providedSummary != null && providedSummary.isNotEmpty) {
+    return _truncateSummary(
+      providedSummary,
+      maxLength: 120,
+    );
+  }
+  return _extractSummary(post.contentMarkdown);
+}
+
+String _truncateSummary(
+  String text, {
+  required int maxLength,
+}) {
+  if (text.length <= maxLength) {
+    return text;
   }
 
-  return '${plainText.substring(0, maxLength)}...';
+  return '${text.substring(0, maxLength)}...';
 }
 
 String? _extractFirstImageUrl(String markdown) {

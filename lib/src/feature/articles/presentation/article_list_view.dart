@@ -5,6 +5,7 @@ import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_vi
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_state.dart';
 import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_view_model.dart';
@@ -17,16 +18,36 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ArticleListView extends ConsumerWidget {
-  const ArticleListView({super.key});
+class ArticleListView extends HookConsumerWidget {
+  const ArticleListView({
+    super.key,
+    this.postType = PostType.blog,
+    this.pageTitle = '게시글',
+    this.pageSubtitle = 'A&I 커뮤니티의 최신 기술 동향을 확인하세요.',
+    this.listPath = '/articles',
+    this.detailBasePath = '/articles',
+    this.showWriteButton = true,
+    this.writeButtonLabel = '글 작성',
+    this.writePath = '/articles/write',
+  });
+
+  final PostType postType;
+  final String pageTitle;
+  final String pageSubtitle;
+  final String listPath;
+  final String detailBasePath;
+  final bool showWriteButton;
+  final String writeButtonLabel;
+  final String writePath;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
-    final canShowWriteButton =
-        isLoggedIn && canManageArticlesWithRole(userState.resolvedRole);
+    final canShowWriteButton = showWriteButton &&
+        isLoggedIn &&
+        canManageArticlesWithRole(userState.resolvedRole);
     final nickname = userState.nickname ?? '동아리원';
     final publicCode = userState.publicCode;
     final profileImageUrl = userState.profileImageUrl;
@@ -40,110 +61,139 @@ class ArticleListView extends ConsumerWidget {
     final topPadding = isMobile ? 44.0 : (isTablet ? 54.0 : 64.0);
     final bottomPadding = isMobile ? 56.0 : (isTablet ? 64.0 : 72.0);
     final cardGap = isMobile ? 20.0 : 24.0;
-    final articleListStateAsync = ref.watch(articleListViewModelProvider);
+    final articleListStateAsync =
+        ref.watch(articleListViewModelProvider(postType));
+    final articleListNotifier =
+        ref.read(articleListViewModelProvider(postType).notifier);
+
+    bool handleScrollNotification(ScrollNotification notification) {
+      if (notification.metrics.axis != Axis.vertical) {
+        return false;
+      }
+
+      final current = articleListStateAsync.valueOrNull;
+      if (current == null || current.isLoadingMore || !current.hasMore) {
+        return false;
+      }
+
+      final remainingExtent =
+          notification.metrics.maxScrollExtent - notification.metrics.pixels;
+      if (remainingExtent <= 480) {
+        articleListNotifier.loadMore();
+      }
+      return false;
+    }
 
     return Scaffold(
       backgroundColor: HomeTheme.background,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            elevation: 0,
-            backgroundColor: Colors.white.withValues(alpha: 0.92),
-            surfaceTintColor: Colors.transparent,
-            titleSpacing: 0,
-            title: HomeTopBarSection(
-              nickname: nickname,
-              publicCode: publicCode,
-              profileImageUrl: profileImageUrl,
-              isLoggedIn: isLoggedIn,
-              onGoIntro: () => context.go('/promotion'),
-              onGoEducation: () => context.go('/course'),
-              onGoPosts: () => context.go('/articles'),
-              onGoMyAccount: () => context.go('/my-account'),
-              onLogin: () => context.go('/sign-in'),
-              onLogout: () async {
-                await ref
-                    .read(authViewModelProvider.notifier)
-                    .onEvent(const SignOut());
-                await ref
-                    .read(userViewModelProvider.notifier)
-                    .onEvent(const UserViewEvent.clear());
-              },
-              onGoFaq: () => context.go('/faq'),
-              onGoHome: () => context.go("/"),
+      body: NotificationListener<ScrollNotification>(
+        onNotification: handleScrollNotification,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              elevation: 0,
+              backgroundColor: Colors.white.withValues(alpha: 0.92),
+              surfaceTintColor: Colors.transparent,
+              titleSpacing: 0,
+              title: HomeTopBarSection(
+                nickname: nickname,
+                publicCode: publicCode,
+                profileImageUrl: profileImageUrl,
+                isLoggedIn: isLoggedIn,
+                onGoIntro: () => context.go('/promotion'),
+                onGoEducation: () => context.go('/course'),
+                onGoPosts: () => context.go('/articles'),
+                onGoMaterials: () => context.go('/materials'),
+                onGoMyAccount: () => context.go('/my-account'),
+                onLogin: () => context.go('/sign-in'),
+                onLogout: () async {
+                  await ref
+                      .read(authViewModelProvider.notifier)
+                      .onEvent(const SignOut());
+                  await ref
+                      .read(userViewModelProvider.notifier)
+                      .onEvent(const UserViewEvent.clear());
+                },
+                onGoFaq: () => context.go('/faq'),
+                onGoHome: () => context.go("/"),
+              ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxWidth),
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontal,
-                    topPadding,
-                    horizontal,
-                    bottomPadding,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '게시글',
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1.1,
-                          color: HomeTheme.textMain,
-                        ),
-                      ),
-                      SizedBox(height: isMobile ? 8 : 12),
-                      Text(
-                        'A&I 커뮤니티의 최신 기술 동향을 확인하세요.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: subtitleFontSize,
-                          height: 1.6,
-                          color: HomeTheme.textMuted,
-                        ),
-                      ),
-                      SizedBox(height: isMobile ? 16 : 20),
-                      if (canShowWriteButton)
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: FilledButton.icon(
-                            onPressed: () {
-                              ref
-                                  .read(articleWriteViewModelProvider.notifier)
-                                  .reset();
-                              context.go('/articles/write');
-                            },
-                            icon: const Icon(Icons.edit, size: 18),
-                            label: const Text('블로그 글 작성'),
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontal,
+                      topPadding,
+                      horizontal,
+                      bottomPadding,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          pageTitle,
+                          style: TextStyle(
+                            fontSize: titleFontSize,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -1.1,
+                            color: HomeTheme.textMain,
                           ),
                         ),
-                      SizedBox(height: isMobile ? 34 : 44),
-                      ArticleCardListSection(
-                        articleListStateAsync: articleListStateAsync,
-                        cardGap: cardGap,
-                        onRetry: () => ref
-                            .read(articleListViewModelProvider.notifier)
-                            .refresh(),
-                      ),
-                    ],
+                        SizedBox(height: isMobile ? 8 : 12),
+                        Text(
+                          pageSubtitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: subtitleFontSize,
+                            height: 1.6,
+                            color: HomeTheme.textMuted,
+                          ),
+                        ),
+                        SizedBox(height: isMobile ? 16 : 20),
+                        if (canShowWriteButton)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton.icon(
+                              onPressed: () {
+                                ref
+                                    .read(
+                                        articleWriteViewModelProvider.notifier)
+                                    .reset(postType: postType);
+                                context.go(writePath);
+                              },
+                              icon: const Icon(Icons.edit, size: 18),
+                              label: Text(writeButtonLabel),
+                            ),
+                          ),
+                        SizedBox(height: isMobile ? 34 : 44),
+                        ArticleCardListSection(
+                          articleListStateAsync: articleListStateAsync,
+                          cardGap: cardGap,
+                          detailBasePath: detailBasePath,
+                          onRetry: () => ref
+                              .read(articleListViewModelProvider(postType)
+                                  .notifier)
+                              .refresh(),
+                          onLoadMore: articleListNotifier.loadMore,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          const SliverFillRemaining(
-            hasScrollBody: false,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: HomeFooterSection(),
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: HomeFooterSection(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -154,12 +204,16 @@ class ArticleCardListSection extends StatelessWidget {
     super.key,
     required this.articleListStateAsync,
     required this.cardGap,
+    required this.detailBasePath,
     required this.onRetry,
+    required this.onLoadMore,
   });
 
   final AsyncValue<ArticleListState> articleListStateAsync;
   final double cardGap;
+  final String detailBasePath;
   final VoidCallback onRetry;
+  final Future<void> Function() onLoadMore;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +242,22 @@ class ArticleCardListSection extends StatelessWidget {
           }
         }
 
+        if (state.isLoadingMore ||
+            state.loadMoreErrorMsg.isNotEmpty ||
+            state.hasMore) {
+          if (children.isNotEmpty) {
+            children.add(SizedBox(height: cardGap));
+          }
+          children.add(
+            _ArticleListPaginationFooter(
+              isLoadingMore: state.isLoadingMore,
+              errorMsg: state.loadMoreErrorMsg,
+              hasMore: state.hasMore,
+              onRetry: onLoadMore,
+            ),
+          );
+        }
+
         return Column(
           children: children,
         );
@@ -209,6 +279,7 @@ class ArticleCardListSection extends StatelessWidget {
   Widget _buildCard(Post post) {
     return ArticleCardView(
       id: post.id,
+      detailBasePath: detailBasePath,
       category: _statusLabel(post.status),
       date: _formatKoreanDate(post.createdAt),
       title: post.title,
@@ -218,6 +289,63 @@ class ArticleCardListSection extends StatelessWidget {
       authorProfileImage: post.author.profileImage,
       icon: _statusIcon(post.status),
     );
+  }
+}
+
+class _ArticleListPaginationFooter extends StatelessWidget {
+  const _ArticleListPaginationFooter({
+    required this.isLoadingMore,
+    required this.errorMsg,
+    required this.hasMore,
+    required this.onRetry,
+  });
+
+  final bool isLoadingMore;
+  final String errorMsg;
+  final bool hasMore;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (errorMsg.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          children: [
+            const Text(
+              '게시글을 더 불러오지 못했습니다.',
+              style: TextStyle(
+                color: HomeTheme.textMuted,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: const Text('더 불러오기 다시 시도'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (hasMore) {
+      return const SizedBox(
+        height: 36,
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }
 
@@ -371,6 +499,7 @@ class ArticleCardView extends StatelessWidget {
   const ArticleCardView({
     super.key,
     required this.id,
+    required this.detailBasePath,
     required this.category,
     required this.date,
     required this.title,
@@ -382,6 +511,7 @@ class ArticleCardView extends StatelessWidget {
   });
 
   final String id;
+  final String detailBasePath;
   final String category;
   final String date;
   final String title;
@@ -400,7 +530,7 @@ class ArticleCardView extends StatelessWidget {
     final previewWidth = isTablet ? 210.0 : 240.0;
     final previewHeight = isMobile ? 168.0 : 150.0;
     return InkWell(
-      onTap: () => context.go('/articles/$id'),
+      onTap: () => context.go('$detailBasePath/$id'),
       borderRadius: BorderRadius.circular(16),
       child: Flex(
         direction: stacked ? Axis.vertical : Axis.horizontal,

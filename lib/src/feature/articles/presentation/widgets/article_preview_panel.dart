@@ -61,6 +61,9 @@ class ArticlePreviewPanel extends StatelessWidget {
                     fitContent: false,
                     styleSheet: markdownStyle,
                     syntaxHighlighter: codeSyntaxHighlighter,
+                    onTapLink: (text, href, title) {
+                      launchArticleMarkdownLink(context, href);
+                    },
                   )
                 else
                   const Text(

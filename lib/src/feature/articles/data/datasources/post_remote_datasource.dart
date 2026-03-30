@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/dtos/post_list_response_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/dtos/post_response_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:dio/dio.dart';
 
 /// 게시글 원격 데이터소스입니다.
@@ -11,6 +12,7 @@ abstract class PostRemoteDatasource {
   Future<PostListResponseDto> getPosts(
     int page,
     int size,
+    PostType? type,
     String? status,
   );
 
@@ -19,6 +21,7 @@ abstract class PostRemoteDatasource {
     String authorization,
     String title,
     String contentMarkdown,
+    PostType type,
     String? summary,
     String authorId,
     String authorNickname,
@@ -29,12 +32,16 @@ abstract class PostRemoteDatasource {
   );
 
   /// 서버에서 게시글 상세를 조회합니다.
-  Future<PostResponseDto> getPost(String postId);
+  Future<PostResponseDto> getPost(
+    String postId,
+    PostType type,
+  );
 
   /// 서버의 게시글을 일부 수정합니다.
   Future<PostResponseDto> patchPost(
     String authorization,
     String postId,
+    PostType? type,
     String? title,
     String? contentMarkdown,
     String? summary,
@@ -51,6 +58,7 @@ abstract class PostRemoteDatasource {
     String authorization,
     int page,
     int size,
+    PostType? type,
   );
 }
 
@@ -66,6 +74,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
   Future<PostListResponseDto> getPosts(
     int page,
     int size,
+    PostType? type,
     String? status,
   ) async {
     final queryParameters = <String, dynamic>{
@@ -74,6 +83,9 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     };
     if (status != null && status.isNotEmpty) {
       queryParameters['status'] = status;
+    }
+    if (type != null) {
+      queryParameters['type'] = type.apiValue;
     }
 
     final response = await dio.get<Map<String, dynamic>>(
@@ -93,6 +105,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     String authorization,
     String title,
     String contentMarkdown,
+    PostType type,
     String? summary,
     String authorId,
     String authorNickname,
@@ -102,6 +115,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     MultipartFile? thumbnail,
   ) async {
     final postJson = <String, dynamic>{
+      'type': type.apiValue,
       'title': title,
       'contentMarkdown': contentMarkdown,
       if (summary != null) 'summary': summary,
@@ -139,9 +153,12 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
   }
 
   @override
-  Future<PostResponseDto> getPost(String postId) async {
+  Future<PostResponseDto> getPost(String postId, PostType type) async {
     final response = await dio.get<Map<String, dynamic>>(
       '/v1/posts/$postId',
+      queryParameters: <String, dynamic>{
+        'type': type.apiValue,
+      },
       options: Options(
         contentType: 'application/json',
       ),
@@ -155,6 +172,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
   Future<PostResponseDto> patchPost(
     String authorization,
     String postId,
+    PostType? type,
     String? title,
     String? contentMarkdown,
     String? summary,
@@ -163,6 +181,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     MultipartFile? thumbnail,
   ) async {
     final postJson = <String, dynamic>{
+      if (type != null) 'type': type.apiValue,
       if (title != null && title.isNotEmpty) 'title': title,
       if (contentMarkdown != null && contentMarkdown.isNotEmpty)
         'contentMarkdown': contentMarkdown,
@@ -212,13 +231,19 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     String authorization,
     int page,
     int size,
+    PostType? type,
   ) async {
+    final queryParameters = <String, dynamic>{
+      'page': page,
+      'size': size,
+    };
+    if (type != null) {
+      queryParameters['type'] = type.apiValue;
+    }
+
     final response = await dio.get<Map<String, dynamic>>(
       '/v1/posts/drafts/me',
-      queryParameters: <String, dynamic>{
-        'page': page,
-        'size': size,
-      },
+      queryParameters: queryParameters,
       options: Options(
         contentType: 'application/json',
         headers: <String, dynamic>{

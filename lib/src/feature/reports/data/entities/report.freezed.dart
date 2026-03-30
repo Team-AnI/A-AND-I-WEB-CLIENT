@@ -35,6 +35,9 @@ mixin _$Report {
   /// 예제 입출력 케이스 목록
   List<ExampleIO> get exampleIo;
 
+  /// 언어별 기본 코드 템플릿 목록
+  List<CodeTemplate> get codeTemplates;
+
   /// 과제 유형 (CS, Algorithm 등)
   ReportType get reportType;
 
@@ -68,6 +71,8 @@ mixin _$Report {
                 .equals(other.requirement, requirement) &&
             const DeepCollectionEquality().equals(other.objects, objects) &&
             const DeepCollectionEquality().equals(other.exampleIo, exampleIo) &&
+            const DeepCollectionEquality()
+                .equals(other.codeTemplates, codeTemplates) &&
             (identical(other.reportType, reportType) ||
                 other.reportType == reportType) &&
             (identical(other.week, week) || other.week == week) &&
@@ -85,13 +90,14 @@ mixin _$Report {
       const DeepCollectionEquality().hash(requirement),
       const DeepCollectionEquality().hash(objects),
       const DeepCollectionEquality().hash(exampleIo),
+      const DeepCollectionEquality().hash(codeTemplates),
       reportType,
       week,
       level);
 
   @override
   String toString() {
-    return 'Report(id: $id, problemId: $problemId, title: $title, content: $content, requirement: $requirement, objects: $objects, exampleIo: $exampleIo, reportType: $reportType, week: $week, level: $level)';
+    return 'Report(id: $id, problemId: $problemId, title: $title, content: $content, requirement: $requirement, objects: $objects, exampleIo: $exampleIo, codeTemplates: $codeTemplates, reportType: $reportType, week: $week, level: $level)';
   }
 }
 
@@ -108,6 +114,7 @@ abstract mixin class $ReportCopyWith<$Res> {
       List<SeqString> requirement,
       List<SeqString> objects,
       List<ExampleIO> exampleIo,
+      List<CodeTemplate> codeTemplates,
       ReportType reportType,
       int week,
       Level level});
@@ -132,6 +139,7 @@ class _$ReportCopyWithImpl<$Res> implements $ReportCopyWith<$Res> {
     Object? requirement = null,
     Object? objects = null,
     Object? exampleIo = null,
+    Object? codeTemplates = null,
     Object? reportType = null,
     Object? week = null,
     Object? level = null,
@@ -165,6 +173,10 @@ class _$ReportCopyWithImpl<$Res> implements $ReportCopyWith<$Res> {
           ? _self.exampleIo
           : exampleIo // ignore: cast_nullable_to_non_nullable
               as List<ExampleIO>,
+      codeTemplates: null == codeTemplates
+          ? _self.codeTemplates
+          : codeTemplates // ignore: cast_nullable_to_non_nullable
+              as List<CodeTemplate>,
       reportType: null == reportType
           ? _self.reportType
           : reportType // ignore: cast_nullable_to_non_nullable
@@ -280,6 +292,7 @@ extension ReportPatterns on Report {
             List<SeqString> requirement,
             List<SeqString> objects,
             List<ExampleIO> exampleIo,
+            List<CodeTemplate> codeTemplates,
             ReportType reportType,
             int week,
             Level level)?
@@ -297,6 +310,7 @@ extension ReportPatterns on Report {
             _that.requirement,
             _that.objects,
             _that.exampleIo,
+            _that.codeTemplates,
             _that.reportType,
             _that.week,
             _that.level);
@@ -328,6 +342,7 @@ extension ReportPatterns on Report {
             List<SeqString> requirement,
             List<SeqString> objects,
             List<ExampleIO> exampleIo,
+            List<CodeTemplate> codeTemplates,
             ReportType reportType,
             int week,
             Level level)
@@ -344,6 +359,7 @@ extension ReportPatterns on Report {
             _that.requirement,
             _that.objects,
             _that.exampleIo,
+            _that.codeTemplates,
             _that.reportType,
             _that.week,
             _that.level);
@@ -372,6 +388,7 @@ extension ReportPatterns on Report {
             List<SeqString> requirement,
             List<SeqString> objects,
             List<ExampleIO> exampleIo,
+            List<CodeTemplate> codeTemplates,
             ReportType reportType,
             int week,
             Level level)?
@@ -388,6 +405,7 @@ extension ReportPatterns on Report {
             _that.requirement,
             _that.objects,
             _that.exampleIo,
+            _that.codeTemplates,
             _that.reportType,
             _that.week,
             _that.level);
@@ -408,12 +426,14 @@ class _Report implements Report {
       required final List<SeqString> requirement,
       required final List<SeqString> objects,
       required final List<ExampleIO> exampleIo,
+      required final List<CodeTemplate> codeTemplates,
       required this.reportType,
       required this.week,
       required this.level})
       : _requirement = requirement,
         _objects = objects,
-        _exampleIo = exampleIo;
+        _exampleIo = exampleIo,
+        _codeTemplates = codeTemplates;
   factory _Report.fromJson(Map<String, dynamic> json) => _$ReportFromJson(json);
 
   /// 과제 고유 ID (UUID)
@@ -465,6 +485,17 @@ class _Report implements Report {
     return EqualUnmodifiableListView(_exampleIo);
   }
 
+  /// 언어별 기본 코드 템플릿 목록
+  final List<CodeTemplate> _codeTemplates;
+
+  /// 언어별 기본 코드 템플릿 목록
+  @override
+  List<CodeTemplate> get codeTemplates {
+    if (_codeTemplates is EqualUnmodifiableListView) return _codeTemplates;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_codeTemplates);
+  }
+
   /// 과제 유형 (CS, Algorithm 등)
   @override
   final ReportType reportType;
@@ -507,6 +538,8 @@ class _Report implements Report {
             const DeepCollectionEquality().equals(other._objects, _objects) &&
             const DeepCollectionEquality()
                 .equals(other._exampleIo, _exampleIo) &&
+            const DeepCollectionEquality()
+                .equals(other._codeTemplates, _codeTemplates) &&
             (identical(other.reportType, reportType) ||
                 other.reportType == reportType) &&
             (identical(other.week, week) || other.week == week) &&
@@ -524,13 +557,14 @@ class _Report implements Report {
       const DeepCollectionEquality().hash(_requirement),
       const DeepCollectionEquality().hash(_objects),
       const DeepCollectionEquality().hash(_exampleIo),
+      const DeepCollectionEquality().hash(_codeTemplates),
       reportType,
       week,
       level);
 
   @override
   String toString() {
-    return 'Report(id: $id, problemId: $problemId, title: $title, content: $content, requirement: $requirement, objects: $objects, exampleIo: $exampleIo, reportType: $reportType, week: $week, level: $level)';
+    return 'Report(id: $id, problemId: $problemId, title: $title, content: $content, requirement: $requirement, objects: $objects, exampleIo: $exampleIo, codeTemplates: $codeTemplates, reportType: $reportType, week: $week, level: $level)';
   }
 }
 
@@ -548,6 +582,7 @@ abstract mixin class _$ReportCopyWith<$Res> implements $ReportCopyWith<$Res> {
       List<SeqString> requirement,
       List<SeqString> objects,
       List<ExampleIO> exampleIo,
+      List<CodeTemplate> codeTemplates,
       ReportType reportType,
       int week,
       Level level});
@@ -572,6 +607,7 @@ class __$ReportCopyWithImpl<$Res> implements _$ReportCopyWith<$Res> {
     Object? requirement = null,
     Object? objects = null,
     Object? exampleIo = null,
+    Object? codeTemplates = null,
     Object? reportType = null,
     Object? week = null,
     Object? level = null,
@@ -605,6 +641,10 @@ class __$ReportCopyWithImpl<$Res> implements _$ReportCopyWith<$Res> {
           ? _self._exampleIo
           : exampleIo // ignore: cast_nullable_to_non_nullable
               as List<ExampleIO>,
+      codeTemplates: null == codeTemplates
+          ? _self._codeTemplates
+          : codeTemplates // ignore: cast_nullable_to_non_nullable
+              as List<CodeTemplate>,
       reportType: null == reportType
           ? _self.reportType
           : reportType // ignore: cast_nullable_to_non_nullable
@@ -1263,6 +1303,327 @@ class __$ExampleIOCopyWithImpl<$Res> implements _$ExampleIOCopyWith<$Res> {
       output: null == output
           ? _self.output
           : output // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+mixin _$CodeTemplate {
+  /// 템플릿 언어입니다.
+  String get language;
+
+  /// 제출 에디터에 표시할 기본 함수 템플릿입니다.
+  String get functionTemplate;
+
+  /// Create a copy of CodeTemplate
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $CodeTemplateCopyWith<CodeTemplate> get copyWith =>
+      _$CodeTemplateCopyWithImpl<CodeTemplate>(
+          this as CodeTemplate, _$identity);
+
+  /// Serializes this CodeTemplate to a JSON map.
+  Map<String, dynamic> toJson();
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is CodeTemplate &&
+            (identical(other.language, language) ||
+                other.language == language) &&
+            (identical(other.functionTemplate, functionTemplate) ||
+                other.functionTemplate == functionTemplate));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, language, functionTemplate);
+
+  @override
+  String toString() {
+    return 'CodeTemplate(language: $language, functionTemplate: $functionTemplate)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $CodeTemplateCopyWith<$Res> {
+  factory $CodeTemplateCopyWith(
+          CodeTemplate value, $Res Function(CodeTemplate) _then) =
+      _$CodeTemplateCopyWithImpl;
+  @useResult
+  $Res call({String language, String functionTemplate});
+}
+
+/// @nodoc
+class _$CodeTemplateCopyWithImpl<$Res> implements $CodeTemplateCopyWith<$Res> {
+  _$CodeTemplateCopyWithImpl(this._self, this._then);
+
+  final CodeTemplate _self;
+  final $Res Function(CodeTemplate) _then;
+
+  /// Create a copy of CodeTemplate
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? language = null,
+    Object? functionTemplate = null,
+  }) {
+    return _then(_self.copyWith(
+      language: null == language
+          ? _self.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as String,
+      functionTemplate: null == functionTemplate
+          ? _self.functionTemplate
+          : functionTemplate // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// Adds pattern-matching-related methods to [CodeTemplate].
+extension CodeTemplatePatterns on CodeTemplate {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_CodeTemplate value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _CodeTemplate() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_CodeTemplate value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _CodeTemplate():
+        return $default(_that);
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_CodeTemplate value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _CodeTemplate() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(String language, String functionTemplate)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _CodeTemplate() when $default != null:
+        return $default(_that.language, _that.functionTemplate);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(String language, String functionTemplate) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _CodeTemplate():
+        return $default(_that.language, _that.functionTemplate);
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(String language, String functionTemplate)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _CodeTemplate() when $default != null:
+        return $default(_that.language, _that.functionTemplate);
+      case _:
+        return null;
+    }
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _CodeTemplate implements CodeTemplate {
+  _CodeTemplate({required this.language, required this.functionTemplate});
+  factory _CodeTemplate.fromJson(Map<String, dynamic> json) =>
+      _$CodeTemplateFromJson(json);
+
+  /// 템플릿 언어입니다.
+  @override
+  final String language;
+
+  /// 제출 에디터에 표시할 기본 함수 템플릿입니다.
+  @override
+  final String functionTemplate;
+
+  /// Create a copy of CodeTemplate
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$CodeTemplateCopyWith<_CodeTemplate> get copyWith =>
+      __$CodeTemplateCopyWithImpl<_CodeTemplate>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$CodeTemplateToJson(
+      this,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _CodeTemplate &&
+            (identical(other.language, language) ||
+                other.language == language) &&
+            (identical(other.functionTemplate, functionTemplate) ||
+                other.functionTemplate == functionTemplate));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, language, functionTemplate);
+
+  @override
+  String toString() {
+    return 'CodeTemplate(language: $language, functionTemplate: $functionTemplate)';
+  }
+}
+
+/// @nodoc
+abstract mixin class _$CodeTemplateCopyWith<$Res>
+    implements $CodeTemplateCopyWith<$Res> {
+  factory _$CodeTemplateCopyWith(
+          _CodeTemplate value, $Res Function(_CodeTemplate) _then) =
+      __$CodeTemplateCopyWithImpl;
+  @override
+  @useResult
+  $Res call({String language, String functionTemplate});
+}
+
+/// @nodoc
+class __$CodeTemplateCopyWithImpl<$Res>
+    implements _$CodeTemplateCopyWith<$Res> {
+  __$CodeTemplateCopyWithImpl(this._self, this._then);
+
+  final _CodeTemplate _self;
+  final $Res Function(_CodeTemplate) _then;
+
+  /// Create a copy of CodeTemplate
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? language = null,
+    Object? functionTemplate = null,
+  }) {
+    return _then(_CodeTemplate(
+      language: null == language
+          ? _self.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as String,
+      functionTemplate: null == functionTemplate
+          ? _self.functionTemplate
+          : functionTemplate // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
