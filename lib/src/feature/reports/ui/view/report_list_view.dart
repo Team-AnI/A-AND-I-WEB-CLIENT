@@ -8,6 +8,7 @@ import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_vi
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/level.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_summary.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_type.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/ui/utils/report_progress.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_list_view_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -180,6 +181,7 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
   }
 
   List<_CourseSection> _buildSections(List<ReportSummary> reports) {
+    final currentTime = DateTime.now().toUtc();
     final sorted = List<ReportSummary>.of(reports)
       ..sort((a, b) {
         final typeCompare = a.reportType.index.compareTo(b.reportType.index);
@@ -217,6 +219,10 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
         continue;
       }
 
+      final currentProgressWeek = findCurrentProgressWeek(
+        typeReports,
+        now: currentTime,
+      );
       final weekGroups = <_WeekGroup>[];
       final weeks = typeReports.map((report) => report.week).toSet().toList()
         ..sort();
@@ -227,14 +233,11 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
             .toList(growable: false)
           ..sort((a, b) => a.seq.compareTo(b.seq));
 
-        final hasProgress = weekReports.any(
-          (report) => report.endAt.isAfter(DateTime.now().toUtc()),
-        );
-
         weekGroups.add(
           _WeekGroup(
             week: week,
-            isProgress: hasProgress,
+            isProgress:
+                currentProgressWeek != null && week == currentProgressWeek,
             reports: weekReports,
           ),
         );
@@ -533,11 +536,13 @@ class _WeekGroupCard extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(width: 8),
-            _WeekStatusBadge(
-              isProgress: weekGroup.isProgress,
-              palette: palette,
-            ),
+            if (weekGroup.isProgress) ...[
+              const SizedBox(width: 8),
+              _WeekStatusBadge(
+                isProgress: weekGroup.isProgress,
+                palette: palette,
+              ),
+            ],
           ],
         ),
         children: [
@@ -572,37 +577,21 @@ class _WeekStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isProgress) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: const Color(0xFFECFDF3),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFA7F3D0)),
-        ),
-        child: const Text(
-          '진행중',
-          style: TextStyle(
-            color: Color(0xFF059669),
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.7,
-          ),
-        ),
-      );
+    if (!isProgress) {
+      return const SizedBox.shrink();
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: palette.doneBadgeBackground,
+        color: const Color(0xFFECFDF3),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: palette.doneBadgeBorder),
+        border: Border.all(color: const Color(0xFFA7F3D0)),
       ),
-      child: Text(
-        '종료',
+      child: const Text(
+        '진행중',
         style: TextStyle(
-          color: palette.doneBadgeText,
+          color: Color(0xFF059669),
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.7,

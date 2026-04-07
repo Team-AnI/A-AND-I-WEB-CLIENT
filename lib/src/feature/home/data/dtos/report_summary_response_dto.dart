@@ -272,6 +272,7 @@ class CourseOutlineAssignmentDto {
   /// 화면용 요약 엔티티로 변환합니다.
   ReportSummary? toSummary(ReportType reportType) {
     final level = _parseLevel(difficulty);
+    final resolvedStartAt = startAt;
     final resolvedEndAt = endAt;
 
     if (assignmentId.isEmpty ||
@@ -289,6 +290,7 @@ class CourseOutlineAssignmentDto {
       title: title,
       level: level,
       reportType: reportType,
+      startAt: resolvedStartAt,
       endAt: resolvedEndAt,
     );
   }
@@ -383,6 +385,7 @@ ReportSummary? _toSummary(Map<String, dynamic> json) {
         attributesMap?['reportType'] ??
         json['reportType'],
   );
+  final startAt = _parseDateTime(json['startAt']);
   final endAt = _parseDateTime(json['endAt']);
 
   if (id == null ||
@@ -402,6 +405,7 @@ ReportSummary? _toSummary(Map<String, dynamic> json) {
     title: title,
     level: level,
     reportType: reportType,
+    startAt: startAt,
     endAt: endAt,
   );
 }

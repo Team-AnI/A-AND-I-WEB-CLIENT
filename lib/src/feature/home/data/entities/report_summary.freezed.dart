@@ -32,6 +32,9 @@ mixin _$ReportSummary {
   /// 과제 유형 (CS, Algorithm 등)
   ReportType get reportType;
 
+  /// 과제 시작일
+  DateTime? get startAt;
+
   /// 제출 마감일
   DateTime get endAt;
 
@@ -58,17 +61,18 @@ mixin _$ReportSummary {
             (identical(other.level, level) || other.level == level) &&
             (identical(other.reportType, reportType) ||
                 other.reportType == reportType) &&
+            (identical(other.startAt, startAt) || other.startAt == startAt) &&
             (identical(other.endAt, endAt) || other.endAt == endAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, week, seq, title, level, reportType, endAt);
+  int get hashCode => Object.hash(
+      runtimeType, id, week, seq, title, level, reportType, startAt, endAt);
 
   @override
   String toString() {
-    return 'ReportSummary(id: $id, week: $week, seq: $seq, title: $title, level: $level, reportType: $reportType, endAt: $endAt)';
+    return 'ReportSummary(id: $id, week: $week, seq: $seq, title: $title, level: $level, reportType: $reportType, startAt: $startAt, endAt: $endAt)';
   }
 }
 
@@ -85,6 +89,7 @@ abstract mixin class $ReportSummaryCopyWith<$Res> {
       String title,
       Level level,
       ReportType reportType,
+      DateTime? startAt,
       DateTime endAt});
 }
 
@@ -107,6 +112,7 @@ class _$ReportSummaryCopyWithImpl<$Res>
     Object? title = null,
     Object? level = null,
     Object? reportType = null,
+    Object? startAt = freezed,
     Object? endAt = null,
   }) {
     return _then(_self.copyWith(
@@ -134,6 +140,10 @@ class _$ReportSummaryCopyWithImpl<$Res>
           ? _self.reportType
           : reportType // ignore: cast_nullable_to_non_nullable
               as ReportType,
+      startAt: freezed == startAt
+          ? _self.startAt
+          : startAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       endAt: null == endAt
           ? _self.endAt
           : endAt // ignore: cast_nullable_to_non_nullable
@@ -234,7 +244,7 @@ extension ReportSummaryPatterns on ReportSummary {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(String id, int week, int seq, String title, Level level,
-            ReportType reportType, DateTime endAt)?
+            ReportType reportType, DateTime? startAt, DateTime endAt)?
         $default, {
     required TResult orElse(),
   }) {
@@ -242,7 +252,7 @@ extension ReportSummaryPatterns on ReportSummary {
     switch (_that) {
       case _ReportSummary() when $default != null:
         return $default(_that.id, _that.week, _that.seq, _that.title,
-            _that.level, _that.reportType, _that.endAt);
+            _that.level, _that.reportType, _that.startAt, _that.endAt);
       case _:
         return orElse();
     }
@@ -264,14 +274,14 @@ extension ReportSummaryPatterns on ReportSummary {
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
     TResult Function(String id, int week, int seq, String title, Level level,
-            ReportType reportType, DateTime endAt)
+            ReportType reportType, DateTime? startAt, DateTime endAt)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ReportSummary():
         return $default(_that.id, _that.week, _that.seq, _that.title,
-            _that.level, _that.reportType, _that.endAt);
+            _that.level, _that.reportType, _that.startAt, _that.endAt);
     }
   }
 
@@ -290,14 +300,14 @@ extension ReportSummaryPatterns on ReportSummary {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(String id, int week, int seq, String title, Level level,
-            ReportType reportType, DateTime endAt)?
+            ReportType reportType, DateTime? startAt, DateTime endAt)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ReportSummary() when $default != null:
         return $default(_that.id, _that.week, _that.seq, _that.title,
-            _that.level, _that.reportType, _that.endAt);
+            _that.level, _that.reportType, _that.startAt, _that.endAt);
       case _:
         return null;
     }
@@ -314,6 +324,7 @@ class _ReportSummary implements ReportSummary {
       required this.title,
       required this.level,
       required this.reportType,
+      this.startAt,
       required this.endAt});
   factory _ReportSummary.fromJson(Map<String, dynamic> json) =>
       _$ReportSummaryFromJson(json);
@@ -341,6 +352,10 @@ class _ReportSummary implements ReportSummary {
   /// 과제 유형 (CS, Algorithm 등)
   @override
   final ReportType reportType;
+
+  /// 과제 시작일
+  @override
+  final DateTime? startAt;
 
   /// 제출 마감일
   @override
@@ -373,17 +388,18 @@ class _ReportSummary implements ReportSummary {
             (identical(other.level, level) || other.level == level) &&
             (identical(other.reportType, reportType) ||
                 other.reportType == reportType) &&
+            (identical(other.startAt, startAt) || other.startAt == startAt) &&
             (identical(other.endAt, endAt) || other.endAt == endAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, week, seq, title, level, reportType, endAt);
+  int get hashCode => Object.hash(
+      runtimeType, id, week, seq, title, level, reportType, startAt, endAt);
 
   @override
   String toString() {
-    return 'ReportSummary(id: $id, week: $week, seq: $seq, title: $title, level: $level, reportType: $reportType, endAt: $endAt)';
+    return 'ReportSummary(id: $id, week: $week, seq: $seq, title: $title, level: $level, reportType: $reportType, startAt: $startAt, endAt: $endAt)';
   }
 }
 
@@ -402,6 +418,7 @@ abstract mixin class _$ReportSummaryCopyWith<$Res>
       String title,
       Level level,
       ReportType reportType,
+      DateTime? startAt,
       DateTime endAt});
 }
 
@@ -424,6 +441,7 @@ class __$ReportSummaryCopyWithImpl<$Res>
     Object? title = null,
     Object? level = null,
     Object? reportType = null,
+    Object? startAt = freezed,
     Object? endAt = null,
   }) {
     return _then(_ReportSummary(
@@ -451,6 +469,10 @@ class __$ReportSummaryCopyWithImpl<$Res>
           ? _self.reportType
           : reportType // ignore: cast_nullable_to_non_nullable
               as ReportType,
+      startAt: freezed == startAt
+          ? _self.startAt
+          : startAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       endAt: null == endAt
           ? _self.endAt
           : endAt // ignore: cast_nullable_to_non_nullable
