@@ -14,6 +14,9 @@ _ReportSummary _$ReportSummaryFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String,
       level: $enumDecode(_$LevelEnumMap, json['level']),
       reportType: $enumDecode(_$ReportTypeEnumMap, json['reportType']),
+      startAt: json['startAt'] == null
+          ? null
+          : DateTime.parse(json['startAt'] as String),
       endAt: DateTime.parse(json['endAt'] as String),
     );
 
@@ -25,6 +28,7 @@ Map<String, dynamic> _$ReportSummaryToJson(_ReportSummary instance) =>
       'title': instance.title,
       'level': _$LevelEnumMap[instance.level]!,
       'reportType': _$ReportTypeEnumMap[instance.reportType]!,
+      'startAt': instance.startAt?.toIso8601String(),
       'endAt': instance.endAt.toIso8601String(),
     };
 
