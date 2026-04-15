@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/dtos/submission_api_payload_parser.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/submission_result.dart';
@@ -17,13 +18,25 @@ final class GetSubmissionResultUsecaseImpl
   @override
   Future<SubmissionResult?> call(String submissionId) async {
     final token = await authRepository.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('인증되지 않은 사용자입니다. 로그인이 필요합니다.');
+    }
 
-    final response = await submissionRepository.getSubmissionResult(
-      submissionId,
-      'Bearer $token',
-    );
-    return SubmissionApiPayloadParser.parseSubmissionResult(response)
-        ?.toEntity();
+    try {
+      final response = await submissionRepository.getSubmissionResult(
+        submissionId,
+        'Bearer $token',
+      );
+      return SubmissionApiPayloadParser.parseSubmissionResult(response)
+          ?.toEntity();
+    } catch (error) {
+      throw Exception(
+        ApiErrorMapper.map(
+          error,
+          fallbackMessage: '제출 결과를 불러오지 못했습니다.',
+        ),
+      );
+    }
   }
 }
 

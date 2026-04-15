@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/network/api_failure_exception.dart';
 import 'package:dio/dio.dart';
 
 /// API/네트워크 예외를 사용자 노출용 메시지로 변환합니다.
@@ -9,21 +10,39 @@ final class ApiErrorMapper {
     Object error, {
     String fallbackMessage = '오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
   }) {
+    if (error is ApiFailureException) {
+      return mapApiError(
+        code: error.error?.code?.toString(),
+        value: error.error?.value,
+        message: error.error?.message,
+        alert: error.error?.alert,
+        fallbackMessage: fallbackMessage,
+      );
+    }
+
     if (error is DioException) {
       return _mapDioException(error, fallbackMessage: fallbackMessage);
     }
 
-    final normalized = error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+    final normalized =
+        error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
     return normalized.isEmpty ? fallbackMessage : normalized;
   }
 
   /// 서버 에러 코드와 메시지를 사용자 메시지로 변환합니다.
   static String mapApiError({
     String? code,
+    String? value,
     String? message,
+    String? alert,
     String fallbackMessage = '요청 처리 중 오류가 발생했습니다.',
   }) {
-    final normalizedCode = code?.trim().toUpperCase();
+    final normalizedAlert = alert?.trim();
+    if (normalizedAlert != null && normalizedAlert.isNotEmpty) {
+      return normalizedAlert;
+    }
+
+    final normalizedCode = (value ?? code)?.trim().toUpperCase();
     final normalizedMessage = message?.trim();
 
     return switch (normalizedCode) {
@@ -34,7 +53,8 @@ final class ApiErrorMapper {
       'ENUM_MISMATCH_STATUS' ||
       'ENUM_MISMATCH_TRACK' ||
       'MISSING_REQUIRED_VALUE' ||
-      'BAD_REQUEST' => '요청 값이 올바르지 않습니다.',
+      'BAD_REQUEST' =>
+        '요청 값이 올바르지 않습니다.',
       'UNAUTHORIZED' => '로그인이 필요하거나 인증이 만료되었습니다.',
       'FORBIDDEN' => '요청을 수행할 권한이 없습니다.',
       'NOT_FOUND' => normalizedMessage?.isNotEmpty == true
@@ -47,7 +67,9 @@ final class ApiErrorMapper {
           ? normalizedMessage!
           : '요청은 유효하지만 처리할 수 없습니다.',
       'INTERNAL_SERVER_ERROR' => '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-      _ => normalizedMessage?.isNotEmpty == true ? normalizedMessage! : fallbackMessage,
+      _ => normalizedMessage?.isNotEmpty == true
+          ? normalizedMessage!
+          : fallbackMessage,
     };
   }
 
@@ -61,13 +83,21 @@ final class ApiErrorMapper {
 
     final data = error.response?.data;
     final errorMap = data is Map<String, dynamic> ? data['error'] : null;
-    final code = errorMap is Map<String, dynamic> ? errorMap['code']?.toString() : null;
+    final code =
+        errorMap is Map<String, dynamic> ? errorMap['code']?.toString() : null;
+    final value =
+        errorMap is Map<String, dynamic> ? errorMap['value']?.toString() : null;
     final message = errorMap is Map<String, dynamic>
         ? errorMap['message']?.toString()
         : null;
-    final topLevelError = data is Map<String, dynamic> ? data['error']?.toString() : null;
-    final requestId = data is Map<String, dynamic> ? data['requestId']?.toString() : null;
-    final resolvedMessage = message?.isNotEmpty == true ? message : topLevelError;
+    final alert =
+        errorMap is Map<String, dynamic> ? errorMap['alert']?.toString() : null;
+    final topLevelError =
+        data is Map<String, dynamic> ? data['error']?.toString() : null;
+    final requestId =
+        data is Map<String, dynamic> ? data['requestId']?.toString() : null;
+    final resolvedMessage =
+        message?.isNotEmpty == true ? message : topLevelError;
     final fallbackWithRequestId = requestId?.isNotEmpty == true
         ? '$fallbackMessage (requestId: $requestId)'
         : fallbackMessage;
@@ -77,7 +107,9 @@ final class ApiErrorMapper {
       return switch (statusCode) {
         400 => mapApiError(
             code: code,
+            value: value,
             message: resolvedMessage,
+            alert: alert,
             fallbackMessage: requestId?.isNotEmpty == true
                 ? '요청 값이 올바르지 않습니다. (requestId: $requestId)'
                 : '요청 값이 올바르지 않습니다.',
@@ -96,7 +128,9 @@ final class ApiErrorMapper {
         500 => '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
         _ => mapApiError(
             code: code,
+            value: value,
             message: resolvedMessage,
+            alert: alert,
             fallbackMessage: fallbackWithRequestId,
           ),
       };
@@ -104,7 +138,9 @@ final class ApiErrorMapper {
 
     return mapApiError(
       code: code,
+      value: value,
       message: resolvedMessage,
+      alert: alert,
       fallbackMessage: fallbackWithRequestId,
     );
   }
