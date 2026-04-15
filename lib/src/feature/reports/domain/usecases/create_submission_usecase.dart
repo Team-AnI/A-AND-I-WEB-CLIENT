@@ -1,17 +1,15 @@
-import 'package:a_and_i_report_web_server/src/core/network/base_response.dart';
 import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
-import 'package:a_and_i_report_web_server/src/feature/reports/data/dtos/submission_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/dtos/submission_response_dto.dart';
-import 'package:a_and_i_report_web_server/src/feature/reports/data/repositories/submission_repository.dart';
+import 'package:aandi_oj_api/aandi_oj_api.dart' as oj_api;
 
 /// 제출 생성 UseCase 구현체입니다.
 final class CreateSubmissionUsecaseImpl implements CreateSubmissionUsecase {
-  final SubmissionRepository submissionRepository;
+  final oj_api.OjApiClient ojApiClient;
   final AuthRepository authRepository;
 
   const CreateSubmissionUsecaseImpl({
-    required this.submissionRepository,
+    required this.ojApiClient,
     required this.authRepository,
   });
 
@@ -37,50 +35,34 @@ final class CreateSubmissionUsecaseImpl implements CreateSubmissionUsecase {
       throw Exception('사용자 publicCode를 확인할 수 없습니다.');
     }
 
-    final request = SubmissionRequestDto(
+    final request = oj_api.SubmissionCreateRequest(
       publicCode: publicCode,
       problemId: problemId,
       language: language,
       code: code,
-      options: const SubmissionOptionsDto(
+      options: const oj_api.SubmissionOptions(
         realtimeFeedback: true,
       ),
-    ).toJson();
-
-    final rawResponse = await submissionRepository.createSubmission(
-      'Bearer $token',
-      'application/json',
-      'application/json',
-      request,
     );
-
-    if (rawResponse is! Map<String, dynamic>) {
-      throw Exception('제출 응답 형식이 올바르지 않습니다.');
-    }
-
-    final response = BaseResponse<SubmissionResponseDto>.fromJson(
-      rawResponse,
-      (rawData) {
-        if (rawData is! Map<String, dynamic>) {
-          return null;
-        }
-        return SubmissionResponseDto.fromJson(rawData);
-      },
-    );
-
-    if (!response.success || response.data == null) {
+    try {
+      final response = await ojApiClient.createSubmissionV2(
+        accessToken: token,
+        request: request,
+      );
+      return SubmissionResponseDto(
+        submissionId: response.submissionId,
+        streamUrl: response.streamUrl,
+      );
+    } on oj_api.OjApiException catch (error) {
       throw Exception(
         ApiErrorMapper.mapApiError(
-          code: response.error?.code?.toString(),
-          value: response.error?.value,
-          message: response.error?.message,
-          alert: response.error?.alert,
+          code: error.code,
+          message: error.message,
+          alert: error.alert,
           fallbackMessage: '소스 코드 제출에 실패했습니다.',
         ),
       );
     }
-
-    return response.data!;
   }
 }
 

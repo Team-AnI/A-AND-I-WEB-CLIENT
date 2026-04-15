@@ -1,6 +1,6 @@
+import 'package:a_and_i_report_web_server/src/core/providers/package_api_client_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_repository_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/domain/usecases/get_my_problem_submissions_usecase.dart';
-import 'package:a_and_i_report_web_server/src/feature/reports/providers/submission_repository_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -10,7 +10,7 @@ part 'get_my_problem_submissions_usecase_provider.g.dart';
 @riverpod
 GetMyProblemSubmissionsUsecase getMyProblemSubmissionsUsecase(Ref ref) {
   return GetMyProblemSubmissionsUsecaseImpl(
-    submissionRepository: ref.read(submissionRepositoryProvider),
+    ojApiClient: ref.read(ojApiClientProvider),
     authRepository: ref.read(authRepositoryProvider),
   );
 }
