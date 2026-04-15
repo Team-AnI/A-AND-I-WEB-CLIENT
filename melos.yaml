@@ -1,0 +1,22 @@
+name: a_and_i_report_web_server
+
+packages:
+  - .
+  - packages/**
+
+ignore:
+  - build/**
+
+scripts:
+  bootstrap:
+    description: 워크스페이스 의존성을 설치하고 로컬 패키지를 연결합니다.
+    run: dart run melos bootstrap
+  generate:
+    description: 코드 생성이 필요한 패키지에서 build_runner를 실행합니다.
+    run: dart run melos exec --fail-fast --depends-on=build_runner -- "dart run build_runner build --delete-conflicting-outputs"
+  analyze:
+    description: 워크스페이스 전체 정적 분석을 수행합니다.
+    run: dart run melos exec --fail-fast -- "dart analyze ."
+  format:
+    description: 워크스페이스 전체 코드를 포맷합니다.
+    run: dart run melos exec --fail-fast -- "dart format ."

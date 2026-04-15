@@ -1,11 +1,12 @@
 import 'dart:developer';
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:dio/dio.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/local/local_auth_datasource.dart';
 
 /// 401 에러 발생 시 자동으로 토큰을 갱신하는 Dio Interceptor
 class AuthInterceptor extends QueuedInterceptor {
   static const _retryKey = '__auth_retry__';
-  static const _refreshPath = '/v1/auth/refresh';
+  static const _refreshPath = AandiApiEndpointTemplate.refreshToken;
 
   final LocalAuthDatasource localAuthDatasource;
   final Dio dio;

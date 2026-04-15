@@ -15,9 +15,37 @@
 ### 1. 프로젝트 클론 및 의존성 설치
 
 ```bash
-git clone <repository-url>
+git clone --recurse-submodules <repository-url>
 cd a_and_i_report_web_server
+git submodule update --init --recursive
 flutter pub get
+```
+
+### 1-1. Melos 워크스페이스 사용
+
+이 저장소는 **Melos 기반 모노레포**로 관리됩니다. 현재 프로젝트 SDK(`Dart 3.5.x`)와의 호환성을 위해 `melos 6.3.2` 기준으로 구성되어 있습니다.
+
+```bash
+# 의존성 설치
+git submodule update --init --recursive
+flutter pub get
+
+# 워크스페이스 부트스트랩
+dart run melos bootstrap
+```
+
+서브모듈(`packages/auth_api`, `packages/blog_api`)이 초기화되지 않으면
+`flutter pub get`과 CI 빌드가 실패할 수 있습니다.
+
+향후 `packages/aandi_oj_api`, `packages/aandi_course_api`도 같은 방식의
+Git submodule로 관리합니다.
+
+자주 사용하는 명령어:
+
+```bash
+dart run melos run generate
+dart run melos run analyze
+dart run melos run format
 ```
 
 ### 2. 환경 변수 설정 (Environment Variables)
@@ -55,19 +83,35 @@ dart run build_runner watch --delete-conflicting-outputs
 이 프로젝트는 **Feature-first** 기반의 **Clean Architecture + MVVM** 패턴을 따릅니다.
 
 ```
-lib/
-├── main.dart                 # 앱 진입점
-└── src/
-    ├── core/                 # 공통 모듈 (Constants, Utils, Extensions)
-    └── feature/              # 기능별 모듈 (Auth, Home, Reports)
-        ├── auth/
-        │   ├── data/         # Data Layer (Repository Impl, DTO, Datasource)
-        │   ├── domain/       # Domain Layer (Entity, Repository Interface, UseCase)
-        │   ├── providers/    # DI & State Management (Riverpod Providers)
-        │   └── ui/           # Presentation Layer (Widgets, Screens)
-        ├── home/
-        └── reports/
+.
+├── lib/
+│   ├── main.dart                 # 앱 진입점
+│   └── src/
+│       ├── core/                 # 공통 모듈 (Constants, Utils, Extensions)
+│       └── feature/              # 기능별 모듈 (Auth, Home, Reports)
+├── melos.yaml                    # 워크스페이스 설정
+└── packages/
+    ├── aandi_api_endpoints/      # API 엔드포인트 전용 내부 패키지
+    ├── auth_api/                 # 인증 도메인/데이터 패키지
+    ├── blog_api/                 # 기술 블로그 API 패키지
+    ├── aandi_oj_api/             # 온라인 저지 API 패키지
+    └── aandi_course_api/         # 코스 API 패키지
 ```
+
+### 내부 패키지
+
+- `packages/aandi_api_endpoints`
+  - 서버 API 엔드포인트 템플릿
+  - 런타임 경로 빌더
+  - `baseUrl` URL 조합 유틸리티
+- `packages/auth_api`
+  - 인증 도메인/리포지토리/프로바이더 패키지
+- `packages/blog_api`
+  - 기술 블로그 API 클라이언트 패키지
+- `packages/aandi_oj_api`
+  - 온라인 저지 API 패키지
+- `packages/aandi_course_api`
+  - 코스 API 패키지
 
 ### 아키텍처 원칙
 *   **Domain Layer**: 순수 Dart 코드로 작성하며, Flutter 의존성을 가지지 않도록 노력합니다.
@@ -103,4 +147,3 @@ lib/
 
 ---
 **문의**: A&I 운영진 개발팀
-

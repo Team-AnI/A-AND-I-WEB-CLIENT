@@ -1,0 +1,12 @@
+[submodule "packages/auth_api"]
+	path = packages/auth_api
+	url = https://github.com/Team-AnI/A-AND-I-AUTH-API.git
+[submodule "packages/blog_api"]
+	path = packages/blog_api
+	url = https://github.com/Team-AnI/A-AND-I-TECH-BLOG-API.git
+[submodule "packages/aandi_oj_api"]
+	path = packages/aandi_oj_api
+	url = https://github.com/Team-AnI/A-AND-I-OJ-API.git
+[submodule "packages/aandi_course_api"]
+	path = packages/aandi_course_api
+	url = https://github.com/Team-AnI/A-AND-I-COURSE-API.git
