@@ -32,6 +32,12 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
+  aandi_api_endpoints:
+    path: packages/aandi_api_endpoints
+  aandi_course_api:
+    path: packages/aandi_course_api
+  aandi_oj_api:
+    path: packages/aandi_oj_api
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -63,6 +69,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  melos: 6.3.2
   riverpod_generator: ^2.6.3
   build_runner: ^2.4.9
   custom_lint: ^0.7.0

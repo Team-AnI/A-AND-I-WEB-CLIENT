@@ -1,3 +1,4 @@
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:dio/dio.dart' hide Headers;
 import 'package:retrofit/retrofit.dart';
 import '../dtos/report_summary_response_dto.dart';
@@ -15,7 +16,7 @@ abstract class ReportSummaryRepository {
   /// 서버로부터 코스 목차를 조회합니다.
   ///
   /// [authorization] 헤더에 Bearer 토큰을 포함하여 요청해야 합니다.
-  @GET("/v1/courses/{courseSlug}/outline")
+  @GET(AandiApiEndpointTemplate.courseOutline)
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })
@@ -27,7 +28,7 @@ abstract class ReportSummaryRepository {
   /// 서버로부터 특정 주차의 과제 목록을 조회합니다.
   ///
   /// [authorization] 헤더에 Bearer 토큰을 포함하여 요청해야 합니다.
-  @GET("/v1/courses/{courseSlug}/weeks/{weekNo}/assignments")
+  @GET(AandiApiEndpointTemplate.courseWeekAssignments)
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })

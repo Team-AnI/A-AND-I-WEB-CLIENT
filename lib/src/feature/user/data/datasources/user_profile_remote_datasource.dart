@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:dio/dio.dart';
 
@@ -55,7 +56,7 @@ class UserProfileRemoteDatasource {
       }
 
       final response = await dio.post(
-        _buildUrl('/v1/me'),
+        _buildUrl(AandiApiEndpointTemplate.me),
         data: FormData.fromMap(formDataMap),
         options: Options(
           headers: {
@@ -95,7 +96,7 @@ class UserProfileRemoteDatasource {
       }
 
       final response = await dio.post(
-        _buildUrl('/v1/me/password'),
+        _buildUrl(AandiApiEndpointTemplate.mePassword),
         data: {
           'currentPassword': trimmedCurrentPassword,
           'newPassword': trimmedNewPassword,
@@ -143,10 +144,7 @@ class UserProfileRemoteDatasource {
   }
 
   String _buildUrl(String endpoint) {
-    if (_baseUrl.trim().isEmpty) {
-      return endpoint;
-    }
-    return Uri.parse(_baseUrl).resolve(endpoint).toString();
+    return AandiApiUrlResolver.resolve(_baseUrl, endpoint);
   }
 
   User? _parseUser(Response<dynamic> response) {

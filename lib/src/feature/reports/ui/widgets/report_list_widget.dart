@@ -1,5 +1,6 @@
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_summary.dart';
 import 'package:a_and_i_report_web_server/src/core/widgets/responsive_layout.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/ui/utils/report_progress.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/widgets/report_status_widget.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/widgets/report_title_row.dart';
 import 'package:flutter/material.dart';
@@ -22,12 +23,7 @@ class ReportListWidget extends StatelessWidget {
 
   Widget _label(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
-    final weekStatus = reports.any(
-      (report) =>
-          ReportStatueType.fromEndAt(report.endAt) == ReportStatueType.progress,
-    )
-        ? ReportStatueType.progress
-        : ReportStatueType.done;
+    final currentProgressWeek = findCurrentProgressWeek(reports);
 
     return Padding(
       padding:
@@ -44,7 +40,8 @@ class ReportListWidget extends StatelessWidget {
               ),
             ),
           ),
-          ReportStatus(type: weekStatus),
+          if (currentProgressWeek != null)
+            const ReportStatus(type: ReportStatueType.progress),
         ],
       ),
     );

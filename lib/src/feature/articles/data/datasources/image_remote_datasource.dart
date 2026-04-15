@@ -1,3 +1,4 @@
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/dtos/image_upload_response_dto.dart';
 import 'package:dio/dio.dart';
 
@@ -28,7 +29,7 @@ class ImageRemoteDatasourceImpl implements ImageRemoteDatasource {
     });
 
     final response = await dio.post<Map<String, dynamic>>(
-      '/v1/posts/images',
+      AandiApiEndpointTemplate.postImages,
       data: formData,
       options: Options(
         headers: <String, dynamic>{

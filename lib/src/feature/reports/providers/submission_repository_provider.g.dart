@@ -7,7 +7,7 @@ part of 'submission_repository_provider.dart';
 // **************************************************************************
 
 String _$submissionRepositoryHash() =>
-    r'372fa8e7b37bd19e40705d4427b9dea8d89d3e10';
+    r'4f7ce536d5801d2a0be9f9267289c5f21e46994b';
 
 /// 제출 API Repository Provider입니다.
 ///

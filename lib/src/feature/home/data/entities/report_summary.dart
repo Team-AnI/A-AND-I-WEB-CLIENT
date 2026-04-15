@@ -27,6 +27,9 @@ sealed class ReportSummary with _$ReportSummary {
     /// 과제 유형 (CS, Algorithm 등)
     required ReportType reportType,
 
+    /// 과제 시작일
+    DateTime? startAt,
+
     /// 제출 마감일
     required DateTime endAt,
   }) = _ReportSummary;

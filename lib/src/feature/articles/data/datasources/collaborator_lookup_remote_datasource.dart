@@ -1,3 +1,4 @@
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/dtos/collaborator_lookup_response_dto.dart';
 import 'package:dio/dio.dart';
 
@@ -25,7 +26,7 @@ class CollaboratorLookupRemoteDatasourceImpl
   ) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        '/v1/users/lookup',
+        AandiApiEndpointTemplate.userLookup,
         queryParameters: <String, dynamic>{
           'code': code,
         },
