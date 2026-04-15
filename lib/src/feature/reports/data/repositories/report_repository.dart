@@ -1,3 +1,4 @@
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/dtos/report_detail_response_dto.dart';
 import 'package:dio/dio.dart' hide Headers;
 import 'package:retrofit/retrofit.dart';
@@ -14,7 +15,7 @@ abstract class ReportRepository {
   /// 특정 코스의 과제 상세 정보를 조회합니다.
   ///
   /// [assignmentId]는 과제의 UUID이며, [authorization] 헤더가 필요합니다.
-  @GET("/v1/courses/{courseSlug}/assignments/{assignmentId}")
+  @GET(AandiApiEndpointTemplate.courseAssignmentDetail)
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })

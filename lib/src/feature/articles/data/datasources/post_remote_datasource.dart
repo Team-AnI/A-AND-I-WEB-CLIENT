@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/dtos/post_list_response_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/dtos/post_response_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
@@ -89,7 +90,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     }
 
     final response = await dio.get<Map<String, dynamic>>(
-      '/v1/posts',
+      AandiApiEndpointTemplate.posts,
       queryParameters: queryParameters,
       options: Options(
         contentType: 'application/json',
@@ -139,7 +140,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     };
 
     final response = await dio.post<Map<String, dynamic>>(
-      '/v1/posts',
+      AandiApiEndpointTemplate.posts,
       data: FormData.fromMap(formDataMap),
       options: Options(
         headers: <String, dynamic>{
@@ -155,7 +156,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
   @override
   Future<PostResponseDto> getPost(String postId, PostType type) async {
     final response = await dio.get<Map<String, dynamic>>(
-      '/v1/posts/$postId',
+      AandiApiEndpointPath.postById(postId),
       queryParameters: <String, dynamic>{
         'type': type.apiValue,
       },
@@ -200,7 +201,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     };
 
     final response = await dio.patch<Map<String, dynamic>>(
-      '/v1/posts/$postId',
+      AandiApiEndpointPath.postById(postId),
       data: FormData.fromMap(formDataMap),
       options: Options(
         headers: <String, dynamic>{
@@ -216,7 +217,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
   @override
   Future<void> deletePost(String authorization, String postId) async {
     await dio.delete<void>(
-      '/v1/posts/$postId',
+      AandiApiEndpointPath.postById(postId),
       options: Options(
         contentType: 'application/json',
         headers: <String, dynamic>{
@@ -242,7 +243,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     }
 
     final response = await dio.get<Map<String, dynamic>>(
-      '/v1/posts/drafts/me',
+      AandiApiEndpointTemplate.myDraftPosts,
       queryParameters: queryParameters,
       options: Options(
         contentType: 'application/json',

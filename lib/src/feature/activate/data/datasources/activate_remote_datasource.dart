@@ -1,3 +1,4 @@
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:a_and_i_report_web_server/src/feature/activate/data/dtos/activate_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/activate/data/dtos/activate_response_dto.dart';
 import 'package:dio/dio.dart';
@@ -16,7 +17,7 @@ class ActivateRemoteDatasource {
   final String _baseUrl;
 
   Future<void> activate(ActivateRequestDto request) async {
-    const endpoints = <String>['/activate', '/v1/auth/activate'];
+    const endpoints = AandiApiEndpointTemplate.activateCandidates;
     for (var i = 0; i < endpoints.length; i++) {
       final endpoint = endpoints[i];
       final isLastEndpoint = i == endpoints.length - 1;
@@ -48,11 +49,7 @@ class ActivateRemoteDatasource {
   }
 
   String _buildUrl(String endpoint) {
-    if (_baseUrl.trim().isEmpty) {
-      return endpoint;
-    }
-
-    return Uri.parse(_baseUrl).resolve(endpoint).toString();
+    return AandiApiUrlResolver.resolve(_baseUrl, endpoint);
   }
 
   bool _isNetworkError(DioException error) {
