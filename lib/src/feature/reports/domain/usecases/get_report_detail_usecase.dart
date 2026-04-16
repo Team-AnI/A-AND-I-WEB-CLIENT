@@ -35,12 +35,9 @@ final class GetReportDetailUsecaseImpl implements GetReportDetailUsecase {
         assignmentId: assignmentId,
       );
 
-      final response = ReportDetailResponseDto.fromJson(<String, dynamic>{
-        'success': true,
-        'data': assignment.toJson(),
-        'error': null,
-        'timestamp': null,
-      });
+      final response = ReportDetailResponseDto.fromJson(
+        _buildReportDetailResponseJson(assignment),
+      );
 
       if (response.data == null) {
         throw Exception(
@@ -67,6 +64,71 @@ final class GetReportDetailUsecaseImpl implements GetReportDetailUsecase {
       );
     }
   }
+}
+
+Map<String, dynamic> _buildReportDetailResponseJson(
+  course_api.Assignment assignment,
+) {
+  final metadata = assignment.metadata;
+
+  return <String, dynamic>{
+    'success': true,
+    'data': <String, dynamic>{
+      'assignmentId': assignment.id,
+      'courseSlug': assignment.courseSlug,
+      'weekNo': assignment.weekNo,
+      'orderInWeek': assignment.orderInWeek,
+      'startAt': assignment.startAt,
+      'endAt': assignment.endAt,
+      'status': assignment.status,
+      'publishedAt': assignment.publishedAt,
+      'metadata': <String, dynamic>{
+        'title': metadata.title,
+        'difficulty': metadata.difficulty,
+        'description': metadata.description,
+        'learningGoals': metadata.learningGoals
+            .map(
+              (goal) => <String, dynamic>{
+                'sortOrder': goal.sortOrder,
+                'learningGoalText': goal.learningGoalText,
+              },
+            )
+            .toList(growable: false),
+        'requirements': metadata.requirements
+            .map(
+              (requirement) => <String, dynamic>{
+                'sortOrder': requirement.sortOrder,
+                'requirementText': requirement.requirementText,
+              },
+            )
+            .toList(growable: false),
+        'testCases': metadata.testCases
+            .map(
+              (testCase) => <String, dynamic>{
+                'seq': testCase.seq,
+                'inputValues': testCase.inputValues,
+                'outputText': testCase.outputText,
+                'visibility': testCase.visibility.name.toUpperCase(),
+              },
+            )
+            .toList(growable: false),
+        'codeTemplates': metadata.codeTemplates
+            .map(
+              (template) => <String, dynamic>{
+                'language': template.language,
+                'codeTemplate': template.codeTemplate,
+                'runnableTemplate': template.runnableTemplate,
+                'commentTemplate': template.commentTemplate,
+                'functionTemplate': template.functionTemplate,
+              },
+            )
+            .toList(growable: false),
+        'attributes': metadata.attributes,
+      },
+    },
+    'error': null,
+    'timestamp': null,
+  };
 }
 
 /// 과제 상세 정보 조회 UseCase 인터페이스입니다.

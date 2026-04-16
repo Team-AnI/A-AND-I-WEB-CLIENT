@@ -24,7 +24,7 @@ abstract class ActivateResponseDto with _$ActivateResponseDto {
 @freezed
 abstract class ActivateResponseDataDto with _$ActivateResponseDataDto {
   const factory ActivateResponseDataDto({
-    @Default(false) bool success,
+    @Default(false) bool activated,
   }) = _ActivateResponseDataDto;
 
   factory ActivateResponseDataDto.fromJson(Map<String, dynamic> json) =>
@@ -35,8 +35,10 @@ abstract class ActivateResponseDataDto with _$ActivateResponseDataDto {
 @freezed
 abstract class ActivateErrorDto with _$ActivateErrorDto {
   const factory ActivateErrorDto({
-    String? code,
+    int? code,
     String? message,
+    String? value,
+    String? alert,
   }) = _ActivateErrorDto;
 
   factory ActivateErrorDto.fromJson(Map<String, dynamic> json) =>

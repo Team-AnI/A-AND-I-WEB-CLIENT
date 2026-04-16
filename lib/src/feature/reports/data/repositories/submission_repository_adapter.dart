@@ -42,7 +42,7 @@ final class SubmissionRepositoryAdapter implements SubmissionRepository {
         problemId: problemId,
       );
 
-      return submissions.map((submission) => submission.toJson()).toList();
+      return submissions.map(_submissionToJson).toList(growable: false);
     } on oj_api.OjApiException catch (error) {
       throw Exception(error.message);
     }
@@ -59,11 +59,37 @@ final class SubmissionRepositoryAdapter implements SubmissionRepository {
         submissionId: submissionId,
       );
 
-      return submission.toJson();
+      return _submissionToJson(submission);
     } on oj_api.OjApiException catch (error) {
       throw Exception(error.message);
     }
   }
+}
+
+Map<String, dynamic> _submissionToJson(oj_api.Submission submission) {
+  return <String, dynamic>{
+    'submissionId': submission.submissionId,
+    'submitterId': submission.submitterId,
+    'submitterPublicCode': submission.submitterPublicCode,
+    'problemId': submission.problemId,
+    'language': submission.language,
+    'code': submission.code,
+    'status': submission.status,
+    'testCases': submission.testCases
+        .map(
+          (testCase) => <String, dynamic>{
+            'caseId': testCase.caseId,
+            'status': testCase.status,
+            'timeMs': testCase.timeMs,
+            'memoryMb': testCase.memoryMb,
+            'output': testCase.output,
+            'error': testCase.error,
+          },
+        )
+        .toList(growable: false),
+    'createdAt': submission.createdAt?.toIso8601String(),
+    'completedAt': submission.completedAt?.toIso8601String(),
+  };
 }
 
 String _extractAccessToken(String authorization) {

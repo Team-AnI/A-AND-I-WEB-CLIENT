@@ -7,7 +7,7 @@ part of 'report_summary_repository_provider.dart';
 // **************************************************************************
 
 String _$reportSummaryRepositoryHash() =>
-    r'827b00efffcc7b2935c756214f1f5e15f8e5d9fb';
+    r'b96639eaf2357aea2d29108e24df65679147e302';
 
 /// See also [reportSummaryRepository].
 @ProviderFor(reportSummaryRepository)

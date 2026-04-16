@@ -31,7 +31,7 @@ class _CourseRepository implements CourseRepository {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/v1/courses/${courseSlug}',
+            '/v2/courses/${courseSlug}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -69,7 +69,7 @@ class _CourseRepository implements CourseRepository {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/v1/courses',
+            '/v2/courses',
             queryParameters: queryParameters,
             data: _data,
           )

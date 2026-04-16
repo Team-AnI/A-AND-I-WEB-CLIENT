@@ -82,7 +82,13 @@ final class ReportSummaryRepositoryAdapter implements ReportSummaryRepository {
         status: status,
       );
 
-      final reportType = _parseReportType(course.metadata.phase);
+      final reportType = _resolveReportType(
+        phase: course.metadata.phase,
+        slug: course.slug,
+        title: course.metadata.title,
+        description: course.metadata.description,
+        fieldTag: course.targetTrack,
+      );
       final summaries = reportType == null
           ? const <ReportSummary>[]
           : assignments
@@ -152,11 +158,42 @@ ReportType? _parseReportType(String? value) {
     return null;
   }
 
-  return switch (normalized) {
-    'CS' => ReportType.CS,
-    'BASIC' || 'FRAMEWORK' => ReportType.BASIC,
-    _ => null,
-  };
+  if (normalized.contains('CS') ||
+      normalized.contains('COMPUTER SCIENCE') ||
+      normalized.contains('BACKEND')) {
+    return ReportType.CS;
+  }
+
+  if (normalized.contains('BASIC') ||
+      normalized.contains('FRAMEWORK') ||
+      normalized.contains('기초')) {
+    return ReportType.BASIC;
+  }
+
+  return null;
+}
+
+ReportType? _resolveReportType({
+  required String? phase,
+  required String? slug,
+  required String? title,
+  required String? description,
+  required String? fieldTag,
+}) {
+  for (final candidate in <String?>[
+    phase,
+    slug,
+    title,
+    description,
+    fieldTag,
+  ]) {
+    final reportType = _parseReportType(candidate);
+    if (reportType != null) {
+      return reportType;
+    }
+  }
+
+  return null;
 }
 
 DateTime? _parseDateTimeString(String? value) {
