@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:aandi_auth/aandi_auth.dart' as auth_api;
 import 'package:a_and_i_report_web_server/src/core/models/user.dart';
 import 'package:dio/dio.dart';
 
@@ -18,14 +17,13 @@ class ChangePasswordRequestException implements Exception {}
 
 /// 사용자 프로필 원격 데이터소스다.
 class UserProfileRemoteDatasource {
-  UserProfileRemoteDatasource({
-    required auth_api.AuthRepository repository,
-    Dio? uploadDio,
-  })  : _repository = repository,
-        _uploadDio = uploadDio ?? Dio();
+  UserProfileRemoteDatasource(
+    this.dio, {
+    required String baseUrl,
+  }) : _baseUrl = baseUrl;
 
-  final auth_api.AuthRepository _repository;
-  final Dio _uploadDio;
+  final Dio dio;
+  final String _baseUrl;
 
   /// `/v2/me` 내 정보 수정 API를 호출한다.
   Future<User?> updateMyProfile({
@@ -36,54 +34,47 @@ class UserProfileRemoteDatasource {
     String? profileImageMimeType,
   }) async {
     try {
-      final _ = authorization;
-      final trimmedNickname = nickname?.trim();
-      final hasNickname = trimmedNickname != null && trimmedNickname.isNotEmpty;
-      final hasProfileImage =
-          profileImageBytes != null && profileImageBytes.isNotEmpty;
+      final formDataMap = <String, dynamic>{};
 
-      if (!hasNickname && !hasProfileImage) {
-        throw UpdateMyProfileRequestException();
+      final trimmedNickname = nickname?.trim();
+      if (trimmedNickname != null && trimmedNickname.isNotEmpty) {
+        formDataMap['nickname'] = trimmedNickname;
       }
 
-      String? profileImageUrl;
-      if (hasProfileImage) {
-        profileImageUrl = await _uploadProfileImage(
-          profileImageBytes: profileImageBytes,
-          profileImageFileName: profileImageFileName ??
-              _resolveDefaultFileName(profileImageMimeType),
-          profileImageMimeType:
-              _resolveMimeType(profileImageMimeType, profileImageFileName),
+      if (profileImageBytes != null && profileImageBytes.isNotEmpty) {
+        final resolvedFileName = profileImageFileName ??
+            _resolveDefaultFileName(profileImageMimeType);
+        formDataMap['profileImage'] = MultipartFile.fromBytes(
+          profileImageBytes,
+          filename: resolvedFileName,
         );
       }
 
-      final response = await _repository.updateProfileV2(
-        nickname: hasNickname ? trimmedNickname : null,
-        profileImageUrl: profileImageUrl,
+      if (formDataMap.isEmpty) {
+        throw UpdateMyProfileRequestException();
+      }
+
+      final response = await dio.patch(
+        _buildUrl('/v2/me'),
+        data: FormData.fromMap(formDataMap),
+        options: Options(
+          headers: {
+            'Authenticate': authorization,
+          },
+        ),
       );
 
-      return User(
-        id: response.id,
-        role: response.role.toApi(),
-        nickname: _resolveNickname(
-          nickname: response.nickname,
-          username: response.username,
-        ),
-        profileImageUrl: response.profileImageUrl,
-        publicCode: response.publicCode,
-      );
-    } on auth_api.AuthApiException catch (error) {
-      if (_isNetworkLike(error.statusCode)) {
-        throw UpdateMyProfileNetworkException();
-      }
-      throw UpdateMyProfileRequestException();
+      return _parseUser(response);
     } on DioException catch (error) {
-      if (_isDioNetworkError(error)) {
+      final isNetworkError = error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.unknown;
+      if (isNetworkError) {
         throw UpdateMyProfileNetworkException();
       }
       throw UpdateMyProfileRequestException();
-    } on UpdateMyProfileRequestException {
-      rethrow;
     } catch (_) {
       throw UpdateMyProfileRequestException();
     }
@@ -96,7 +87,6 @@ class UserProfileRemoteDatasource {
     required String newPassword,
   }) async {
     try {
-      final _ = authorization;
       final trimmedCurrentPassword = currentPassword.trim();
       final trimmedNewPassword = newPassword.trim();
 
@@ -104,16 +94,31 @@ class UserProfileRemoteDatasource {
         throw ChangePasswordRequestException();
       }
 
-      final changed = await _repository.changePasswordV2(
-        currentPassword: trimmedCurrentPassword,
-        newPassword: trimmedNewPassword,
+      final response = await dio.patch(
+        _buildUrl('/v2/me/password'),
+        data: {
+          'currentPassword': trimmedCurrentPassword,
+          'newPassword': trimmedNewPassword,
+        },
+        options: Options(
+          headers: {
+            'Authenticate': authorization,
+          },
+        ),
       );
 
-      if (!changed) {
+      final responseData = response.data;
+      if (responseData is! Map<String, dynamic> ||
+          responseData['success'] != true) {
         throw ChangePasswordRequestException();
       }
-    } on auth_api.AuthApiException catch (error) {
-      if (_isNetworkLike(error.statusCode)) {
+    } on DioException catch (error) {
+      final isNetworkError = error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.unknown;
+      if (isNetworkError) {
         throw ChangePasswordNetworkException();
       }
       throw ChangePasswordRequestException();
@@ -122,29 +127,6 @@ class UserProfileRemoteDatasource {
     } catch (_) {
       throw ChangePasswordRequestException();
     }
-  }
-
-  Future<String> _uploadProfileImage({
-    required Uint8List profileImageBytes,
-    required String profileImageFileName,
-    required String profileImageMimeType,
-  }) async {
-    final upload = await _repository.requestProfileImageUploadUrlV2(
-      contentType: profileImageMimeType,
-      fileName: profileImageFileName,
-    );
-
-    await _uploadDio.put<void>(
-      upload.uploadUrl,
-      data: profileImageBytes,
-      options: Options(
-        headers: <String, String>{
-          'Content-Type': profileImageMimeType,
-        },
-      ),
-    );
-
-    return upload.profileImageUrl;
   }
 
   String _resolveDefaultFileName(String? mimeType) {
@@ -160,46 +142,57 @@ class UserProfileRemoteDatasource {
     return 'profile.jpg';
   }
 
-  String _resolveMimeType(String? mimeType, String? fileName) {
-    final trimmedMimeType = mimeType?.trim();
-    if (trimmedMimeType != null && trimmedMimeType.isNotEmpty) {
-      return trimmedMimeType;
+  String _buildUrl(String endpoint) {
+    if (_baseUrl.trim().isEmpty) {
+      return endpoint;
+    }
+    return Uri.parse(_baseUrl).resolve(endpoint).toString();
+  }
+
+  User? _parseUser(Response<dynamic> response) {
+    final responseData = response.data;
+    if (responseData is! Map<String, dynamic>) {
+      throw UpdateMyProfileRequestException();
     }
 
-    final lowerFileName = fileName?.toLowerCase() ?? '';
-    if (lowerFileName.endsWith('.png')) {
-      return 'image/png';
+    final isSuccess = responseData['success'] == true;
+    if (!isSuccess) {
+      throw UpdateMyProfileRequestException();
     }
-    if (lowerFileName.endsWith('.webp')) {
-      return 'image/webp';
+
+    final responseDataField = responseData['data'];
+    if (responseDataField is! Map<String, dynamic>) {
+      return null;
     }
-    return 'image/jpeg';
+
+    final dynamic nestedUser = responseDataField['user'];
+    final userData =
+        nestedUser is Map<String, dynamic> ? nestedUser : responseDataField;
+
+    final id = userData['id']?.toString() ?? userData['userId']?.toString();
+    final role = userData['role']?.toString();
+    final nickname = userData['nickName']?.toString() ??
+        userData['nickname']?.toString() ??
+        userData['nick_name']?.toString() ??
+        userData['displayName']?.toString() ??
+        userData['username']?.toString();
+    if (id == null || role == null || nickname == null || nickname.isEmpty) {
+      return null;
+    }
+
+    final profileImage = userData['profileImageUrl']?.toString() ??
+        userData['profileImagePath']?.toString() ??
+        userData['profileImage']?.toString();
+    final publicCode = userData['publicCode']?.toString() ??
+        userData['public_code']?.toString() ??
+        userData['publiccode']?.toString();
+
+    return User(
+      id: id,
+      role: role,
+      nickname: nickname,
+      profileImageUrl: profileImage,
+      publicCode: publicCode,
+    );
   }
-
-  bool _isNetworkLike(int? statusCode) => statusCode == null;
-
-  bool _isDioNetworkError(DioException error) {
-    return error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.unknown;
-  }
-}
-
-String _resolveNickname({
-  required String? nickname,
-  required String username,
-}) {
-  final trimmedNickname = nickname?.trim();
-  if (trimmedNickname != null && trimmedNickname.isNotEmpty) {
-    return trimmedNickname;
-  }
-
-  final trimmedUsername = username.trim();
-  if (trimmedUsername.isNotEmpty) {
-    return trimmedUsername;
-  }
-
-  return '동아리원';
 }

@@ -6,7 +6,7 @@ part of 'get_courses_usecase_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$getCoursesUsecaseHash() => r'2d4ae3644b295cf18300e9596080e63e7dec1bc4';
+String _$getCoursesUsecaseHash() => r'3e8f7fda73015a29053c2c7307d63b78ed8e6e17';
 
 /// See also [getCoursesUsecase].
 @ProviderFor(getCoursesUsecase)

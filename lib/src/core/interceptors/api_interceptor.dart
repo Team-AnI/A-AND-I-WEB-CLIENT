@@ -23,15 +23,18 @@ class ApiInterceptor extends Interceptor {
     options.headers.putIfAbsent('deviceOS', _resolveDeviceOs);
     options.headers.putIfAbsent('timestamp', _resolveTimestamp);
 
-    final hasAuthorization = options.headers.keys.any(
-      (key) => key.toLowerCase() == 'authorization',
-    );
-    if (!hasAuthorization && !_isAuthEndpoint(options.path)) {
+    final hasAuthenticationHeader = options.headers.keys.any((key) {
+      final normalized = key.toLowerCase();
+      return normalized == 'authorization' || normalized == 'authenticate';
+    });
+    if (!hasAuthenticationHeader && !_isAuthEndpoint(options.path)) {
       final accessToken = await localAuthDatasource.getUserToken();
       if (accessToken != null && accessToken.trim().isNotEmpty) {
-        options.headers['Authorization'] = 'Bearer ${accessToken.trim()}';
+        options.headers['Authenticate'] = 'Bearer ${accessToken.trim()}';
       }
     }
+
+    _normalizeAuthenticateHeader(options.headers);
 
     handler.next(options);
   }
@@ -122,7 +125,9 @@ class ApiInterceptor extends Interceptor {
 
   bool _isAuthEndpoint(String path) {
     final normalizedPath = Uri.tryParse(path)?.path ?? path;
-    return normalizedPath.startsWith('/v1/auth/');
+    return normalizedPath.startsWith('/v1/auth/') ||
+        normalizedPath.startsWith('/v2/auth/') ||
+        normalizedPath == '/v2/activate';
   }
 
   String _resolveDeviceOs() {
@@ -141,6 +146,37 @@ class ApiInterceptor extends Interceptor {
   }
 
   String _resolveTimestamp() {
-    return DateTime.now().toIso8601String();
+    return DateTime.now().toUtc().toIso8601String();
+  }
+
+  void _normalizeAuthenticateHeader(Map<String, dynamic> headers) {
+    final authorizationKey = headers.keys.firstWhere(
+      (key) => key.toLowerCase() == 'authorization',
+      orElse: () => '',
+    );
+    final authenticateKey = headers.keys.firstWhere(
+      (key) => key.toLowerCase() == 'authenticate',
+      orElse: () => '',
+    );
+
+    final rawValue =
+        (authenticateKey.isNotEmpty ? headers[authenticateKey] : null) ??
+        (authorizationKey.isNotEmpty ? headers[authorizationKey] : null);
+    final normalizedValue = rawValue?.toString().trim();
+    if (normalizedValue == null || normalizedValue.isEmpty) {
+      return;
+    }
+
+    if (authorizationKey.isNotEmpty) {
+      headers.remove(authorizationKey);
+    }
+    if (authenticateKey.isNotEmpty) {
+      headers.remove(authenticateKey);
+    }
+
+    headers['Authenticate'] =
+        normalizedValue.toLowerCase().startsWith('bearer ')
+            ? normalizedValue
+            : 'Bearer $normalizedValue';
   }
 }

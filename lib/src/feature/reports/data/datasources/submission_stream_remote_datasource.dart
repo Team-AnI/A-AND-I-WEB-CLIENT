@@ -30,7 +30,9 @@ class SubmissionStreamRemoteDatasource {
                 headers: {
                   'Accept': 'text/event-stream',
                   'Cache-Control': 'no-cache',
-                  'Authorization': 'Bearer $accessToken',
+                  'Authenticate': 'Bearer $accessToken',
+                  'deviceOS': 'web',
+                  'timestamp': DateTime.now().toUtc().toIso8601String(),
                 }.jsify()! as web.HeadersInit,
                 signal: abortController.signal,
                 credentials: 'same-origin',

@@ -7,7 +7,7 @@ part of 'get_course_by_slug_usecase_provider.dart';
 // **************************************************************************
 
 String _$getCourseBySlugUsecaseHash() =>
-    r'70d9f12e6607b08d1124182ab7edbcd011c1e5e9';
+    r'd03f10377d0d07a8f6cc48055f313a5aaea526c2';
 
 /// See also [getCourseBySlugUsecase].
 @ProviderFor(getCourseBySlugUsecase)
