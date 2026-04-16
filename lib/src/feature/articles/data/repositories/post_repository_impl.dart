@@ -33,8 +33,14 @@ class PostRepositoryImpl implements PostRepository {
     PostType? type,
     String? status,
   }) async {
-    final response =
-        await postRemoteDatasource.getPosts(page, size, type, status);
+    final authorization = await _readAuthorization();
+    final response = await postRemoteDatasource.getPosts(
+      authorization,
+      page,
+      size,
+      type,
+      status,
+    );
     return response.toEntity();
   }
 
@@ -68,7 +74,8 @@ class PostRepositoryImpl implements PostRepository {
     required String postId,
     required PostType type,
   }) async {
-    final response = await postRemoteDatasource.getPost(postId, type);
+    final authorization = await _readAuthorization();
+    final response = await postRemoteDatasource.getPost(authorization, postId);
     return response.toEntity();
   }
 
@@ -139,10 +146,18 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   Future<String> _resolveAuthorization() async {
+    final authorization = await _readAuthorization();
+    if (authorization == null || authorization.isEmpty) {
+      throw Exception('로그인이 필요합니다.');
+    }
+    return authorization;
+  }
+
+  Future<String?> _readAuthorization() async {
     final token = await localAuthDatasource.getUserToken();
     final normalizedToken = token?.trim();
     if (normalizedToken == null || normalizedToken.isEmpty) {
-      throw Exception('로그인이 필요합니다.');
+      return null;
     }
     if (normalizedToken.toLowerCase().startsWith('bearer ')) {
       return normalizedToken;

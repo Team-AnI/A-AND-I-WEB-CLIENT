@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/network/base_response.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/level.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/report.dart';
@@ -26,13 +27,13 @@ class ReportDetailResponseDto {
 
   /// JSON 응답을 DTO로 변환합니다.
   factory ReportDetailResponseDto.fromJson(Map<String, dynamic> json) {
-    final rawData = json['data'];
+    final baseResponse = BaseResponse<Report>.fromJson(json, _parseReport);
 
     return ReportDetailResponseDto(
-      success: json['success'] == true,
-      data: _parseReport(rawData),
-      error: ReportDetailApiErrorDto.fromNullableJson(json['error']),
-      timestamp: json['timestamp']?.toString(),
+      success: baseResponse.success,
+      data: baseResponse.data,
+      error: ReportDetailApiErrorDto.fromBaseError(baseResponse.error),
+      timestamp: baseResponse.timestamp,
     );
   }
 }
@@ -43,6 +44,8 @@ class ReportDetailApiErrorDto {
   const ReportDetailApiErrorDto({
     this.code,
     this.message,
+    this.value,
+    this.alert,
   });
 
   /// 서버 에러 코드입니다.
@@ -51,11 +54,33 @@ class ReportDetailApiErrorDto {
   /// 사용자에게 표시할 수 있는 에러 메시지입니다.
   final String? message;
 
+  /// 서버의 공통 에러 value 입니다.
+  final String? value;
+
+  /// 사용자에게 바로 노출할 alert 문구입니다.
+  final String? alert;
+
   /// JSON 응답을 DTO로 변환합니다.
   factory ReportDetailApiErrorDto.fromJson(Map<String, dynamic> json) {
     return ReportDetailApiErrorDto(
       code: json['code']?.toString(),
       message: json['message']?.toString(),
+      value: json['value']?.toString(),
+      alert: json['alert']?.toString(),
+    );
+  }
+
+  /// 공통 BaseResponse 에러를 DTO로 변환합니다.
+  factory ReportDetailApiErrorDto.fromBaseError(BaseResponseError? error) {
+    if (error == null) {
+      return const ReportDetailApiErrorDto();
+    }
+
+    return ReportDetailApiErrorDto(
+      code: error.code?.toString(),
+      message: error.message,
+      value: error.value,
+      alert: error.alert,
     );
   }
 

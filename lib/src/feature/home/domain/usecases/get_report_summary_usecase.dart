@@ -1,7 +1,8 @@
 import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_summary.dart';
-import 'package:a_and_i_report_web_server/src/feature/home/data/repositories/report_summary_repository.dart';
+import 'package:a_and_i_report_web_server/src/feature/home/data/dtos/report_summary_response_dto.dart';
+import 'package:aandi_course_api/aandi_course_api.dart' as course_api;
 
 /// 과제 목록을 조회하는 UseCase 구현체입니다.
 ///
@@ -12,10 +13,10 @@ import 'package:a_and_i_report_web_server/src/feature/home/data/repositories/rep
 /// 4. [ReportSummaryRepository]를 호출하여 데이터를 받아옵니다.
 final class GetReportSummaryUsecaseImpl implements GetReportSummaryUsecase {
   final AuthRepository authRepository;
-  final ReportSummaryRepository reportSummaryRepository;
+  final course_api.CourseApiClient courseApiClient;
   const GetReportSummaryUsecaseImpl({
     required this.authRepository,
-    required this.reportSummaryRepository,
+    required this.courseApiClient,
   });
 
   @override
@@ -31,22 +32,18 @@ final class GetReportSummaryUsecaseImpl implements GetReportSummaryUsecase {
       throw Exception('인증되지 않은 사용자입니다. 로그인이 필요합니다.');
     }
 
-    final authorization = 'Bearer $token';
     try {
-      final outlineResponse = await reportSummaryRepository.getOutline(
-        authorization,
-        courseSlug,
+      final outline = await courseApiClient.getCourseOutlineV2(
+        accessToken: token,
+        courseSlug: courseSlug,
       );
 
-      if (!outlineResponse.success) {
-        throw Exception(
-          ApiErrorMapper.mapApiError(
-            code: outlineResponse.error?.code,
-            message: outlineResponse.error?.message,
-            fallbackMessage: '코스 목차 조회에 실패했습니다.',
-          ),
-        );
-      }
+      final outlineResponse = CourseOutlineResponseDto.fromJson(<String, dynamic>{
+        'success': true,
+        'data': outline.toJson(),
+        'error': null,
+        'timestamp': null,
+      });
 
       final reports = outlineResponse.toSummaries();
 
@@ -60,6 +57,15 @@ final class GetReportSummaryUsecaseImpl implements GetReportSummaryUsecase {
       });
 
       return reports;
+    } on course_api.CourseApiException catch (error) {
+      throw Exception(
+        ApiErrorMapper.mapApiError(
+          code: error.code,
+          message: error.message,
+          alert: error.alert,
+          fallbackMessage: '코스 목차 조회에 실패했습니다.',
+        ),
+      );
     } catch (error) {
       throw Exception(
         ApiErrorMapper.map(

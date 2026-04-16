@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:a_and_i_report_web_server/src/core/constants/api_url.dart';
+import 'package:a_and_i_report_web_server/src/core/interceptors/api_interceptor.dart';
 import 'package:a_and_i_report_web_server/src/core/interceptors/auth_interceptor.dart';
 import 'package:a_and_i_report_web_server/src/core/utils/app_messenger.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/providers/local_auth_datasource_provider.dart';
@@ -23,6 +23,12 @@ Dio dio(Ref ref) {
   ));
 
   dio.interceptors.add(
+    ApiInterceptor(
+      localAuthDatasource: localAuthDatasource,
+    ),
+  );
+
+  dio.interceptors.add(
     AuthInterceptor(
       localAuthDatasource: localAuthDatasource,
       dio: dio,
@@ -30,7 +36,7 @@ Dio dio(Ref ref) {
         if (refreshToken != null && refreshToken.isNotEmpty) {
           try {
             await dio.post(
-              AandiApiEndpointTemplate.logout,
+              '/v2/auth/logout',
               data: {'refreshToken': refreshToken},
               options: Options(
                 headers: {'Content-Type': 'application/json'},

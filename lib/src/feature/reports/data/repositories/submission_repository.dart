@@ -1,5 +1,3 @@
-import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
-import 'package:a_and_i_report_web_server/src/feature/reports/data/dtos/submission_response_dto.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -12,8 +10,8 @@ abstract class SubmissionRepository {
       _SubmissionRepository;
 
   /// 소스 코드 제출을 생성합니다.
-  @POST(AandiApiEndpointTemplate.submissions)
-  Future<SubmissionResponseDto> createSubmission(
+  @POST('/v1/submissions')
+  Future<dynamic> createSubmission(
     @Header('Authorization') String authorization,
     @Header('Content-Type') String contentType,
     @Header('accept') String accept,
@@ -21,14 +19,14 @@ abstract class SubmissionRepository {
   );
 
   /// 제출 최종 결과를 조회합니다.
-  @GET(AandiApiEndpointTemplate.submissionById)
+  @GET('/v1/submissions/{submissionId}')
   Future<dynamic> getSubmissionResult(
     @Path('submissionId') String submissionId,
     @Header('Authorization') String authorization,
   );
 
   /// 특정 문제에 대한 내 제출 목록을 조회합니다.
-  @GET(AandiApiEndpointTemplate.myProblemSubmissions)
+  @GET('/v1/problems/{problemId}/submissions/me')
   Future<dynamic> getMyProblemSubmissions(
     @Path('problemId') String problemId,
     @Header('Authorization') String authorization,

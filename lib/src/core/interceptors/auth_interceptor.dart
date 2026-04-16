@@ -1,12 +1,12 @@
 import 'dart:developer';
-import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/local/local_auth_datasource.dart';
 
 /// 401 에러 발생 시 자동으로 토큰을 갱신하는 Dio Interceptor
 class AuthInterceptor extends QueuedInterceptor {
   static const _retryKey = '__auth_retry__';
-  static const _refreshPath = AandiApiEndpointTemplate.refreshToken;
+  static const _refreshPath = '/v2/auth/refresh';
 
   final LocalAuthDatasource localAuthDatasource;
   final Dio dio;
@@ -112,7 +112,11 @@ class AuthInterceptor extends QueuedInterceptor {
       _refreshPath,
       data: {'refreshToken': refreshToken},
       options: Options(
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'deviceOS': _resolveDeviceOs(),
+          'timestamp': DateTime.now().toUtc().toIso8601String(),
+        },
       ),
     );
   }
@@ -162,7 +166,8 @@ class AuthInterceptor extends QueuedInterceptor {
 
   String? _readAuthorizationHeader(RequestOptions options) {
     for (final entry in options.headers.entries) {
-      if (entry.key.toLowerCase() != 'authorization') {
+      final key = entry.key.toLowerCase();
+      if (key != 'authorization' && key != 'authenticate') {
         continue;
       }
       final value = entry.value?.toString().trim();
@@ -175,16 +180,43 @@ class AuthInterceptor extends QueuedInterceptor {
   }
 
   void _setAuthorizationHeader(RequestOptions options, String value) {
-    final authorizationHeaderKey = options.headers.keys.firstWhere(
-      (key) => key.toLowerCase() == 'authorization',
-      orElse: () => 'Authorization',
+    final authenticateHeaderKey = options.headers.keys.firstWhere(
+      (key) {
+        final normalized = key.toLowerCase();
+        return normalized == 'authorization' || normalized == 'authenticate';
+      },
+      orElse: () => 'Authenticate',
     );
-    options.headers[authorizationHeaderKey] = value;
+    options.headers
+      ..removeWhere(
+        (key, _) =>
+            key.toLowerCase() == 'authorization' ||
+            key.toLowerCase() == 'authenticate',
+      )
+      ..[authenticateHeaderKey == 'Authorization'
+              ? 'Authenticate'
+              : authenticateHeaderKey] =
+          value;
   }
 
   RequestOptions _buildRetryOptions(RequestOptions source) {
     final data = source.data;
     final clonedData = data is FormData ? data.clone() : data;
     return source.copyWith(data: clonedData);
+  }
+
+  String _resolveDeviceOs() {
+    if (kIsWeb) {
+      return 'web';
+    }
+
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => 'android',
+      TargetPlatform.iOS => 'ios',
+      TargetPlatform.macOS => 'macos',
+      TargetPlatform.windows => 'windows',
+      TargetPlatform.linux => 'linux',
+      TargetPlatform.fuchsia => 'fuchsia',
+    };
   }
 }
