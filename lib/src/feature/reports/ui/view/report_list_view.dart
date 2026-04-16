@@ -230,7 +230,7 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
       for (final week in weeks) {
         final weekReports = typeReports
             .where((report) => report.week == week)
-            .toList(growable: false)
+            .toList()
           ..sort((a, b) => a.seq.compareTo(b.seq));
 
         weekGroups.add(

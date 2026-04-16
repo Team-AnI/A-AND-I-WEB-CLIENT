@@ -7,7 +7,7 @@ part of 'get_report_detail_usecase_provider.dart';
 // **************************************************************************
 
 String _$getReportDetailUsecaseHash() =>
-    r'ef9a669fb2011dd9e09c1a806a0a15ee4835ddd5';
+    r'49cf21dfe2406995f8036f8fd9b2b2e29967095c';
 
 /// See also [getReportDetailUsecase].
 @ProviderFor(getReportDetailUsecase)

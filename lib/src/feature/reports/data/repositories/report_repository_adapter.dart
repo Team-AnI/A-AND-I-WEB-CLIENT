@@ -43,10 +43,14 @@ final class ReportRepositoryAdapter implements ReportRepository {
 
 Report? _toReport(course_api.Assignment assignment) {
   final metadata = assignment.metadata;
-  final reportType = _parseReportType(
-    metadata.attributes['legacyReportType']?.toString() ??
-        metadata.attributes['reportType']?.toString() ??
-        assignment.courseSlug,
+  final reportType = _resolveReportType(
+    candidates: <String?>[
+      metadata.attributes['legacyReportType']?.toString(),
+      metadata.attributes['reportType']?.toString(),
+      assignment.courseSlug,
+      metadata.title,
+      metadata.description,
+    ],
   );
   final level = _parseLevel(metadata.difficulty);
 
@@ -164,11 +168,30 @@ ReportType? _parseReportType(String? value) {
     return null;
   }
 
-  return switch (normalized) {
-    'CS' => ReportType.CS,
-    'BASIC' || 'FRAMEWORK' => ReportType.BASIC,
-    _ => null,
-  };
+  if (normalized.contains('CS') ||
+      normalized.contains('COMPUTER SCIENCE') ||
+      normalized.contains('BACKEND')) {
+    return ReportType.CS;
+  }
+
+  if (normalized.contains('BASIC') ||
+      normalized.contains('FRAMEWORK') ||
+      normalized.contains('기초')) {
+    return ReportType.BASIC;
+  }
+
+  return null;
+}
+
+ReportType? _resolveReportType({required List<String?> candidates}) {
+  for (final candidate in candidates) {
+    final reportType = _parseReportType(candidate);
+    if (reportType != null) {
+      return reportType;
+    }
+  }
+
+  return null;
 }
 
 String _extractAccessToken(String authorization) {

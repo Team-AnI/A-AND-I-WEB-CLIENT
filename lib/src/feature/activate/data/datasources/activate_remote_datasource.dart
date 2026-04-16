@@ -1,4 +1,3 @@
-import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:a_and_i_report_web_server/src/feature/activate/data/dtos/activate_request_dto.dart';
 import 'package:a_and_i_report_web_server/src/feature/activate/data/dtos/activate_response_dto.dart';
 import 'package:dio/dio.dart';
@@ -17,7 +16,7 @@ class ActivateRemoteDatasource {
   final String _baseUrl;
 
   Future<void> activate(ActivateRequestDto request) async {
-    const endpoints = AandiApiEndpointTemplate.activateCandidates;
+    const endpoints = <String>['/v2/activate', '/activate', '/v1/auth/activate'];
     for (var i = 0; i < endpoints.length; i++) {
       final endpoint = endpoints[i];
       final isLastEndpoint = i == endpoints.length - 1;
@@ -49,7 +48,11 @@ class ActivateRemoteDatasource {
   }
 
   String _buildUrl(String endpoint) {
-    return AandiApiUrlResolver.resolve(_baseUrl, endpoint);
+    if (_baseUrl.trim().isEmpty) {
+      return endpoint;
+    }
+
+    return Uri.parse(_baseUrl).resolve(endpoint).toString();
   }
 
   bool _isNetworkError(DioException error) {
@@ -67,7 +70,7 @@ class ActivateRemoteDatasource {
 
     final dto =
         ActivateResponseDto.fromJson(response.data as Map<String, dynamic>);
-    final isSuccess = dto.success && (dto.data?.success ?? false);
+    final isSuccess = dto.success && (dto.data?.activated ?? false);
     if (!isSuccess) {
       throw ActivateInvalidTokenException();
     }

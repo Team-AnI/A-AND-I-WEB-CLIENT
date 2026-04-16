@@ -7,7 +7,7 @@ part of 'create_submission_usecase_provider.dart';
 // **************************************************************************
 
 String _$createSubmissionUsecaseHash() =>
-    r'83c0658caa0a905edd73cff2bd2d0887a1276665';
+    r'3b3f708a999f2e22f6c2d5d0ca0863fb37ae7e86';
 
 /// 제출 생성 UseCase Provider입니다.
 ///

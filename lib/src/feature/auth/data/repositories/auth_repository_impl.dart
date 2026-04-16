@@ -58,7 +58,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<User> getMyInfo(String accessToken) async {
-    return remoteAuthRepository.getMyInfo(accessToken);
+    final response = await remoteAuthRepository.getMyInfo(accessToken);
+    final user = _parseUser(response);
+    if (user == null) {
+      throw Exception('사용자 정보를 불러오지 못했습니다.');
+    }
+    return user;
   }
 
   @override
@@ -90,5 +95,46 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> deleteCachedUser() async {
     await localAuthRepository.deleteCachedUserJson();
+  }
+
+  User? _parseUser(dynamic response) {
+    if (response is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final responseData = response['data'];
+    if (responseData is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final nestedUser = responseData['user'];
+    final userData =
+        nestedUser is Map<String, dynamic> ? nestedUser : responseData;
+
+    final id = userData['id']?.toString() ?? userData['userId']?.toString();
+    final role = userData['role']?.toString();
+    final nickname = userData['nickName']?.toString() ??
+        userData['nickname']?.toString() ??
+        userData['nick_name']?.toString() ??
+        userData['displayName']?.toString() ??
+        userData['username']?.toString();
+    if (id == null || role == null || nickname == null || nickname.isEmpty) {
+      return null;
+    }
+
+    final profileImage = userData['profileImageUrl']?.toString() ??
+        userData['profileImagePath']?.toString() ??
+        userData['profileImage']?.toString();
+    final publicCode = userData['publicCode']?.toString() ??
+        userData['public_code']?.toString() ??
+        userData['publiccode']?.toString();
+
+    return User(
+      id: id,
+      role: role,
+      nickname: nickname,
+      profileImageUrl: profileImage,
+      publicCode: publicCode,
+    );
   }
 }

@@ -18,7 +18,7 @@ class _SubmissionRepository implements SubmissionRepository {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<SubmissionResponseDto> createSubmission(
+  Future<dynamic> createSubmission(
     String authorization,
     String contentType,
     String accept,
@@ -34,7 +34,7 @@ class _SubmissionRepository implements SubmissionRepository {
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(request);
-    final _options = _setStreamType<SubmissionResponseDto>(
+    final _options = _setStreamType<dynamic>(
       Options(
         method: 'POST',
         headers: _headers,
@@ -49,14 +49,8 @@ class _SubmissionRepository implements SubmissionRepository {
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late SubmissionResponseDto _value;
-    try {
-      _value = SubmissionResponseDto.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
     return _value;
   }
 

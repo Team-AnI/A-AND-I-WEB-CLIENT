@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'course_repository.dart';
+part of 'remote_auth_datasource.dart';
 
 // **************************************************************************
 // RetrofitGenerator
@@ -8,8 +8,8 @@ part of 'course_repository.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
 
-class _CourseRepository implements CourseRepository {
-  _CourseRepository(this._dio, {this.baseUrl, this.errorLogger});
+class _RemoteAuthDatasource implements RemoteAuthDatasource {
+  _RemoteAuthDatasource(this._dio, {this.baseUrl, this.errorLogger});
 
   final Dio _dio;
 
@@ -18,29 +18,31 @@ class _CourseRepository implements CourseRepository {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<CourseDetailResponseDto> getCourseBySlugFromCourses(
-    String authorization,
-    String courseSlug,
-  ) async {
+  Future<LoginResponseDto> login(LoginRequestDto dto) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{r'Authorization': authorization};
+    final _headers = <String, dynamic>{r'Content-Type': 'application/json'};
     _headers.removeWhere((k, v) => v == null);
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<CourseDetailResponseDto>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
+    final _data = dto;
+    final _options = _setStreamType<LoginResponseDto>(
+      Options(
+        method: 'POST',
+        headers: _headers,
+        extra: _extra,
+        contentType: 'application/json',
+      )
           .compose(
             _dio.options,
-            '/v2/courses/${courseSlug}',
+            '/v2/auth/login',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late CourseDetailResponseDto _value;
+    late LoginResponseDto _value;
     try {
-      _value = CourseDetailResponseDto.fromJson(_result.data!);
+      _value = LoginResponseDto.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -49,36 +51,56 @@ class _CourseRepository implements CourseRepository {
   }
 
   @override
-  Future<CourseListResponseDto> getCourses(
-    String authorization,
-    String? status,
-    String? phase,
-    String? track,
-  ) async {
+  Future<dynamic> getMyInfo(String authorization) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'status': status,
-      r'phase': phase,
-      r'track': track,
-    };
-    queryParameters.removeWhere((k, v) => v == null);
-    final _headers = <String, dynamic>{r'Authorization': authorization};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Authenticate': authorization};
     _headers.removeWhere((k, v) => v == null);
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<CourseListResponseDto>(
+    final _options = _setStreamType<dynamic>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/v2/courses',
+            '/v2/me',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<RefreshTokenResponseDto> refreshToken(
+    Map<String, dynamic> body,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Content-Type': 'application/json'};
+    _headers.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final _options = _setStreamType<RefreshTokenResponseDto>(
+      Options(
+        method: 'POST',
+        headers: _headers,
+        extra: _extra,
+        contentType: 'application/json',
+      )
+          .compose(
+            _dio.options,
+            '/v2/auth/refresh',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late CourseListResponseDto _value;
+    late RefreshTokenResponseDto _value;
     try {
-      _value = CourseListResponseDto.fromJson(_result.data!);
+      _value = RefreshTokenResponseDto.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
