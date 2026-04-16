@@ -22,7 +22,7 @@ final class GetMyProblemSubmissionsUsecaseImpl
     }
 
     try {
-      final response = await ojApiClient.getMyProblemSubmissionsV2(
+      final response = await ojApiClient.getMyProblemSubmissions(
         accessToken: token,
         problemId: problemId,
       );

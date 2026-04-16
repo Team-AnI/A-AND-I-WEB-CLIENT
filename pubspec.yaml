@@ -68,14 +68,6 @@ dependencies:
   flutter_markdown: ^0.7.7+1
   image_picker: ^1.1.2
   cached_network_image: ^3.4.1
-  aandi_auth:
-    path: ../A-AND-I-AUTH-API
-  aandi_tech_blog:
-    path: ../A-AND-I-TECH-BLOG-API
-  aandi_course_api:
-    path: ../A-AND-I-COURSE-API
-  aandi_oj_api:
-    path: ../A-AND-I-OJ-API
 
 dev_dependencies:
   flutter_test:
@@ -91,12 +83,6 @@ dev_dependencies:
   retrofit_generator: ^9.7.0
   analyzer: ^7.6.0
   analyzer_plugin: ^0.13.4
-
-dependency_overrides:
-  aandi_api_protocol:
-    path: ../A-AND-I-PROTOCOL-API
-  aandi_auth:
-    path: ../A-AND-I-AUTH-API
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

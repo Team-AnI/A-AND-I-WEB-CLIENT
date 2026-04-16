@@ -22,7 +22,7 @@ final class GetSubmissionResultUsecaseImpl
     }
 
     try {
-      final response = await ojApiClient.getSubmissionResultV2(
+      final response = await ojApiClient.getSubmissionResult(
         accessToken: token,
         submissionId: submissionId,
       );

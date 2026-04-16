@@ -35,19 +35,18 @@ final class CreateSubmissionUsecaseImpl implements CreateSubmissionUsecase {
       throw Exception('사용자 publicCode를 확인할 수 없습니다.');
     }
 
-    final request = oj_api.SubmissionCreateRequest(
-      publicCode: publicCode,
-      problemId: problemId,
-      language: language,
-      code: code,
-      options: const oj_api.SubmissionOptions(
-        realtimeFeedback: true,
-      ),
-    );
     try {
-      final response = await ojApiClient.createSubmissionV2(
+      final response = await ojApiClient.createSubmission(
         accessToken: token,
-        request: request,
+        request: <String, dynamic>{
+          'publicCode': publicCode,
+          'problemId': problemId,
+          'language': language,
+          'code': code,
+          'options': const <String, dynamic>{
+            'realtimeFeedback': true,
+          },
+        },
       );
       return SubmissionResponseDto(
         submissionId: response.submissionId,
