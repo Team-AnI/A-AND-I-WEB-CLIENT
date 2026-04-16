@@ -73,14 +73,16 @@ class _RemoteAuthDatasource implements RemoteAuthDatasource {
   }
 
   @override
-  Future<LoginResponseDto> refreshToken(Map<String, dynamic> body) async {
+  Future<RefreshTokenResponseDto> refreshToken(
+    Map<String, dynamic> body,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{r'Content-Type': 'application/json'};
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<LoginResponseDto>(
+    final _options = _setStreamType<RefreshTokenResponseDto>(
       Options(
         method: 'POST',
         headers: _headers,
@@ -96,9 +98,9 @@ class _RemoteAuthDatasource implements RemoteAuthDatasource {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late LoginResponseDto _value;
+    late RefreshTokenResponseDto _value;
     try {
-      _value = LoginResponseDto.fromJson(_result.data!);
+      _value = RefreshTokenResponseDto.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

@@ -123,7 +123,7 @@ class CourseOutlineResponseDto {
       return const <ReportSummary>[];
     }
 
-    final reportType = _parseReportType(outline.course.phase);
+    final reportType = _resolveOutlineReportType(outline.course);
     if (reportType == null) {
       return const <ReportSummary>[];
     }
@@ -451,9 +451,34 @@ ReportType? _parseReportType(Object? value) {
     return null;
   }
 
-  return switch (normalized) {
-    'CS' => ReportType.CS,
-    'BASIC' || 'FRAMEWORK' => ReportType.BASIC,
-    _ => null,
-  };
+  if (normalized.contains('CS') ||
+      normalized.contains('COMPUTER SCIENCE') ||
+      normalized.contains('BACKEND')) {
+    return ReportType.CS;
+  }
+
+  if (normalized.contains('BASIC') ||
+      normalized.contains('FRAMEWORK') ||
+      normalized.contains('기초')) {
+    return ReportType.BASIC;
+  }
+
+  return null;
+}
+
+ReportType? _resolveOutlineReportType(CourseOutlineHeaderDto course) {
+  for (final candidate in <Object?>[
+    course.phase,
+    course.slug,
+    course.title,
+    course.description,
+    course.fieldTag,
+  ]) {
+    final reportType = _parseReportType(candidate);
+    if (reportType != null) {
+      return reportType;
+    }
+  }
+
+  return null;
 }

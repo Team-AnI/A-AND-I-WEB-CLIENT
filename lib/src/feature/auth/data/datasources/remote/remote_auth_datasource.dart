@@ -30,5 +30,5 @@ abstract class RemoteAuthDatasource {
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })
-  Future<LoginResponseDto> refreshToken(@Body() Map<String, dynamic> body);
+  Future<RefreshTokenResponseDto> refreshToken(@Body() Map<String, dynamic> body);
 }

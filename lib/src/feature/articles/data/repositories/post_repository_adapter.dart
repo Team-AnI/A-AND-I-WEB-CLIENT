@@ -28,7 +28,7 @@ final class PostRepositoryAdapter implements PostRepository {
     String? status,
   }) async {
     final response = await _client.listPostsV2(
-      accessToken: await _resolveAccessToken(),
+      accessToken: null,
       page: page,
       size: size,
       status: _toBlogPostStatus(status),
@@ -75,7 +75,7 @@ final class PostRepositoryAdapter implements PostRepository {
   }) async {
     final response = await _client.getPostV2(
       postId: postId,
-      accessToken: await _resolveAccessToken(),
+      accessToken: null,
     );
     return _toPost(response);
   }
@@ -147,10 +147,18 @@ final class PostRepositoryAdapter implements PostRepository {
   }
 
   Future<String> _resolveAccessToken() async {
+    final token = await _tryResolveAccessToken();
+    if (token == null) {
+      throw Exception('로그인이 필요합니다.');
+    }
+    return token;
+  }
+
+  Future<String?> _tryResolveAccessToken() async {
     final token = await _localAuthDatasource.getUserToken();
     final normalizedToken = token?.trim();
     if (normalizedToken == null || normalizedToken.isEmpty) {
-      throw Exception('로그인이 필요합니다.');
+      return null;
     }
     if (normalizedToken.toLowerCase().startsWith('bearer ')) {
       return normalizedToken.substring('Bearer '.length).trim();

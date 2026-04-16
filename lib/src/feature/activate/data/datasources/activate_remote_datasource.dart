@@ -70,7 +70,7 @@ class ActivateRemoteDatasource {
 
     final dto =
         ActivateResponseDto.fromJson(response.data as Map<String, dynamic>);
-    final isSuccess = dto.success && (dto.data?.success ?? false);
+    final isSuccess = dto.success && (dto.data?.activated ?? false);
     if (!isSuccess) {
       throw ActivateInvalidTokenException();
     }

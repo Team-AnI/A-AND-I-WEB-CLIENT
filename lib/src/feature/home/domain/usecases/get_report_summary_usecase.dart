@@ -38,14 +38,36 @@ final class GetReportSummaryUsecaseImpl implements GetReportSummaryUsecase {
         courseSlug: courseSlug,
       );
 
-      final outlineResponse = CourseOutlineResponseDto.fromJson(<String, dynamic>{
-        'success': true,
-        'data': outline.toJson(),
-        'error': null,
-        'timestamp': null,
-      });
+      final outlineResponse = CourseOutlineResponseDto(
+        success: true,
+        data: CourseOutlineDataDto(
+          course: CourseOutlineHeaderDto(
+            id: outline.course.id,
+            slug: outline.course.slug,
+            fieldTag: outline.course.targetTrack,
+            title: outline.course.title,
+            description: outline.course.description ?? '',
+            phase: outline.course.phase,
+          ),
+          totalAssignments: outline.totalAssignments,
+          assignments: outline.assignments
+              .map(
+                (assignment) => CourseOutlineAssignmentDto(
+                  assignmentId: assignment.id,
+                  weekNo: assignment.weekNo,
+                  orderInWeek: assignment.orderInWeek,
+                  title: assignment.title,
+                  difficulty: assignment.difficulty,
+                  startAt: _parseDateTimeString(assignment.startAt),
+                  endAt: _parseDateTimeString(assignment.endAt),
+                  checked: assignment.checked,
+                ),
+              )
+              .toList(growable: false),
+        ),
+      );
 
-      final reports = outlineResponse.toSummaries();
+      final reports = outlineResponse.toSummaries().toList();
 
       reports.sort((a, b) {
         final weekCompare = a.week.compareTo(b.week);
@@ -75,6 +97,14 @@ final class GetReportSummaryUsecaseImpl implements GetReportSummaryUsecase {
       );
     }
   }
+}
+
+DateTime? _parseDateTimeString(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return null;
+  }
+
+  return DateTime.tryParse(value);
 }
 
 /// 과제 목록 조회 UseCase 인터페이스입니다.

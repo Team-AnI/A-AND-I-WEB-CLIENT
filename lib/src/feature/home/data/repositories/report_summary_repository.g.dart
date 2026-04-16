@@ -39,7 +39,7 @@ class _ReportSummaryRepository implements ReportSummaryRepository {
       )
           .compose(
             _dio.options,
-            '/v1/courses/${courseSlug}/outline',
+            '/v2/courses/${courseSlug}/outline',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -80,7 +80,7 @@ class _ReportSummaryRepository implements ReportSummaryRepository {
       )
           .compose(
             _dio.options,
-            '/v1/courses/${courseSlug}/weeks/${weekNo}/assignments',
+            '/v2/courses/${courseSlug}/weeks/${weekNo}/assignments',
             queryParameters: queryParameters,
             data: _data,
           )

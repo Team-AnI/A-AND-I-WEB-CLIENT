@@ -40,7 +40,7 @@ class _ReportRepository implements ReportRepository {
       )
           .compose(
             _dio.options,
-            '/v1/courses/${courseSlug}/assignments/${assignmentId}',
+            '/v2/courses/${courseSlug}/assignments/${assignmentId}',
             queryParameters: queryParameters,
             data: _data,
           )
