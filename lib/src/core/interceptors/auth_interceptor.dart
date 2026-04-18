@@ -11,12 +11,41 @@ class AuthInterceptor extends QueuedInterceptor {
   final LocalAuthDatasource localAuthDatasource;
   final Dio dio;
   final Future<void> Function(String? refreshToken) onTokenExpired;
+  final Future<Response<dynamic>> Function(String refreshToken)?
+      requestTokenRefresh;
 
   AuthInterceptor({
     required this.localAuthDatasource,
     required this.dio,
     required this.onTokenExpired,
+    this.requestTokenRefresh,
   });
+
+  @override
+  Future<void> onResponse(
+    Response response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    final requestOptions = response.requestOptions;
+    final isUnauthorized = response.statusCode == 401;
+    final isRefreshApi = _isRefreshApi(requestOptions);
+    final alreadyRetried = requestOptions.extra[_retryKey] == true;
+
+    if (isUnauthorized && !isRefreshApi && !alreadyRetried) {
+      try {
+        final retryResponse = await _refreshAndRetry(requestOptions);
+        if (retryResponse != null) {
+          return handler.resolve(retryResponse);
+        }
+      } on _SessionExpiredException catch (_) {
+        return handler.next(response);
+      } catch (e) {
+        log('401 응답 처리 중 예외 발생: $e');
+      }
+    }
+
+    return handler.next(response);
+  }
 
   @override
   Future<void> onError(
@@ -32,69 +61,12 @@ class AuthInterceptor extends QueuedInterceptor {
     // 헤더가 누락되었더라도 로컬 토큰이 있으면 재발급을 시도해
     // 브라우저/프록시 환경에서의 헤더 유실 케이스를 흡수한다.
     if (isUnauthorized && !isRefreshApi && !alreadyRetried) {
-      String? refreshToken;
       try {
-        final authorizationHeader = _readAuthorizationHeader(requestOptions);
-        final accessToken = await localAuthDatasource.getUserToken();
-        final hasAuthContext =
-            _hasToken(authorizationHeader) || _hasToken(accessToken);
-
-        if (!hasAuthContext) {
-          return handler.next(err);
+        final retryResponse = await _refreshAndRetry(requestOptions);
+        if (retryResponse != null) {
+          return handler.resolve(retryResponse);
         }
-
-        log('401 에러 발생, 토큰 갱신 시도...');
-
-        // 리프레시 토큰 조회
-        refreshToken = await localAuthDatasource.getRefreshToken();
-        if (refreshToken == null || refreshToken.isEmpty) {
-          log('리프레시 토큰이 없음, 로그아웃 처리');
-          await onTokenExpired(null);
-          return handler.reject(err);
-        }
-
-        // 토큰 갱신 API 호출
-        final response = await _requestTokenRefresh(refreshToken);
-
-        // 응답 데이터 안전하게 파싱
-        final statusCode = response.statusCode ?? 0;
-        if (statusCode < 200 || statusCode >= 300) {
-          log('토큰 갱신 실패, 로그아웃 처리');
-          await onTokenExpired(refreshToken);
-          return handler.reject(err);
-        }
-
-        final newAccessToken = _extractAccessToken(response.data);
-        final newRefreshToken = _extractRefreshToken(response.data);
-
-        if (!_hasToken(newAccessToken)) {
-          log('토큰 갱신 응답에 accessToken이 없음');
-          await onTokenExpired(refreshToken);
-          return handler.reject(err);
-        }
-
-        // 새 토큰 저장 (refreshToken은 내려준 경우에만 갱신)
-        await localAuthDatasource.saveUserToken(newAccessToken!);
-        if (_hasToken(newRefreshToken)) {
-          await localAuthDatasource.saveRefreshToken(newRefreshToken!);
-        }
-
-        log('토큰 갱신 성공');
-
-        // 원래 요청 재시도 (무한 재시도 방지 플래그 포함)
-        final retryOptions = _buildRetryOptions(requestOptions)
-          ..extra[_retryKey] = true;
-        _setAuthorizationHeader(retryOptions, 'Bearer $newAccessToken');
-
-        final retryResponse = await dio.fetch<dynamic>(retryOptions);
-        return handler.resolve(retryResponse);
-      } on DioException catch (e) {
-        log('토큰 갱신 중 에러 발생: ${e.response?.statusCode}');
-        // 리프레시 토큰도 만료된 경우 (401)
-        if (e.response?.statusCode == 401) {
-          log('리프레시 토큰 만료, 로그아웃 처리');
-          await onTokenExpired(refreshToken);
-        }
+      } on _SessionExpiredException catch (_) {
         return handler.reject(err);
       } catch (e) {
         log('토큰 갱신 중 예외 발생: $e');
@@ -119,6 +91,64 @@ class AuthInterceptor extends QueuedInterceptor {
         },
       ),
     );
+  }
+
+  Future<Response<dynamic>?> _refreshAndRetry(RequestOptions requestOptions) async {
+    final authorizationHeader = _readAuthorizationHeader(requestOptions);
+    final accessToken = await localAuthDatasource.getUserToken();
+    final hasAuthContext =
+        _hasToken(authorizationHeader) || _hasToken(accessToken);
+
+    if (!hasAuthContext) {
+      return null;
+    }
+
+    log('401 에러 발생, 토큰 갱신 시도...');
+
+    final refreshToken = await localAuthDatasource.getRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      log('리프레시 토큰이 없음, 로그아웃 처리');
+      await onTokenExpired(null);
+      throw const _SessionExpiredException();
+    }
+
+    try {
+      final response =
+          await (requestTokenRefresh?.call(refreshToken) ??
+              _requestTokenRefresh(refreshToken));
+      final statusCode = response.statusCode ?? 0;
+      if (statusCode < 200 || statusCode >= 300) {
+        log('토큰 갱신 실패, 로그아웃 처리');
+        await onTokenExpired(refreshToken);
+        throw const _SessionExpiredException();
+      }
+
+      final newAccessToken = _extractAccessToken(response.data);
+      final newRefreshToken = _extractRefreshToken(response.data);
+
+      if (!_hasToken(newAccessToken)) {
+        log('토큰 갱신 응답에 accessToken이 없음');
+        await onTokenExpired(refreshToken);
+        throw const _SessionExpiredException();
+      }
+
+      await localAuthDatasource.saveUserToken(newAccessToken!);
+      if (_hasToken(newRefreshToken)) {
+        await localAuthDatasource.saveRefreshToken(newRefreshToken!);
+      }
+
+      log('토큰 갱신 성공');
+
+      final retryOptions = _buildRetryOptions(requestOptions)
+        ..extra[_retryKey] = true;
+      _setAuthorizationHeader(retryOptions, 'Bearer $newAccessToken');
+
+      return dio.fetch<dynamic>(retryOptions);
+    } on DioException catch (e) {
+      log('토큰 갱신 중 에러 발생: ${e.response?.statusCode}');
+      await onTokenExpired(refreshToken);
+      throw const _SessionExpiredException();
+    }
   }
 
   bool _isRefreshApi(RequestOptions options) {
@@ -219,4 +249,8 @@ class AuthInterceptor extends QueuedInterceptor {
       TargetPlatform.fuchsia => 'fuchsia',
     };
   }
+}
+
+final class _SessionExpiredException implements Exception {
+  const _SessionExpiredException();
 }

@@ -48,6 +48,11 @@ class AuthViewModel extends _$AuthViewModel {
     }
   }
 
+  /// 세션 만료 등 외부 요인으로 인증 상태를 강제로 해제합니다.
+  void expireSession() {
+    state = const AuthState(status: AuthenticationStatus.unauthenticated);
+  }
+
   /// UI에서 발생한 인증 관련 이벤트를 처리합니다.
   ///
   /// - [SignIn]: 로그인 요청을 처리합니다. UseCase를 호출하고 성공 시 [Authenticated]로 상태를 변경합니다.
