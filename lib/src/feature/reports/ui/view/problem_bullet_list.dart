@@ -18,12 +18,18 @@ class ProblemBulletList extends StatelessWidget {
             (item) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.fiber_manual_record,
-                    size: 10,
-                    color: isDarkMode ? const Color(0xFFE5E7EB) : const Color(0xFF000000),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 7),
+                    child: Icon(
+                      Icons.fiber_manual_record,
+                      size: 10,
+                      color:
+                          isDarkMode
+                              ? const Color(0xFFE5E7EB)
+                              : const Color(0xFF000000),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Flexible(
