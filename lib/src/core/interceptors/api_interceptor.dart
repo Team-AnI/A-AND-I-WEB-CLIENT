@@ -2,6 +2,7 @@ import 'package:a_and_i_report_web_server/src/core/network/api_failure_exception
 import 'package:a_and_i_report_web_server/src/core/network/base_response.dart';
 import 'package:a_and_i_report_web_server/src/core/utils/app_messenger.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/local/local_auth_datasource.dart';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -23,14 +24,11 @@ class ApiInterceptor extends Interceptor {
     options.headers.putIfAbsent('deviceOS', _resolveDeviceOs);
     options.headers.putIfAbsent('timestamp', _resolveTimestamp);
 
-    final hasAuthenticationHeader = options.headers.keys.any((key) {
-      final normalized = key.toLowerCase();
-      return normalized == 'authorization' || normalized == 'authenticate';
-    });
-    if (!hasAuthenticationHeader && !_isAuthEndpoint(options.path)) {
+    if (!_isAuthEndpoint(options.path)) {
       final accessToken = await localAuthDatasource.getUserToken();
-      if (accessToken != null && accessToken.trim().isNotEmpty) {
-        options.headers['Authenticate'] = 'Bearer ${accessToken.trim()}';
+      final normalizedAccessToken = accessToken?.trim();
+      if (normalizedAccessToken != null && normalizedAccessToken.isNotEmpty) {
+        options.headers['Authenticate'] = normalizedAccessToken;
       }
     }
 
@@ -75,8 +73,8 @@ class ApiInterceptor extends Interceptor {
   }
 
   ApiFailureException? _extractFailure(Response<dynamic>? response) {
-    final data = response?.data;
-    if (data is! Map<String, dynamic>) {
+    final data = _toMap(response?.data);
+    if (data == null) {
       return null;
     }
 
@@ -93,11 +91,12 @@ class ApiInterceptor extends Interceptor {
   }
 
   String? _extractAlert(Object? raw) {
-    if (raw is! Map<String, dynamic>) {
+    final data = _toMap(raw);
+    if (data == null) {
       return null;
     }
 
-    final error = raw['error'];
+    final error = data['error'];
     if (error is! Map<String, dynamic>) {
       return null;
     }
@@ -110,6 +109,36 @@ class ApiInterceptor extends Interceptor {
     final message = error['message']?.toString().trim();
     if (message != null && message.isNotEmpty) {
       return message;
+    }
+
+    return null;
+  }
+
+  Map<String, dynamic>? _toMap(Object? raw) {
+    if (raw is Map<String, dynamic>) {
+      return raw;
+    }
+
+    if (raw is Map) {
+      return raw.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+    }
+
+    if (raw is String && raw.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+        if (decoded is Map) {
+          return decoded.map(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+        }
+      } catch (_) {
+        return null;
+      }
     }
 
     return null;

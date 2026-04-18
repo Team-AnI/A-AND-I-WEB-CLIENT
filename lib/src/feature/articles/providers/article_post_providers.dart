@@ -1,14 +1,13 @@
-import 'package:aandi_auth/aandi_auth.dart' as auth_api;
 import 'package:aandi_tech_blog/aandi_tech_blog.dart' as blog_api;
 import 'package:a_and_i_report_web_server/src/core/constants/api_url.dart';
 import 'package:a_and_i_report_web_server/src/core/providers/dio_provider.dart';
-import 'package:a_and_i_report_web_server/src/feature/articles/data/repositories/collaborator_lookup_repository_adapter.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/data/datasources/collaborator_lookup_remote_datasource.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/data/repositories/collaborator_lookup_repository_impl.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/repositories/image_repository_adapter.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/data/repositories/post_repository_adapter.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_page.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
-import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/local/auth_token_store_adapter.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/providers/local_auth_datasource_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/repositories/collaborator_lookup_repository.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/repositories/image_repository.dart';
@@ -43,12 +42,9 @@ final imageRepositoryProvider = Provider<ImageRepository>((ref) {
 /// 협업자 조회 저장소 Provider입니다.
 final collaboratorLookupRepositoryProvider =
     Provider<CollaboratorLookupRepository>((ref) {
-  return CollaboratorLookupRepositoryAdapter(
-    repository: auth_api.AuthRepositoryImpl(
-      apiClient: auth_api.AuthApiClient(baseUrl: baseUrl),
-      tokenStore: AuthTokenStoreAdapter(
-        localAuthDatasource: ref.read(localAuthDatasourceProvider),
-      ),
+  return CollaboratorLookupRepositoryImpl(
+    collaboratorLookupRemoteDatasource: CollaboratorLookupRemoteDatasourceImpl(
+      ref.read(dioProvider),
     ),
     localAuthDatasource: ref.read(localAuthDatasourceProvider),
   );
