@@ -57,18 +57,24 @@ class ProblemDetailView extends HookConsumerWidget {
       return timer.cancel;
     }, [endAt]);
 
-    void selectTab(int nextTab) {
+    void selectTab(
+      int nextTab, {
+      bool isSubmitNavigation = false,
+    }) {
       if (nextTab == 1 && isSubmissionClosed) {
         return;
       }
       selectedTab.value = nextTab;
-      if (nextTab == 2 && historyProblemId.isNotEmpty) {
+      final submitState = ref.read(reportSubmitViewModelProvider(report));
+      if (nextTab == 2 &&
+          historyProblemId.isNotEmpty &&
+          !isSubmitNavigation &&
+          !_isSubmissionResultPending(submitState)) {
         unawaited(
           ref
               .read(reportSubmitViewModelProvider(report).notifier)
               .loadSubmissionHistory(
                 problemId: historyProblemId,
-                forceRefresh: true,
               ),
         );
       }
@@ -91,7 +97,7 @@ class ProblemDetailView extends HookConsumerWidget {
           selectedTab: selectedTab.value,
           isSubmissionClosed: isSubmissionClosed,
           isDarkMode: isDarkMode,
-          onMoveToResultTab: () => selectTab(2),
+          onMoveToResultTab: () => selectTab(2, isSubmitNavigation: true),
         ),
         const SizedBox(height: 64),
         const BottomLogo(),
@@ -368,6 +374,24 @@ class _ComingSoon extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _isSubmissionResultPending(ReportSubmitState state) {
+  if (state.isSubmitting || state.isPolling) {
+    return true;
+  }
+
+  return switch (state.submissionStatus) {
+    SubmissionStatus.submitting ||
+    SubmissionStatus.queued ||
+    SubmissionStatus.judging =>
+      true,
+    SubmissionStatus.notSubmitted ||
+    SubmissionStatus.accepted ||
+    SubmissionStatus.failed ||
+    SubmissionStatus.error =>
+      false,
+  };
 }
 
 class _DeadlineTimer extends StatelessWidget {
