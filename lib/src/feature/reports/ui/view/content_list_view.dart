@@ -14,9 +14,14 @@ class ContentListView extends StatelessWidget {
           (index) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 13.0),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5.5),
+                  padding: const EdgeInsets.only(
+                    left: 5.5,
+                    right: 5.5,
+                    top: 8,
+                  ),
                   child: Container(
                     width: 5,
                     height: 5,
