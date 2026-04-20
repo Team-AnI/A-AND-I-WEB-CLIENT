@@ -398,6 +398,7 @@ class _ArticleDetailContent extends StatelessWidget {
           data: normalizedMarkdown,
           selectable: true,
           fitContent: false,
+          softLineBreak: true,
           styleSheet: markdownStyle,
           syntaxHighlighter: codeSyntaxHighlighter,
           onTapLink: (text, href, title) {
