@@ -57,9 +57,9 @@ void main() {
       );
 
       expect(capturedOptions, isNotNull);
-      expect(capturedOptions!.path, '/v1/posts');
+      expect(capturedOptions!.path, '/v2/posts');
       expect(capturedOptions!.method, 'POST');
-      expect(capturedOptions!.headers['Authorization'], 'Bearer access-token');
+      expect(capturedOptions!.headers['Authenticate'], 'Bearer access-token');
 
       final files = capturedFormData!.files;
       final postPart = files.firstWhere((entry) => entry.key == 'post').value;
@@ -95,8 +95,8 @@ void main() {
       expect(thumbnailPart.contentType?.mimeType, 'image/webp');
     });
 
-    test('patchPost는 post(json) 파트를 multipart로 전송한다', () async {
-      FormData? capturedFormData;
+    test('patchPost는 썸네일이 없으면 JSON으로 전송한다', () async {
+      Map<String, dynamic>? capturedPayload;
       RequestOptions? capturedOptions;
 
       final dio = Dio()
@@ -104,7 +104,9 @@ void main() {
           InterceptorsWrapper(
             onRequest: (options, handler) {
               capturedOptions = options;
-              capturedFormData = options.data as FormData;
+              capturedPayload = Map<String, dynamic>.from(
+                options.data as Map<dynamic, dynamic>,
+              );
               handler.resolve(
                 Response<Map<String, dynamic>>(
                   requestOptions: options,
@@ -131,34 +133,31 @@ void main() {
       );
 
       expect(capturedOptions, isNotNull);
-      expect(capturedOptions!.path, '/v1/posts/post-id');
+      expect(capturedOptions!.path, '/v2/posts/post-id');
       expect(capturedOptions!.method, 'PATCH');
-      expect(capturedOptions!.headers['Authorization'], 'Bearer access-token');
-
-      final files = capturedFormData!.files;
-      final postPart = files.firstWhere((entry) => entry.key == 'post').value;
-      expect(postPart.filename, 'post.json');
-      expect(postPart.contentType?.mimeType, 'application/json');
+      expect(capturedOptions!.headers['Authenticate'], 'Bearer access-token');
+      expect(capturedOptions!.headers['Content-Type'], 'application/json');
       expect(
-        jsonDecode(await _readMultipartAsString(postPart)),
+        capturedPayload,
         <String, dynamic>{
           'title': '수정 제목',
-          'contentMarkdown': '수정 본문',
           'summary': '수정 요약',
+          'contentMarkdown': '수정 본문',
           'status': 'Draft',
         },
       );
-      expect(files.any((entry) => entry.key == 'thumbnail'), isFalse);
     });
 
-    test('patchPost는 빈 summary도 post(json)에 포함한다', () async {
-      FormData? capturedFormData;
+    test('patchPost는 빈 summary도 JSON payload에 포함한다', () async {
+      Map<String, dynamic>? capturedPayload;
 
       final dio = Dio()
         ..interceptors.add(
           InterceptorsWrapper(
             onRequest: (options, handler) {
-              capturedFormData = options.data as FormData;
+              capturedPayload = Map<String, dynamic>.from(
+                options.data as Map<dynamic, dynamic>,
+              );
               handler.resolve(
                 Response<Map<String, dynamic>>(
                   requestOptions: options,
@@ -183,15 +182,12 @@ void main() {
         null,
       );
 
-      final files = capturedFormData!.files;
-      final postPart = files.firstWhere((entry) => entry.key == 'post').value;
-      final payload = jsonDecode(await _readMultipartAsString(postPart))
-          as Map<String, dynamic>;
-      expect(payload.containsKey('summary'), isTrue);
-      expect(payload['summary'], '');
+      expect(capturedPayload, isNotNull);
+      expect(capturedPayload!.containsKey('summary'), isTrue);
+      expect(capturedPayload!['summary'], '');
     });
 
-    test('getDraftPosts는 /v1/posts/drafts/me 경로와 인증 헤더로 조회한다', () async {
+    test('getDraftPosts는 /v2/posts/drafts/me 경로와 인증 헤더로 조회한다', () async {
       RequestOptions? capturedOptions;
 
       final dio = Dio()
@@ -224,13 +220,12 @@ void main() {
       await datasource.getDraftPosts('Bearer access-token', 0, 20, null);
 
       expect(capturedOptions, isNotNull);
-      expect(capturedOptions!.path, '/v1/posts/drafts/me');
+      expect(
+        capturedOptions!.uri,
+        Uri.parse('/v2/posts/drafts/me?page=0&size=20'),
+      );
       expect(capturedOptions!.method, 'GET');
-      expect(capturedOptions!.headers['Authorization'], 'Bearer access-token');
-      expect(capturedOptions!.queryParameters, <String, dynamic>{
-        'page': 0,
-        'size': 20,
-      });
+      expect(capturedOptions!.headers['Authenticate'], 'Bearer access-token');
     });
   });
 }
