@@ -854,24 +854,67 @@ class _PostTypeSelectorSection extends StatelessWidget {
           title: '00. 게시글 종류',
         ),
         SizedBox(height: isMobile ? 16 : 20),
-        SegmentedButton<PostType>(
-          segments: PostType.values
-              .map(
-                (type) => ButtonSegment<PostType>(
-                  value: type,
-                  label: Text(type.label),
-                ),
-              )
-              .toList(),
-          selected: <PostType>{selectedType},
-          showSelectedIcon: false,
-          onSelectionChanged: (selection) {
-            if (selection.isNotEmpty) {
-              onChanged(selection.first);
-            }
-          },
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: PostType.values
+                .map(
+                  (type) => Expanded(
+                    child: _PostTypeSelectorButton(
+                      label: type.label,
+                      selected: selectedType == type,
+                      onTap: () => onChanged(type),
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
         ),
       ],
+    );
+  }
+}
+
+class _PostTypeSelectorButton extends StatelessWidget {
+  const _PostTypeSelectorButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: selected
+              ? Border.all(color: const Color(0xFFE5E7EB))
+              : Border.all(color: Colors.transparent),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: selected
+                ? const Color(0xFF111827)
+                : const Color(0xFF6B7280),
+          ),
+        ),
+      ),
     );
   }
 }
