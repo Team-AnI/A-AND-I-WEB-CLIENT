@@ -1,4 +1,5 @@
 import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/providers/get_report_detail_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_detail_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -9,6 +10,7 @@ part 'report_detail_view_model.g.dart';
 class ReportDetailViewModel extends _$ReportDetailViewModel {
   @override
   ReportDatailState build(String courseSlug, String assignmentId) {
+    ref.watch(authSessionRevisionProvider);
     _load(courseSlug, assignmentId);
     return const ReportDatailState();
   }

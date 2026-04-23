@@ -2,6 +2,7 @@ import 'package:a_and_i_report_web_server/src/feature/articles/providers/article
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'article_list_view_model.g.dart';
@@ -17,6 +18,7 @@ class ArticleListViewModel extends _$ArticleListViewModel {
   @override
   Future<ArticleListState> build(PostType postType) async {
     ref.keepAlive();
+    ref.watch(authSessionRevisionProvider);
     _postType = postType;
     return _fetchPage(page: 0, size: _defaultPageSize);
   }

@@ -1,4 +1,5 @@
 import 'package:a_and_i_report_web_server/src/feature/home/providers/get_course_by_slug_usecase_provider.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/course_by_slug_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -9,6 +10,7 @@ part 'course_by_slug_view_model.g.dart';
 class CourseBySlugViewModel extends _$CourseBySlugViewModel {
   @override
   CourseBySlugState build(String courseSlug) {
+    ref.watch(authSessionRevisionProvider);
     Future.microtask(() => _load(courseSlug));
     return const CourseBySlugState();
   }

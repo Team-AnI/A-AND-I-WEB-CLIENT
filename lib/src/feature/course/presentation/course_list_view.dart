@@ -1,6 +1,7 @@
 import 'package:a_and_i_report_web_server/src/core/constants/api_url.dart';
 import 'package:a_and_i_report_web_server/src/core/providers/study_theme_provider.dart';
 import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
@@ -15,6 +16,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 final courseListProvider =
     FutureProvider.autoDispose<List<Course>>((ref) async {
+  ref.watch(authSessionRevisionProvider);
   return ref.read(getCoursesUsecaseProvider).call();
 });
 

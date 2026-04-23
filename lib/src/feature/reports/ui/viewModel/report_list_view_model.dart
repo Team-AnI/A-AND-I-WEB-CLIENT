@@ -1,4 +1,5 @@
 import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/providers/get_report_summary_usecase_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_list_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -18,10 +19,10 @@ class ReportListViewModel extends _$ReportListViewModel {
   /// 실패 시 에러 메시지를 담아 반환합니다.
   @override
   Future<ReportListState> build(String courseSlug) async {
+    ref.watch(authSessionRevisionProvider);
     try {
-      final reports = await ref
-          .read(getReportSummaryUsecaseProvider)
-          .call(courseSlug);
+      final reports =
+          await ref.read(getReportSummaryUsecaseProvider).call(courseSlug);
       return ReportListState(reports: reports);
     } catch (e) {
       return ReportListState(

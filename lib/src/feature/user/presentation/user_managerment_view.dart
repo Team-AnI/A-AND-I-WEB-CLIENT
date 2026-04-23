@@ -4,6 +4,7 @@ import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/p
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
@@ -26,6 +27,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 final myWrittenPostsProvider =
     FutureProvider.autoDispose.family<List<Post>, String>(
   (ref, userId) async {
+    ref.watch(authSessionRevisionProvider);
     final responses = await Future.wait<PostPage>([
       ref.read(getPostListUsecaseProvider).call(
             page: 0,

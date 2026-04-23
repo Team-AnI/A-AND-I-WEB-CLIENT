@@ -13,6 +13,7 @@ void main() {
       final dio = Dio();
       var protectedRequestCount = 0;
       var refreshRequestCount = 0;
+      var refreshedCallbackCount = 0;
 
       dio.interceptors.add(
         InterceptorsWrapper(
@@ -62,6 +63,9 @@ void main() {
         localAuthDatasource: localAuthDatasource,
         dio: dio,
         onTokenExpired: (_) async {},
+        onTokenRefreshed: (_, __) async {
+          refreshedCallbackCount += 1;
+        },
         requestTokenRefresh: (refreshToken) async {
           refreshRequestCount += 1;
           return Response<Map<String, dynamic>>(
@@ -92,6 +96,7 @@ void main() {
       expect(response.statusCode, 200);
       expect(protectedRequestCount, 1);
       expect(refreshRequestCount, 1);
+      expect(refreshedCallbackCount, 1);
       expect(await localAuthDatasource.getUserToken(), 'new-access-token');
       expect(await localAuthDatasource.getRefreshToken(), 'new-refresh-token');
     });

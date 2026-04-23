@@ -6,6 +6,7 @@ import 'package:a_and_i_report_web_server/src/core/interceptors/api_interceptor.
 import 'package:a_and_i_report_web_server/src/core/interceptors/auth_interceptor.dart';
 import 'package:a_and_i_report_web_server/src/core/utils/app_messenger.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/providers/local_auth_datasource_provider.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
@@ -58,6 +59,9 @@ Dio dio(Ref ref) {
             .onEvent(const UserViewEvent.clear());
         ref.read(authViewModelProvider.notifier).expireSession();
         showGlobalSnackBar('세션이 만료되어 로그아웃되었습니다. 다시 로그인해주세요.');
+      },
+      onTokenRefreshed: (_, __) async {
+        ref.read(authSessionRevisionProvider.notifier).state++;
       },
     ),
   );

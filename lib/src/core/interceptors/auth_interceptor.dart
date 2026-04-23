@@ -11,6 +11,8 @@ class AuthInterceptor extends QueuedInterceptor {
   final LocalAuthDatasource localAuthDatasource;
   final Dio dio;
   final Future<void> Function(String? refreshToken) onTokenExpired;
+  final Future<void> Function(String accessToken, String? refreshToken)?
+      onTokenRefreshed;
   final Future<Response<dynamic>> Function(String refreshToken)?
       requestTokenRefresh;
 
@@ -18,6 +20,7 @@ class AuthInterceptor extends QueuedInterceptor {
     required this.localAuthDatasource,
     required this.dio,
     required this.onTokenExpired,
+    this.onTokenRefreshed,
     this.requestTokenRefresh,
   });
 
@@ -93,7 +96,8 @@ class AuthInterceptor extends QueuedInterceptor {
     );
   }
 
-  Future<Response<dynamic>?> _refreshAndRetry(RequestOptions requestOptions) async {
+  Future<Response<dynamic>?> _refreshAndRetry(
+      RequestOptions requestOptions) async {
     final authorizationHeader = _readAuthorizationHeader(requestOptions);
     final accessToken = await localAuthDatasource.getUserToken();
     final hasAuthContext =
@@ -113,9 +117,8 @@ class AuthInterceptor extends QueuedInterceptor {
     }
 
     try {
-      final response =
-          await (requestTokenRefresh?.call(refreshToken) ??
-              _requestTokenRefresh(refreshToken));
+      final response = await (requestTokenRefresh?.call(refreshToken) ??
+          _requestTokenRefresh(refreshToken));
       final statusCode = response.statusCode ?? 0;
       if (statusCode < 200 || statusCode >= 300) {
         log('토큰 갱신 실패, 로그아웃 처리');
@@ -136,6 +139,7 @@ class AuthInterceptor extends QueuedInterceptor {
       if (_hasToken(newRefreshToken)) {
         await localAuthDatasource.saveRefreshToken(newRefreshToken!);
       }
+      await onTokenRefreshed?.call(newAccessToken, newRefreshToken);
 
       log('토큰 갱신 성공');
 
@@ -224,9 +228,8 @@ class AuthInterceptor extends QueuedInterceptor {
             key.toLowerCase() == 'authenticate',
       )
       ..[authenticateHeaderKey == 'Authorization'
-              ? 'Authenticate'
-              : authenticateHeaderKey] =
-          value;
+          ? 'Authenticate'
+          : authenticateHeaderKey] = value;
   }
 
   RequestOptions _buildRetryOptions(RequestOptions source) {
