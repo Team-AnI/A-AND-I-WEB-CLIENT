@@ -8,24 +8,67 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-/// 메인 화면 최신 블로그 게시글을 조회하는 Provider입니다.
-final homeLatestPostsProvider = FutureProvider.autoDispose<List<Post>>((
-  ref,
-) async {
+/// 메인 화면에서 게시글 종류별 최신 게시글을 조회하는 Provider입니다.
+final homeLatestPostsProvider = FutureProvider.autoDispose
+    .family<List<Post>, PostType>((ref, postType) async {
   final page = await ref.read(getPostListUsecaseProvider).call(
         page: 0,
         size: 20,
-        type: PostType.blog,
+        type: postType,
       );
   return page.items.where((post) => _isPublished(post.status)).toList();
 });
 
-class HomeLatestPostsSection extends ConsumerWidget {
+/// 메인 화면 최신 블로그 게시글을 노출하는 섹션입니다.
+class HomeLatestPostsSection extends StatelessWidget {
   const HomeLatestPostsSection({super.key});
 
   @override
+  Widget build(BuildContext context) {
+    return const _HomeLatestPostTypeSection(
+      title: '동아리 소식',
+      subtitle: '학생 운영 스터디와 프로젝트 진행 소식을 확인해보세요.',
+      listPath: '/articles',
+      detailBasePath: '/articles',
+      postType: PostType.blog,
+    );
+  }
+}
+
+/// 메인 화면 최신 강의자료를 노출하는 섹션입니다.
+class HomeLatestMaterialsSection extends StatelessWidget {
+  const HomeLatestMaterialsSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _HomeLatestPostTypeSection(
+      title: '강의자료',
+      subtitle: 'A&I 강의자료를 한곳에서 확인하세요.',
+      listPath: '/materials',
+      detailBasePath: '/materials',
+      postType: PostType.lecture,
+    );
+  }
+}
+
+class _HomeLatestPostTypeSection extends ConsumerWidget {
+  const _HomeLatestPostTypeSection({
+    required this.title,
+    required this.subtitle,
+    required this.listPath,
+    required this.detailBasePath,
+    required this.postType,
+  });
+
+  final String title;
+  final String subtitle;
+  final String listPath;
+  final String detailBasePath;
+  final PostType postType;
+
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final latestPostsAsync = ref.watch(homeLatestPostsProvider);
+    final latestPostsAsync = ref.watch(homeLatestPostsProvider(postType));
     return latestPostsAsync.when(
       data: (posts) {
         final maxPostCount = kIsWeb ? 3 : 4;
@@ -33,7 +76,13 @@ class HomeLatestPostsSection extends ConsumerWidget {
         if (visiblePosts.isEmpty) {
           return const SizedBox.shrink();
         }
-        return _HomeLatestPostsSectionContent(posts: visiblePosts);
+        return _HomeLatestPostsSectionContent(
+          title: title,
+          subtitle: subtitle,
+          listPath: listPath,
+          detailBasePath: detailBasePath,
+          posts: visiblePosts,
+        );
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
@@ -43,9 +92,17 @@ class HomeLatestPostsSection extends ConsumerWidget {
 
 class _HomeLatestPostsSectionContent extends StatelessWidget {
   const _HomeLatestPostsSectionContent({
+    required this.title,
+    required this.subtitle,
+    required this.listPath,
+    required this.detailBasePath,
     required this.posts,
   });
 
+  final String title;
+  final String subtitle;
+  final String listPath;
+  final String detailBasePath;
   final List<Post> posts;
 
   @override
@@ -77,7 +134,7 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '동아리 소식',
+                            title,
                             style: TextStyle(
                               fontSize: titleFont,
                               fontWeight: FontWeight.w800,
@@ -87,7 +144,7 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '학생 운영 스터디와 프로젝트 진행 소식을 확인해보세요.',
+                            subtitle,
                             style: TextStyle(
                               fontSize: subtitleFont,
                               color: HomeTheme.textMuted,
@@ -97,7 +154,7 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => context.go('/articles'),
+                      onPressed: () => context.go(listPath),
                       iconAlignment: IconAlignment.end,
                       label: const Text('전체 보기'),
                       icon: const Icon(Icons.chevron_right),
@@ -113,7 +170,7 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '동아리 소식',
+                      title,
                       style: TextStyle(
                         fontSize: titleFont,
                         fontWeight: FontWeight.w800,
@@ -123,7 +180,7 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '학생 운영 스터디와 프로젝트 진행 소식을 확인해보세요.',
+                      subtitle,
                       style: TextStyle(
                         fontSize: subtitleFont,
                         color: HomeTheme.textMuted,
@@ -131,7 +188,7 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     TextButton.icon(
-                      onPressed: () => context.go('/articles'),
+                      onPressed: () => context.go(listPath),
                       iconAlignment: IconAlignment.end,
                       label: const Text('전체 보기'),
                       icon: const Icon(Icons.chevron_right),
@@ -165,7 +222,7 @@ class _HomeLatestPostsSectionContent extends StatelessWidget {
                       authorNickname: post.author.nickname,
                       authorProfileImage: post.author.profileImage,
                     ),
-                    onTap: () => context.go('/articles/${post.id}'),
+                    onTap: () => context.go('$detailBasePath/${post.id}'),
                   );
                 },
               ),

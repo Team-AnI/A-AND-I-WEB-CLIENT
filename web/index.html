@@ -133,8 +133,59 @@
         }, 1000);
       })();
     </script>
+    <script>
+      // 과거 Flutter 서비스워커/캐시가 남아 있으면 새 배포 반영이 지연될 수 있어 선제 정리한다.
+      window.__prepareFlutterAppLoad = async function() {
+        const flutterCachePrefixes = [
+          'flutter-app-cache',
+          'flutter-temp-cache',
+          'flutter-app-manifest',
+          'workbox',
+        ];
+
+        const shouldDeleteCache = (key) => {
+          if (!key) return false;
+          return flutterCachePrefixes.some((prefix) => key.startsWith(prefix));
+        };
+
+        if ('serviceWorker' in navigator) {
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(
+              registrations.map((registration) => registration.unregister()),
+            );
+          } catch (error) {
+            console.warn('[Flutter Cache Reset] service worker cleanup failed:', error);
+          }
+        }
+
+        if ('caches' in window) {
+          try {
+            const cacheKeys = await window.caches.keys();
+            await Promise.all(
+              cacheKeys
+                .filter(shouldDeleteCache)
+                .map((cacheKey) => window.caches.delete(cacheKey)),
+            );
+          } catch (error) {
+            console.warn('[Flutter Cache Reset] cache cleanup failed:', error);
+          }
+        }
+      };
+    </script>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    (async function() {
+      if (typeof window.__prepareFlutterAppLoad === 'function') {
+        await window.__prepareFlutterAppLoad();
+      }
+
+      const flutterBootstrapScript = document.createElement('script');
+      flutterBootstrapScript.src = `flutter_bootstrap.js?v=${Date.now()}`;
+      flutterBootstrapScript.async = true;
+      document.body.appendChild(flutterBootstrapScript);
+    })();
+  </script>
 </body>
 </html>

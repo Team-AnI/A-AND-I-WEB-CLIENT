@@ -66,6 +66,7 @@ class HomePage extends ConsumerWidget {
               children: [
                 const HomeHeroSection(),
                 const HomeLatestPostsSection(),
+                if (isLoggedIn) const HomeLatestMaterialsSection(),
                 const HomeCtaSection(),
                 const HomeFooterSection(),
               ],
