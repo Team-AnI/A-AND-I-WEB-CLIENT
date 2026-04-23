@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/level.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/dtos/submission_response_dto.dart';
@@ -161,6 +163,48 @@ void main() {
       expect(state.errorMsg, '마감된 과제는 제출할 수 없습니다.');
     });
 
+    test('제출 요청이 실패하면 제출 횟수를 증가시키지 않는다', () async {
+      final fakeCreateUsecase = FakeThrowingCreateSubmissionUsecase(
+        error: Exception('submit failed'),
+      );
+      final fakeHistoryUsecase = FakeGetMyProblemSubmissionsUsecase(
+        results: <SubmissionResult>[
+          SubmissionResult(
+            submissionId: 'submission-existing',
+            problemId: 'problem-1',
+            language: 'PYTHON',
+            status: 'ACCEPTED',
+            createdAt: DateTime.parse('2026-03-24T13:00:00Z'),
+          ),
+        ],
+      );
+      final report = _buildReport();
+      final container = ProviderContainer(
+        overrides: [
+          createSubmissionUsecaseProvider.overrideWith((ref) {
+            return fakeCreateUsecase;
+          }),
+          getMyProblemSubmissionsUsecaseProvider.overrideWith((ref) {
+            return fakeHistoryUsecase;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier =
+          container.read(reportSubmitViewModelProvider(report).notifier);
+      await notifier.loadSubmissionHistory(problemId: 'problem-1');
+      notifier.updateDraft(SubmitLanguage.python, 'print("failed")');
+
+      final submitted =
+          await notifier.submitCurrentDraft(problemId: 'problem-1');
+
+      final state = container.read(reportSubmitViewModelProvider(report));
+      expect(submitted, isFalse);
+      expect(state.submitCount, 1);
+      expect(state.submissionStatus, SubmissionStatus.error);
+    });
+
     test('캐시된 최종 결과가 즉시 조회되면 스트림 없이 화면 상태를 갱신한다', () async {
       final fakeCreateUsecase = FakeCreateSubmissionUsecase(
         response: const SubmissionResponseDto(
@@ -304,6 +348,93 @@ void main() {
       expect(state.testCaseResults, hasLength(1));
       expect(state.feedbacks, contains('채점이 완료되었습니다. 정답입니다!'));
     });
+
+    test('중첩된 SSE payload의 test_case_result와 done 이벤트를 정상 처리한다', () async {
+      final fakeCreateUsecase = FakeCreateSubmissionUsecase(
+        response: const SubmissionResponseDto(
+          submissionId: 'submission-sse',
+          streamUrl: '/streams/submission-sse',
+        ),
+      );
+      final fakeDetailUsecase = FakeGetSubmissionResultUsecase(
+        responses: const <String, SubmissionResult?>{},
+      );
+      final fakeStreamUsecase = FakeStreamSubmissionEventsUsecase(
+        streams: <String, Stream<String>>{
+          '/streams/submission-sse': Stream<String>.fromIterable(<String>[
+            jsonEncode({
+              'event': 'test_case_result',
+              'data': {
+                'success': true,
+                'data': {
+                  'event': 'test_case_result',
+                  'payload': {
+                    'caseId': 1,
+                    'status': 'PASSED',
+                    'timeMs': 1.37,
+                    'memoryMb': 12.4,
+                    'output': '비공개',
+                    'error': null,
+                  },
+                },
+                'error': null,
+                'timestamp': '2026-04-09T02:15:30.123Z',
+              },
+            }),
+            jsonEncode({
+              'event': 'done',
+              'data': {
+                'success': true,
+                'data': {
+                  'event': 'done',
+                  'payload': {
+                    'submissionId': 'submission-sse',
+                    'overallStatus': 'PASSED',
+                  },
+                },
+                'error': null,
+                'timestamp': '2026-04-09T02:15:31.123Z',
+              },
+            }),
+          ]),
+        },
+      );
+      final report = _buildReport();
+      final container = ProviderContainer(
+        overrides: [
+          createSubmissionUsecaseProvider.overrideWith((ref) {
+            return fakeCreateUsecase;
+          }),
+          getSubmissionResultUsecaseProvider.overrideWith((ref) {
+            return fakeDetailUsecase;
+          }),
+          streamSubmissionEventsUsecaseProvider.overrideWith((ref) {
+            return fakeStreamUsecase;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier =
+          container.read(reportSubmitViewModelProvider(report).notifier);
+      notifier.updateDraft(SubmitLanguage.python, 'print("sse")');
+
+      final submitted =
+          await notifier.submitCurrentDraft(problemId: 'problem-1');
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      final state = container.read(reportSubmitViewModelProvider(report));
+      expect(submitted, isTrue);
+      expect(state.submissionStatus, SubmissionStatus.accepted);
+      expect(state.latestVerdict, 'PASSED');
+      expect(state.testCaseResults, hasLength(1));
+      expect(state.testCaseResults.first.caseId, 1);
+      expect(state.testCaseResults.first.status, 'PASSED');
+      expect(state.testCaseResults.first.timeMs, 1.37);
+      expect(state.testCaseResults.first.memoryMb, 12.4);
+      expect(state.feedbacks, contains('1번 테스트: PASSED (1.37ms, 12.4MB)'));
+      expect(state.feedbacks, contains('채점이 완료되었습니다. 정답입니다!'));
+    });
   });
 }
 
@@ -327,6 +458,25 @@ class FakeCreateSubmissionUsecase implements CreateSubmissionUsecase {
     requestedLanguages.add(language);
     requestedCodes.add(code);
     return response;
+  }
+}
+
+class FakeThrowingCreateSubmissionUsecase implements CreateSubmissionUsecase {
+  FakeThrowingCreateSubmissionUsecase({
+    required this.error,
+  });
+
+  final Object error;
+  final List<String> requestedProblemIds = <String>[];
+
+  @override
+  Future<SubmissionResponseDto> call({
+    required String problemId,
+    required String language,
+    required String code,
+  }) async {
+    requestedProblemIds.add(problemId);
+    throw error;
   }
 }
 

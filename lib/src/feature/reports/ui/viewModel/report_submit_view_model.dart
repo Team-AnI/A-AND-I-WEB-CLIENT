@@ -237,7 +237,6 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
       latestSubmittedCode: code,
       latestSubmittedLanguage: lang,
       submittedAt: DateTime.now(),
-      submitCount: state.submitCount + 1,
       submissionStatus: SubmissionStatus.submitting,
       feedbacks: const <String>['제출 요청을 전송하고 있습니다.'],
       testCaseResults: const <SubmissionTestCaseResult>[],
@@ -258,6 +257,7 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
         isPolling: false,
         submissionId: response.submissionId,
         streamUrl: response.streamUrl,
+        submitCount: state.submitCount + 1,
         submissionStatus: SubmissionStatus.queued,
         feedbacks: const <String>['제출이 접수되었습니다. 결과를 확인하고 있습니다.'],
       );
@@ -798,21 +798,73 @@ class ReportSubmitViewModel extends StateNotifier<ReportSubmitState> {
       return null;
     }
 
-    final event = decoded['event']?.toString().trim();
+    final event = _extractEnvelopeEventName(decoded['data']) ??
+        decoded['event']?.toString().trim();
     if (event == null || event.isEmpty) {
       return null;
     }
 
     return _SubmissionStreamEnvelope(
       event: event,
-      data: decoded['data'],
+      data: _extractEnvelopePayload(decoded['data']) ?? decoded['data'],
     );
   }
 
   Map<String, dynamic>? _extractSourceMap(Map<String, dynamic> decoded) {
-    final eventData = decoded['data'];
-    if (eventData is Map<String, dynamic>) {
-      return eventData;
+    return _toMap(_extractEnvelopePayload(decoded['data'])) ??
+        _toMap(_extractEnvelopePayload(decoded));
+  }
+
+  String? _extractEnvelopeEventName(Object? value) {
+    final map = _toMap(value);
+    if (map == null) {
+      return null;
+    }
+
+    final nestedData = map['data'];
+    final nestedEventName = _extractEnvelopeEventName(nestedData);
+    if (nestedEventName != null && nestedEventName.isNotEmpty) {
+      return nestedEventName;
+    }
+
+    final event = map['event']?.toString().trim();
+    if (event != null && event.isNotEmpty) {
+      return event;
+    }
+
+    return null;
+  }
+
+  Object? _extractEnvelopePayload(Object? value) {
+    final map = _toMap(value);
+    if (map == null) {
+      return value;
+    }
+
+    if (map.containsKey('payload')) {
+      return _extractEnvelopePayload(map['payload']);
+    }
+
+    if (map.containsKey('data')) {
+      final nestedData = map['data'];
+      final normalizedNestedData = _extractEnvelopePayload(nestedData);
+      if (normalizedNestedData != nestedData || nestedData is Map) {
+        return normalizedNestedData;
+      }
+    }
+
+    return map;
+  }
+
+  Map<String, dynamic>? _toMap(Object? value) {
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+
+    if (value is Map) {
+      return value.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
     }
 
     return null;
