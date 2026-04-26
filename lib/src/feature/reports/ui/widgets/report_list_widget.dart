@@ -50,8 +50,6 @@ class ReportListWidget extends StatelessWidget {
   Widget _reports(BuildContext context) => Column(
         children: List.generate(reports.length, (index) {
           final report = reports[index];
-          final done =
-              ReportStatueType.fromEndAt(report.endAt) == ReportStatueType.done;
           return Padding(
             padding:
                 EdgeInsets.only(bottom: index == reports.length - 1 ? 0 : 10),
@@ -70,7 +68,6 @@ class ReportListWidget extends StatelessWidget {
               child: ReportTitleRow(
                 reportSummary: report,
                 indexLabel: "${report.week}-${report.seq}.",
-                isDone: done,
               ),
             ),
           );

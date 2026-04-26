@@ -614,8 +614,6 @@ class _ReportTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDone = report.endAt.isBefore(DateTime.now().toUtc());
-
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => context.go(
@@ -681,13 +679,6 @@ class _ReportTile extends StatelessWidget {
               ],
             ),
             const SizedBox(width: 10),
-            Icon(
-              isDone
-                  ? Icons.check_circle_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: isDone ? const Color(0xFF22C55E) : palette.textMuted,
-              size: 22,
-            ),
           ],
         ),
       ),
@@ -710,13 +701,13 @@ class _ReportTile extends StatelessWidget {
   Color _difficultyColor(Level level) {
     switch (level) {
       case Level.LOW:
-        return const Color(0xFF6B7280);
-      case Level.MEDIUM:
         return const Color(0xFF16A34A);
+      case Level.MEDIUM:
+        return const Color(0xFFFACC15);
       case Level.HIGH:
-        return const Color(0xFF4B5563);
+        return const Color(0xFFDC2626);
       case Level.VERYHIGH:
-        return const Color(0xFFB91C1C);
+        return const Color(0xFFDC2626);
     }
   }
 }
