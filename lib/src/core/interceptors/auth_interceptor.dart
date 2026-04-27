@@ -4,7 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/local/local_auth_datasource.dart';
 
 /// 401 에러 발생 시 자동으로 토큰을 갱신하는 Dio Interceptor
-class AuthInterceptor extends QueuedInterceptor {
+///
+/// 일반 [Interceptor]를 상속하고, 동시 다발 401에 대해 refresh가 한 번만
+/// 일어나도록 [_refreshInFlight] 락으로 직렬화한다.
+/// `QueuedInterceptor`를 쓰지 않는 이유: 같은 dio 인스턴스로 retry를 fire하면
+/// retry의 onResponse가 같은 응답 큐에 막혀 데드락이 발생한다.
+class AuthInterceptor extends Interceptor {
   static const _retryKey = '__auth_retry__';
   static const _refreshPath = '/v2/auth/refresh';
 
@@ -15,6 +20,8 @@ class AuthInterceptor extends QueuedInterceptor {
       onTokenRefreshed;
   final Future<Response<dynamic>> Function(String refreshToken)?
       requestTokenRefresh;
+
+  Future<String>? _refreshInFlight;
 
   AuthInterceptor({
     required this.localAuthDatasource,
@@ -116,6 +123,21 @@ class AuthInterceptor extends QueuedInterceptor {
       throw const _SessionExpiredException();
     }
 
+    final newAccessToken = await _ensureRefreshed(refreshToken);
+
+    final retryOptions = _buildRetryOptions(requestOptions)
+      ..extra[_retryKey] = true;
+    _setAuthorizationHeader(retryOptions, 'Bearer $newAccessToken');
+
+    return dio.fetch<dynamic>(retryOptions);
+  }
+
+  Future<String> _ensureRefreshed(String refreshToken) {
+    return _refreshInFlight ??= _performRefresh(refreshToken)
+        .whenComplete(() => _refreshInFlight = null);
+  }
+
+  Future<String> _performRefresh(String refreshToken) async {
     try {
       final response = await (requestTokenRefresh?.call(refreshToken) ??
           _requestTokenRefresh(refreshToken));
@@ -142,12 +164,7 @@ class AuthInterceptor extends QueuedInterceptor {
       await onTokenRefreshed?.call(newAccessToken, newRefreshToken);
 
       log('토큰 갱신 성공');
-
-      final retryOptions = _buildRetryOptions(requestOptions)
-        ..extra[_retryKey] = true;
-      _setAuthorizationHeader(retryOptions, 'Bearer $newAccessToken');
-
-      return dio.fetch<dynamic>(retryOptions);
+      return newAccessToken;
     } on DioException catch (e) {
       log('토큰 갱신 중 에러 발생: ${e.response?.statusCode}');
       await onTokenExpired(refreshToken);

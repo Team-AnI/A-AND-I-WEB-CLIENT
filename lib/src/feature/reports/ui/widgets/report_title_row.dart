@@ -6,13 +6,11 @@ import 'package:flutter/material.dart';
 class ReportTitleRow extends StatelessWidget {
   final ReportSummary reportSummary;
   final String indexLabel;
-  final bool isDone;
 
   const ReportTitleRow({
     super.key,
     required this.reportSummary,
     required this.indexLabel,
-    required this.isDone,
   });
 
   @override
@@ -62,12 +60,6 @@ class ReportTitleRow extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           _difficultyLabel(),
-          const SizedBox(width: 12),
-          Icon(
-            isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: isDone ? const Color(0xFF22C55E) : const Color(0xFFD1D5DB),
-            size: isMobile ? 20 : 24,
-          ),
         ],
       ),
     );
@@ -116,13 +108,13 @@ class ReportTitleRow extends StatelessWidget {
   Color _difficultyColor(Level level) {
     switch (level) {
       case Level.LOW:
-        return const Color(0xFF6B7280);
+        return const Color(0xFF16A34A);
       case Level.MEDIUM:
-        return const Color(0xFF059669);
+        return const Color(0xFFFACC15);
       case Level.HIGH:
-        return const Color(0xFF4B5563);
+        return const Color(0xFFDC2626);
       case Level.VERYHIGH:
-        return const Color(0xFFB91C1C);
+        return const Color(0xFFDC2626);
     }
   }
 }

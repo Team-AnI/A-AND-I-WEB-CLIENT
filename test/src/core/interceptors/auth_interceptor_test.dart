@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:a_and_i_report_web_server/src/core/interceptors/auth_interceptor.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/data/datasources/local/local_auth_datasource.dart';
 import 'package:dio/dio.dart';
@@ -171,7 +174,154 @@ void main() {
       expect(response.statusCode, 401);
       expect(expiredRefreshTokens, <String?>['refresh-token']);
     });
+
+    test('실제 dio 체인에서 401 → refresh → retry가 hang 없이 200으로 완료된다', () async {
+      final localAuth = _FakeLocalAuthDatasource(
+        accessToken: 'expired',
+        refreshToken: 'refresh',
+      );
+      final dio = Dio(BaseOptions(baseUrl: 'https://test.local'));
+      var refreshCount = 0;
+
+      dio.httpClientAdapter = _MockAdapter((options) async {
+        final auth = options.headers['Authenticate']?.toString() ??
+            options.headers['Authorization']?.toString() ??
+            '';
+        if (auth == 'Bearer new-access-token') {
+          return ResponseBody.fromString(
+            '{"success":true}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['application/json'],
+            },
+          );
+        }
+        return ResponseBody.fromString(
+          '{"success":false}',
+          401,
+          headers: {
+            Headers.contentTypeHeader: ['application/json'],
+          },
+        );
+      });
+
+      dio.interceptors.add(
+        AuthInterceptor(
+          localAuthDatasource: localAuth,
+          dio: dio,
+          onTokenExpired: (_) async {},
+          requestTokenRefresh: (refreshToken) async {
+            refreshCount += 1;
+            return Response<Map<String, dynamic>>(
+              requestOptions: RequestOptions(path: '/v2/auth/refresh'),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'data': <String, dynamic>{
+                  'accessToken': 'new-access-token',
+                  'refreshToken': 'new-refresh-token',
+                },
+              },
+            );
+          },
+        ),
+      );
+
+      final response = await dio
+          .get<dynamic>(
+            '/v1/protected',
+            options: Options(headers: {'Authenticate': 'Bearer expired'}),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      expect(response.statusCode, 200);
+      expect(refreshCount, 1);
+      expect(await localAuth.getUserToken(), 'new-access-token');
+      expect(await localAuth.getRefreshToken(), 'new-refresh-token');
+    });
+
+    test('동시 다발 401에서 refresh는 한 번만 실행되고 모든 요청이 재시도된다', () async {
+      final localAuth = _FakeLocalAuthDatasource(
+        accessToken: 'expired',
+        refreshToken: 'refresh',
+      );
+      final dio = Dio(BaseOptions(baseUrl: 'https://test.local'));
+      var refreshCount = 0;
+
+      dio.httpClientAdapter = _MockAdapter((options) async {
+        final auth = options.headers['Authenticate']?.toString() ??
+            options.headers['Authorization']?.toString() ??
+            '';
+        if (auth == 'Bearer new-access-token') {
+          return ResponseBody.fromString(
+            '{"success":true}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['application/json'],
+            },
+          );
+        }
+        return ResponseBody.fromString(
+          '{"success":false}',
+          401,
+          headers: {
+            Headers.contentTypeHeader: ['application/json'],
+          },
+        );
+      });
+
+      dio.interceptors.add(
+        AuthInterceptor(
+          localAuthDatasource: localAuth,
+          dio: dio,
+          onTokenExpired: (_) async {},
+          requestTokenRefresh: (refreshToken) async {
+            refreshCount += 1;
+            await Future<void>.delayed(const Duration(milliseconds: 50));
+            return Response<Map<String, dynamic>>(
+              requestOptions: RequestOptions(path: '/v2/auth/refresh'),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'data': <String, dynamic>{
+                  'accessToken': 'new-access-token',
+                  'refreshToken': 'new-refresh-token',
+                },
+              },
+            );
+          },
+        ),
+      );
+
+      final responses = await Future.wait(<Future<Response<dynamic>>>[
+        dio.get<dynamic>('/v1/a',
+            options: Options(headers: {'Authenticate': 'Bearer expired'})),
+        dio.get<dynamic>('/v1/b',
+            options: Options(headers: {'Authenticate': 'Bearer expired'})),
+        dio.get<dynamic>('/v1/c',
+            options: Options(headers: {'Authenticate': 'Bearer expired'})),
+      ]).timeout(const Duration(seconds: 5));
+
+      expect(responses.map((r) => r.statusCode).toList(), [200, 200, 200]);
+      expect(refreshCount, 1);
+    });
   });
+}
+
+class _MockAdapter implements HttpClientAdapter {
+  _MockAdapter(this.handler);
+
+  final Future<ResponseBody> Function(RequestOptions options) handler;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) {
+    return handler(options);
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 final class _FakeLocalAuthDatasource implements LocalAuthDatasource {
