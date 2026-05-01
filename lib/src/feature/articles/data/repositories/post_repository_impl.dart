@@ -75,7 +75,8 @@ class PostRepositoryImpl implements PostRepository {
     required PostType type,
   }) async {
     final authorization = await _readAuthorization();
-    final response = await postRemoteDatasource.getPost(authorization, postId);
+    final response =
+        await postRemoteDatasource.getPost(authorization, postId, type);
     return response.toEntity();
   }
 

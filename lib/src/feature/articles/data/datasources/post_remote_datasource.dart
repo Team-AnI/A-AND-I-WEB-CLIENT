@@ -37,6 +37,7 @@ abstract class PostRemoteDatasource {
   Future<PostResponseDto> getPost(
     String? authorization,
     String postId,
+    PostType? type,
   );
 
   /// 서버의 게시글을 일부 수정합니다.
@@ -87,21 +88,23 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     String? status,
   ) async {
     final normalizedAuthorization = authorization?.trim();
+    final resolvedType = _requireType(type);
     final response = normalizedAuthorization == null ||
             normalizedAuthorization.isEmpty
-        ? await _client.listPosts(
+        ? await _listPublicPostsByType(
+            type: resolvedType,
             page: page,
             size: size,
             status:
                 status == null || status.isEmpty ? null : _toBlogStatus(status),
           )
-        : await _client.listPostsV2(
+        : await _listPostsByType(
             accessToken: _extractAccessToken(normalizedAuthorization),
+            type: resolvedType,
             page: page,
             size: size,
             status:
                 status == null || status.isEmpty ? null : _toBlogStatus(status),
-            type: _toBlogType(type),
           );
     return _toPostListResponseDto(response, type);
   }
@@ -141,14 +144,23 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
   }
 
   @override
-  Future<PostResponseDto> getPost(String? authorization, String postId) async {
+  Future<PostResponseDto> getPost(
+    String? authorization,
+    String postId,
+    PostType? type,
+  ) async {
     final normalizedAuthorization = authorization?.trim();
+    final resolvedType = _requireType(type);
     final response =
         normalizedAuthorization == null || normalizedAuthorization.isEmpty
-            ? await _client.getPost(postId: postId)
-            : await _client.getPostV2(
+            ? await _getPublicPostByType(
                 postId: postId,
+                type: resolvedType,
+              )
+            : await _getPostByType(
                 accessToken: _extractAccessToken(normalizedAuthorization),
+                postId: postId,
+                type: resolvedType,
               );
     return _toPostResponseDto(response);
   }
@@ -198,13 +210,111 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     int size,
     PostType? type,
   ) async {
-    final response = await _client.listMyDraftsV2(
+    final response = await _listMyDraftPostsByType(
       accessToken: _extractAccessToken(authorization),
+      type: _requireType(type),
       page: page,
       size: size,
-      type: _toBlogType(type),
     );
     return _toPostListResponseDto(response, type);
+  }
+
+  Future<blog_api.PagedPostResponse> _listPublicPostsByType({
+    required PostType type,
+    required int page,
+    required int size,
+    required blog_api.PostStatus? status,
+  }) {
+    return switch (type) {
+      PostType.blog => _client.listBlogs(
+          page: page,
+          size: size,
+          status: status,
+        ),
+      PostType.lecture => _client.listLectures(
+          page: page,
+          size: size,
+          status: status,
+        ),
+    };
+  }
+
+  Future<blog_api.PagedPostResponse> _listPostsByType({
+    required String accessToken,
+    required PostType type,
+    required int page,
+    required int size,
+    required blog_api.PostStatus? status,
+  }) {
+    return switch (type) {
+      PostType.blog => _client.listBlogs(
+          accessToken: accessToken,
+          page: page,
+          size: size,
+          status: status,
+        ),
+      PostType.lecture => _client.listLectures(
+          accessToken: accessToken,
+          page: page,
+          size: size,
+          status: status,
+        ),
+    };
+  }
+
+  Future<blog_api.PostResponse> _getPublicPostByType({
+    required String postId,
+    required PostType type,
+  }) {
+    return switch (type) {
+      PostType.blog => _client.getBlog(postId: postId),
+      PostType.lecture => _client.getLecture(postId: postId),
+    };
+  }
+
+  Future<blog_api.PostResponse> _getPostByType({
+    required String accessToken,
+    required String postId,
+    required PostType type,
+  }) {
+    return switch (type) {
+      PostType.blog => _client.getBlog(
+          postId: postId,
+          accessToken: accessToken,
+        ),
+      PostType.lecture => _client.getLecture(
+          postId: postId,
+          accessToken: accessToken,
+        ),
+    };
+  }
+
+  Future<blog_api.PagedPostResponse> _listMyDraftPostsByType({
+    required String accessToken,
+    required PostType type,
+    required int page,
+    required int size,
+  }) {
+    return switch (type) {
+      PostType.blog => _client.listMyBlogDrafts(
+          accessToken: accessToken,
+          page: page,
+          size: size,
+        ),
+      PostType.lecture => _client.listMyLectureDrafts(
+          accessToken: accessToken,
+          page: page,
+          size: size,
+        ),
+    };
+  }
+
+  PostType _requireType(PostType? type) {
+    if (type == null) {
+      throw ArgumentError(
+          'PostType is required because /v2/posts 조회 API는 deprecated 되었습니다.');
+    }
+    return type;
   }
 
   PostListResponseDto _toPostListResponseDto(
@@ -269,6 +379,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
   blog_api.PostStatus _toBlogStatus(String value) {
     return switch (value) {
       'Draft' => blog_api.PostStatus.draft,
+      'Scheduled' => blog_api.PostStatus.scheduled,
       'Published' => blog_api.PostStatus.published,
       'Deleted' => blog_api.PostStatus.deleted,
       _ => blog_api.PostStatus.draft,

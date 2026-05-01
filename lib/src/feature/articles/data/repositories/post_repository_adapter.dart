@@ -27,12 +27,11 @@ final class PostRepositoryAdapter implements PostRepository {
     PostType? type,
     String? status,
   }) async {
-    final response = await _client.listPostsV2(
-      accessToken: null,
+    final response = await _listPostsByType(
+      type: _requirePostType(type),
       page: page,
       size: size,
       status: _toBlogPostStatus(status),
-      type: _toBlogPostType(type),
     );
     return _toPostPage(response);
   }
@@ -73,9 +72,9 @@ final class PostRepositoryAdapter implements PostRepository {
     required String postId,
     required PostType type,
   }) async {
-    final response = await _client.getPostV2(
+    final response = await _getPostByType(
       postId: postId,
-      accessToken: null,
+      type: type,
     );
     return _toPost(response);
   }
@@ -137,13 +136,71 @@ final class PostRepositoryAdapter implements PostRepository {
     int size = 20,
     PostType? type,
   }) async {
-    final response = await _client.listMyDraftsV2(
+    final response = await _listMyDraftPostsByType(
       accessToken: await _resolveAccessToken(),
+      type: _requirePostType(type),
       page: page,
       size: size,
-      type: _toBlogPostType(type),
     );
     return _toPostPage(response);
+  }
+
+  Future<blog_api.PagedPostResponse> _listPostsByType({
+    required PostType type,
+    required int page,
+    required int size,
+    required blog_api.PostStatus? status,
+  }) {
+    return switch (type) {
+      PostType.blog => _client.listBlogs(
+          page: page,
+          size: size,
+          status: status,
+        ),
+      PostType.lecture => _client.listLectures(
+          page: page,
+          size: size,
+          status: status,
+        ),
+    };
+  }
+
+  Future<blog_api.PostResponse> _getPostByType({
+    required String postId,
+    required PostType type,
+  }) {
+    return switch (type) {
+      PostType.blog => _client.getBlog(postId: postId),
+      PostType.lecture => _client.getLecture(postId: postId),
+    };
+  }
+
+  Future<blog_api.PagedPostResponse> _listMyDraftPostsByType({
+    required String accessToken,
+    required PostType type,
+    required int page,
+    required int size,
+  }) {
+    return switch (type) {
+      PostType.blog => _client.listMyBlogDrafts(
+          accessToken: accessToken,
+          page: page,
+          size: size,
+        ),
+      PostType.lecture => _client.listMyLectureDrafts(
+          accessToken: accessToken,
+          page: page,
+          size: size,
+        ),
+    };
+  }
+
+  PostType _requirePostType(PostType? type) {
+    if (type == null) {
+      throw ArgumentError(
+          'PostType is required because /v2/posts 조회 API는 deprecated 되었습니다.');
+    }
+    return type;
   }
 
   Future<String> _resolveAccessToken() async {
@@ -187,6 +244,7 @@ blog_api.PostStatus? _toBlogPostStatus(String? status) {
   final normalizedStatus = status?.trim();
   return switch (normalizedStatus) {
     'Draft' => blog_api.PostStatus.draft,
+    'Scheduled' => blog_api.PostStatus.scheduled,
     'Published' => blog_api.PostStatus.published,
     'Deleted' => blog_api.PostStatus.deleted,
     _ => null,

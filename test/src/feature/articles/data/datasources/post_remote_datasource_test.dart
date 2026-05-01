@@ -187,7 +187,7 @@ void main() {
       expect(capturedPayload!['summary'], '');
     });
 
-    test('getDraftPosts는 /v2/posts/drafts/me 경로와 인증 헤더로 조회한다', () async {
+    test('getDraftPosts는 /v2/blogs/drafts/me 경로와 인증 헤더로 조회한다', () async {
       RequestOptions? capturedOptions;
 
       final dio = Dio()
@@ -217,12 +217,13 @@ void main() {
         );
 
       final datasource = PostRemoteDatasourceImpl(dio);
-      await datasource.getDraftPosts('Bearer access-token', 0, 20, null);
+      await datasource.getDraftPosts(
+          'Bearer access-token', 0, 20, PostType.blog);
 
       expect(capturedOptions, isNotNull);
       expect(
         capturedOptions!.uri,
-        Uri.parse('/v2/posts/drafts/me?page=0&size=20'),
+        Uri.parse('/v2/blogs/drafts/me?page=0&size=20'),
       );
       expect(capturedOptions!.method, 'GET');
       expect(capturedOptions!.headers['Authenticate'], 'Bearer access-token');
@@ -252,6 +253,7 @@ Map<String, dynamic> _responseJson() {
         },
       ],
       'status': 'Published',
+      'type': 'Blog',
       'createdAt': DateTime.utc(2026, 1, 1).toIso8601String(),
       'updatedAt': DateTime.utc(2026, 1, 1).toIso8601String(),
     },

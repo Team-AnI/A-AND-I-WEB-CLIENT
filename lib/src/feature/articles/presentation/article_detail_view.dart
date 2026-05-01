@@ -516,6 +516,8 @@ String _statusLabel(String status) {
       return '임시저장';
     case 'Published':
       return '게시됨';
+    case 'Scheduled':
+      return '예약됨';
     case 'Deleted':
       return '삭제됨';
     default:
@@ -529,6 +531,8 @@ Color _statusColor(String status) {
       return const Color(0xFF6B7280);
     case 'Deleted':
       return const Color(0xFFDC2626);
+    case 'Scheduled':
+      return const Color(0xFFF59E0B);
     case 'Published':
     default:
       return HomeTheme.primary;

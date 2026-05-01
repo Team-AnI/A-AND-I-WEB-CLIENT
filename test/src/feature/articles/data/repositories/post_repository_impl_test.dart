@@ -236,6 +236,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
   PostType? getDraftsType;
   String? getPostAuthorization;
   String? getPostId;
+  PostType? getPostType;
   String? patchPostId;
   String? deletePostId;
   String? createAuthorization;
@@ -318,9 +319,14 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
   }
 
   @override
-  Future<PostResponseDto> getPost(String? authorization, String postId) async {
+  Future<PostResponseDto> getPost(
+    String? authorization,
+    String postId,
+    PostType? type,
+  ) async {
     getPostAuthorization = authorization;
     getPostId = postId;
+    getPostType = type;
     return _samplePost(status: 'Published');
   }
 
