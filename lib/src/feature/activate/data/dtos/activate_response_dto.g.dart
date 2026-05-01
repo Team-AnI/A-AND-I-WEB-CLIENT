@@ -31,23 +31,27 @@ Map<String, dynamic> _$ActivateResponseDtoToJson(
 _ActivateResponseDataDto _$ActivateResponseDataDtoFromJson(
         Map<String, dynamic> json) =>
     _ActivateResponseDataDto(
-      success: json['success'] as bool? ?? false,
+      activated: json['activated'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ActivateResponseDataDtoToJson(
         _ActivateResponseDataDto instance) =>
     <String, dynamic>{
-      'success': instance.success,
+      'activated': instance.activated,
     };
 
 _ActivateErrorDto _$ActivateErrorDtoFromJson(Map<String, dynamic> json) =>
     _ActivateErrorDto(
-      code: json['code'] as String?,
+      code: (json['code'] as num?)?.toInt(),
       message: json['message'] as String?,
+      value: json['value'] as String?,
+      alert: json['alert'] as String?,
     );
 
 Map<String, dynamic> _$ActivateErrorDtoToJson(_ActivateErrorDto instance) =>
     <String, dynamic>{
       'code': instance.code,
       'message': instance.message,
+      'value': instance.value,
+      'alert': instance.alert,
     };

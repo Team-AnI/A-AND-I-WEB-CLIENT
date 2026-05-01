@@ -15,4 +15,3 @@ sealed class CourseListState with _$CourseListState {
     @Default('') String errorMsg,
   }) = _CourseListState;
 }
-

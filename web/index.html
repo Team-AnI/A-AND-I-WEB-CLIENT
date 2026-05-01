@@ -39,6 +39,22 @@
     <title>A&I</title>
     <link rel="manifest" href="manifest.json">
     <style>
+      @font-face {
+        font-family: 'Pretendard';
+        src: url('assets/assets/fonts/Pretendard-Regular.otf') format('opentype');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Pretendard';
+        src: url('assets/assets/fonts/Pretendard-Bold.otf') format('opentype');
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+
       html, body {
         margin: 0;
         padding: 0;
@@ -47,12 +63,14 @@
         overflow: hidden;
         position: fixed;
         inset: 0;
+        font-family: 'Pretendard', sans-serif;
       }
 
       body {
         /* iOS: Large Viewport Height 강제 (툴바 숨김 상태 기준) */
         height: 100lvh !important;
         max-height: 100lvh !important;
+        font-family: 'Pretendard', sans-serif;
       }
 
       /* Flutter 컨테이너 - 절대 위치로 전체 화면 강제 */
@@ -67,6 +85,7 @@
         width: 100vw !important;
         height: 100lvh !important;
         max-height: 100lvh !important;
+        font-family: 'Pretendard', sans-serif;
       }
     </style>
     <script>
@@ -114,8 +133,59 @@
         }, 1000);
       })();
     </script>
+    <script>
+      // 과거 Flutter 서비스워커/캐시가 남아 있으면 새 배포 반영이 지연될 수 있어 선제 정리한다.
+      window.__prepareFlutterAppLoad = async function() {
+        const flutterCachePrefixes = [
+          'flutter-app-cache',
+          'flutter-temp-cache',
+          'flutter-app-manifest',
+          'workbox',
+        ];
+
+        const shouldDeleteCache = (key) => {
+          if (!key) return false;
+          return flutterCachePrefixes.some((prefix) => key.startsWith(prefix));
+        };
+
+        if ('serviceWorker' in navigator) {
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(
+              registrations.map((registration) => registration.unregister()),
+            );
+          } catch (error) {
+            console.warn('[Flutter Cache Reset] service worker cleanup failed:', error);
+          }
+        }
+
+        if ('caches' in window) {
+          try {
+            const cacheKeys = await window.caches.keys();
+            await Promise.all(
+              cacheKeys
+                .filter(shouldDeleteCache)
+                .map((cacheKey) => window.caches.delete(cacheKey)),
+            );
+          } catch (error) {
+            console.warn('[Flutter Cache Reset] cache cleanup failed:', error);
+          }
+        }
+      };
+    </script>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    (async function() {
+      if (typeof window.__prepareFlutterAppLoad === 'function') {
+        await window.__prepareFlutterAppLoad();
+      }
+
+      const flutterBootstrapScript = document.createElement('script');
+      flutterBootstrapScript.src = `flutter_bootstrap.js?v=${Date.now()}`;
+      flutterBootstrapScript.async = true;
+      document.body.appendChild(flutterBootstrapScript);
+    })();
+  </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 import 'package:a_and_i_report_web_server/src/core/constants/api_url.dart';
 import 'package:a_and_i_report_web_server/src/core/providers/study_theme_provider.dart';
+import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
@@ -7,6 +8,7 @@ import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_vi
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/level.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_summary.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/report_type.dart';
+import 'package:a_and_i_report_web_server/src/feature/reports/ui/utils/report_progress.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_list_view_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +20,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 /// `report_list_view.html` 시안을 기반으로,
 /// 코스별/주차별 과제 목록을 표시합니다.
 class ReportListView extends ConsumerStatefulWidget {
-  const ReportListView({super.key});
+  const ReportListView({
+    super.key,
+    required this.courseSlug,
+  });
+
+  final String courseSlug;
 
   @override
   ConsumerState<ReportListView> createState() => _ReportListViewState();
@@ -29,7 +36,8 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(studyDarkModeProvider);
     final palette = _Palette.fromMode(isDarkMode);
-    final reportListStateAsync = ref.watch(reportListViewModelProvider);
+    final reportListStateAsync =
+        ref.watch(reportListViewModelProvider(widget.courseSlug));
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
@@ -42,7 +50,7 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
         child: SingleChildScrollView(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 896),
+              constraints: const BoxConstraints(maxWidth: 1080),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: isMobile ? 18 : 24),
                 child: Column(
@@ -66,79 +74,100 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
                         context.go('/course');
                       },
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(top: isMobile ? 34 : 48),
-                      child: Column(
-                        children: [
-                          Text(
-                            '목차',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: palette.textPrimary,
-                              fontSize: isMobile ? 36 : 50,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1.0,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            '학습 과정 및 과제 현황을 한눈에 확인하세요.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: palette.textMuted,
-                              fontSize: isMobile ? 15 : 18,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: isMobile ? 24 : 30),
-                    reportListStateAsync.when(
-                      data: (state) {
-                        if (state.errorMsg.isNotEmpty) {
-                          return _FeedbackCard(
-                            palette: palette,
-                            message: '과제 목록을 불러오지 못했습니다.',
-                          );
-                        }
-
-                        final sections = _buildSections(state.reports);
-                        if (sections.isEmpty) {
-                          return _FeedbackCard(
-                            palette: palette,
-                            message: '표시할 과제가 없습니다.',
-                          );
-                        }
-
-                        return Column(
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 896),
+                        child: Column(
                           children: [
-                            ...sections.map(
-                              (section) => Padding(
-                                padding: const EdgeInsets.only(bottom: 22),
-                                child: _CourseSectionCard(
-                                  palette: palette,
-                                  section: section,
-                                ),
+                            Padding(
+                              padding: EdgeInsets.only(top: isMobile ? 34 : 48),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    '목차',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: palette.textPrimary,
+                                      fontSize: isMobile ? 36 : 50,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -1.0,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    '학습 과정 및 과제 현황을 한눈에 확인하세요.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: palette.textMuted,
+                                      fontSize: isMobile ? 15 : 18,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(height: isMobile ? 56 : 80),
-                            _Footer(palette: palette),
-                            const SizedBox(height: 20),
+                            Column(
+                              children: [
+                                SizedBox(height: isMobile ? 24 : 30),
+                                reportListStateAsync.when(
+                                  data: (state) {
+                                    if (state.errorMsg.isNotEmpty) {
+                                      return _FeedbackCard(
+                                        palette: palette,
+                                        message: state.errorMsg,
+                                      );
+                                    }
+
+                                    final sections = _buildSections(
+                                      state.reports,
+                                    );
+                                    if (sections.isEmpty) {
+                                      return _FeedbackCard(
+                                        palette: palette,
+                                        message: '표시할 과제가 없습니다.',
+                                      );
+                                    }
+
+                                    return Column(
+                                      children: [
+                                        ...sections.map(
+                                          (section) => Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 22,
+                                            ),
+                                            child: _CourseSectionCard(
+                                              palette: palette,
+                                              section: section,
+                                              courseSlug: widget.courseSlug,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: isMobile ? 56 : 80),
+                                        _Footer(palette: palette),
+                                        const SizedBox(height: 20),
+                                      ],
+                                    );
+                                  },
+                                  loading: () => Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: isMobile ? 52 : 68,
+                                    ),
+                                    child: CircularProgressIndicator(
+                                      color: palette.textPrimary,
+                                    ),
+                                  ),
+                                  error: (error, _) => _FeedbackCard(
+                                    palette: palette,
+                                    message: ApiErrorMapper.map(
+                                      error,
+                                      fallbackMessage: '과제 목록을 불러오지 못했습니다.',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
-                        );
-                      },
-                      loading: () => Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: isMobile ? 52 : 68,
                         ),
-                        child: CircularProgressIndicator(
-                          color: palette.textPrimary,
-                        ),
-                      ),
-                      error: (_, __) => _FeedbackCard(
-                        palette: palette,
-                        message: '과제 목록을 불러오지 못했습니다.',
                       ),
                     ),
                   ],
@@ -152,6 +181,7 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
   }
 
   List<_CourseSection> _buildSections(List<ReportSummary> reports) {
+    final currentTime = DateTime.now().toUtc();
     final sorted = List<ReportSummary>.of(reports)
       ..sort((a, b) {
         final typeCompare = a.reportType.index.compareTo(b.reportType.index);
@@ -189,6 +219,10 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
         continue;
       }
 
+      final currentProgressWeek = findCurrentProgressWeek(
+        typeReports,
+        now: currentTime,
+      );
       final weekGroups = <_WeekGroup>[];
       final weeks = typeReports.map((report) => report.week).toSet().toList()
         ..sort();
@@ -196,17 +230,14 @@ class _ReportListViewState extends ConsumerState<ReportListView> {
       for (final week in weeks) {
         final weekReports = typeReports
             .where((report) => report.week == week)
-            .toList(growable: false)
+            .toList()
           ..sort((a, b) => a.seq.compareTo(b.seq));
-
-        final hasProgress = weekReports.any(
-          (report) => report.endAt.isAfter(DateTime.now().toUtc()),
-        );
 
         weekGroups.add(
           _WeekGroup(
             week: week,
-            isProgress: hasProgress,
+            isProgress:
+                currentProgressWeek != null && week == currentProgressWeek,
             reports: weekReports,
           ),
         );
@@ -356,14 +387,19 @@ class _TopNavAction extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: palette.textMuted,
-          ),
-        ],
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: palette.iconBackground,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: palette.border),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: palette.textMuted,
+        ),
       ),
     );
   }
@@ -373,10 +409,12 @@ class _CourseSectionCard extends StatelessWidget {
   const _CourseSectionCard({
     required this.palette,
     required this.section,
+    required this.courseSlug,
   });
 
   final _Palette palette;
   final _CourseSection section;
+  final String courseSlug;
 
   @override
   Widget build(BuildContext context) {
@@ -389,13 +427,6 @@ class _CourseSectionCard extends StatelessWidget {
         color: palette.cardBackground,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: palette.border),
-        boxShadow: [
-          BoxShadow(
-            color: palette.cardShadow,
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,11 +435,14 @@ class _CourseSectionCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 6,
-                height: isMobile ? 30 : 36,
-                decoration: BoxDecoration(
-                  color: palette.textPrimary,
-                  borderRadius: BorderRadius.circular(999),
+                padding: EdgeInsets.only(top: isMobile ? 5 : 7),
+                child: Container(
+                  width: 6,
+                  height: isMobile ? 30 : 36,
+                  decoration: BoxDecoration(
+                    color: palette.textPrimary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -437,24 +471,6 @@ class _CourseSectionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: palette.activeBadgeBackground,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: palette.activeBadgeBorder),
-                ),
-                child: Text(
-                  'ACTIVE',
-                  style: TextStyle(
-                    color: palette.activeBadgeText,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
             ],
           ),
           SizedBox(height: isMobile ? 22 : 30),
@@ -467,6 +483,7 @@ class _CourseSectionCard extends StatelessWidget {
                 child: _WeekGroupCard(
                   palette: palette,
                   weekGroup: weekGroup,
+                  courseSlug: courseSlug,
                 ),
               );
             }).toList(),
@@ -481,17 +498,35 @@ class _WeekGroupCard extends StatelessWidget {
   const _WeekGroupCard({
     required this.palette,
     required this.weekGroup,
+    required this.courseSlug,
   });
 
   final _Palette palette;
   final _WeekGroup weekGroup;
+  final String courseSlug;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dividerColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+      ),
+      child: ExpansionTile(
+        key: PageStorageKey<String>(
+          'week-group-$courseSlug-${weekGroup.week}',
+        ),
+        initiallyExpanded: weekGroup.isProgress,
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(top: 10),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        iconColor: palette.textMuted,
+        collapsedIconColor: palette.textMuted,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        collapsedShape:
+            const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        title: Row(
           children: [
             Text(
               '${weekGroup.week}주차 과제',
@@ -501,28 +536,32 @@ class _WeekGroupCard extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(width: 8),
-            _WeekStatusBadge(
-              isProgress: weekGroup.isProgress,
-              palette: palette,
-            ),
+            if (weekGroup.isProgress) ...[
+              const SizedBox(width: 8),
+              _WeekStatusBadge(
+                isProgress: weekGroup.isProgress,
+                palette: palette,
+              ),
+            ],
           ],
         ),
-        const SizedBox(height: 10),
-        Column(
-          children: weekGroup.reports.map((report) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: report == weekGroup.reports.last ? 0 : 8,
-              ),
-              child: _ReportTile(
-                palette: palette,
-                report: report,
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+        children: [
+          Column(
+            children: weekGroup.reports.map((report) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: report == weekGroup.reports.last ? 0 : 8,
+                ),
+                child: _ReportTile(
+                  palette: palette,
+                  report: report,
+                  courseSlug: courseSlug,
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -538,37 +577,21 @@ class _WeekStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isProgress) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: const Color(0xFFECFDF3),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFA7F3D0)),
-        ),
-        child: const Text(
-          '진행중',
-          style: TextStyle(
-            color: Color(0xFF059669),
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.7,
-          ),
-        ),
-      );
+    if (!isProgress) {
+      return const SizedBox.shrink();
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: palette.doneBadgeBackground,
+        color: const Color(0xFFECFDF3),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: palette.doneBadgeBorder),
+        border: Border.all(color: const Color(0xFFA7F3D0)),
       ),
-      child: Text(
-        '종료',
+      child: const Text(
+        '진행중',
         style: TextStyle(
-          color: palette.doneBadgeText,
+          color: Color(0xFF059669),
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.7,
@@ -582,19 +605,19 @@ class _ReportTile extends StatelessWidget {
   const _ReportTile({
     required this.palette,
     required this.report,
+    required this.courseSlug,
   });
 
   final _Palette palette;
   final ReportSummary report;
+  final String courseSlug;
 
   @override
   Widget build(BuildContext context) {
-    final bool isDone = report.endAt.isBefore(DateTime.now().toUtc());
-
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => context.go(
-        '/report/${report.id}?endAt=${report.endAt.millisecondsSinceEpoch}',
+        '/report/${report.id}?courseSlug=${Uri.encodeComponent(courseSlug)}&endAt=${report.endAt.millisecondsSinceEpoch}&week=${report.week}&seq=${report.seq}',
       ),
       child: Container(
         width: double.infinity,
@@ -656,13 +679,6 @@ class _ReportTile extends StatelessWidget {
               ],
             ),
             const SizedBox(width: 10),
-            Icon(
-              isDone
-                  ? Icons.check_circle_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: isDone ? const Color(0xFF22C55E) : palette.textMuted,
-              size: 22,
-            ),
           ],
         ),
       ),
@@ -685,13 +701,13 @@ class _ReportTile extends StatelessWidget {
   Color _difficultyColor(Level level) {
     switch (level) {
       case Level.LOW:
-        return const Color(0xFF6B7280);
-      case Level.MEDIUM:
         return const Color(0xFF16A34A);
+      case Level.MEDIUM:
+        return const Color(0xFFFACC15);
       case Level.HIGH:
-        return const Color(0xFF4B5563);
+        return const Color(0xFFDC2626);
       case Level.VERYHIGH:
-        return const Color(0xFFB91C1C);
+        return const Color(0xFFDC2626);
     }
   }
 }
@@ -832,9 +848,6 @@ class _Palette {
     required this.logoBackground,
     required this.logoForeground,
     required this.iconBackground,
-    required this.activeBadgeBackground,
-    required this.activeBadgeBorder,
-    required this.activeBadgeText,
     required this.doneBadgeBackground,
     required this.doneBadgeBorder,
     required this.doneBadgeText,
@@ -854,9 +867,6 @@ class _Palette {
   final Color logoBackground;
   final Color logoForeground;
   final Color iconBackground;
-  final Color activeBadgeBackground;
-  final Color activeBadgeBorder;
-  final Color activeBadgeText;
   final Color doneBadgeBackground;
   final Color doneBadgeBorder;
   final Color doneBadgeText;
@@ -878,9 +888,6 @@ class _Palette {
         logoBackground: Color(0xFFF5F5F5),
         logoForeground: Color(0xFF111111),
         iconBackground: Color(0xFF18181B),
-        activeBadgeBackground: Color(0xFF27272A),
-        activeBadgeBorder: Color(0xFF3F3F46),
-        activeBadgeText: Color(0xFFD4D4D8),
         doneBadgeBackground: Color(0xFF27272A),
         doneBadgeBorder: Color(0xFF3F3F46),
         doneBadgeText: Color(0xFFD4D4D8),
@@ -902,9 +909,6 @@ class _Palette {
       logoBackground: Color(0xFF111111),
       logoForeground: Color(0xFFFFFFFF),
       iconBackground: Color(0xFFFFFFFF),
-      activeBadgeBackground: Color(0xFFF4F4F5),
-      activeBadgeBorder: Color(0xFFE4E4E7),
-      activeBadgeText: Color(0xFF71717A),
       doneBadgeBackground: Color(0xFFF4F4F5),
       doneBadgeBorder: Color(0xFFE4E4E7),
       doneBadgeText: Color(0xFF71717A),

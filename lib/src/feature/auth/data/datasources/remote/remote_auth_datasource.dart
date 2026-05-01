@@ -13,22 +13,23 @@ abstract class RemoteAuthDatasource {
   /// 로그인 API
   ///
   ///
-  @POST("/v1/auth/login")
+  @POST("/v2/auth/login")
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })
   Future<LoginResponseDto> login(@Body() LoginRequestDto dto);
 
   /// 내 정보 조회 API
-  @GET("/v1/me")
+  @GET("/v2/me")
   Future<dynamic> getMyInfo(
-    @Header("Authorization") String authorization,
+    @Header("Authenticate") String authorization,
   );
 
   /// 토큰 갱신 API
-  @POST("/v1/auth/refresh")
+  @POST("/v2/auth/refresh")
   @Headers(<String, dynamic>{
     'Content-Type': 'application/json',
   })
-  Future<LoginResponseDto> refreshToken(@Body() Map<String, dynamic> body);
+  Future<RefreshTokenResponseDto> refreshToken(
+      @Body() Map<String, dynamic> body);
 }

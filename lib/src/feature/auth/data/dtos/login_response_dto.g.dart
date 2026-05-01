@@ -31,8 +31,8 @@ _LoginDataDto _$LoginDataDtoFromJson(Map<String, dynamic> json) =>
       accessToken: json['accessToken'] as String,
       refreshToken: json['refreshToken'] as String,
       expiresIn: (json['expiresIn'] as num).toInt(),
-      tokenType: json['tokenType'] as String,
-      forcePasswordChange: json['forcePasswordChange'] as bool,
+      tokenType: json['tokenType'] as String?,
+      forcePasswordChange: json['forcePasswordChange'] as bool? ?? false,
       user: LoginUserDto.fromJson(json['user'] as Map<String, dynamic>),
     );
 
@@ -51,6 +51,7 @@ _LoginUserDto _$LoginUserDtoFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       username: json['username'] as String,
       role: json['role'] as String,
+      publicCode: json['publicCode'] as String?,
     );
 
 Map<String, dynamic> _$LoginUserDtoToJson(_LoginUserDto instance) =>
@@ -58,15 +59,55 @@ Map<String, dynamic> _$LoginUserDtoToJson(_LoginUserDto instance) =>
       'id': instance.id,
       'username': instance.username,
       'role': instance.role,
+      'publicCode': instance.publicCode,
     };
 
 _ApiErrorDto _$ApiErrorDtoFromJson(Map<String, dynamic> json) => _ApiErrorDto(
-      code: json['code'] as String?,
+      code: (json['code'] as num?)?.toInt(),
       message: json['message'] as String?,
+      value: json['value'] as String?,
+      alert: json['alert'] as String?,
     );
 
 Map<String, dynamic> _$ApiErrorDtoToJson(_ApiErrorDto instance) =>
     <String, dynamic>{
       'code': instance.code,
       'message': instance.message,
+      'value': instance.value,
+      'alert': instance.alert,
+    };
+
+_RefreshTokenResponseDto _$RefreshTokenResponseDtoFromJson(
+        Map<String, dynamic> json) =>
+    _RefreshTokenResponseDto(
+      success: json['success'] as bool,
+      data: json['data'] == null
+          ? null
+          : RefreshTokenDataDto.fromJson(json['data'] as Map<String, dynamic>),
+      error: json['error'] == null
+          ? null
+          : ApiErrorDto.fromJson(json['error'] as Map<String, dynamic>),
+      timestamp: json['timestamp'] as String?,
+    );
+
+Map<String, dynamic> _$RefreshTokenResponseDtoToJson(
+        _RefreshTokenResponseDto instance) =>
+    <String, dynamic>{
+      'success': instance.success,
+      'data': instance.data,
+      'error': instance.error,
+      'timestamp': instance.timestamp,
+    };
+
+_RefreshTokenDataDto _$RefreshTokenDataDtoFromJson(Map<String, dynamic> json) =>
+    _RefreshTokenDataDto(
+      accessToken: json['accessToken'] as String,
+      expiresIn: (json['expiresIn'] as num).toInt(),
+    );
+
+Map<String, dynamic> _$RefreshTokenDataDtoToJson(
+        _RefreshTokenDataDto instance) =>
+    <String, dynamic>{
+      'accessToken': instance.accessToken,
+      'expiresIn': instance.expiresIn,
     };

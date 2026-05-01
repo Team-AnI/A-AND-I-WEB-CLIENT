@@ -8,6 +8,7 @@ import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/p
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_page.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/repositories/post_repository.dart';
 import 'package:dio/dio.dart';
 
@@ -29,9 +30,17 @@ class PostRepositoryImpl implements PostRepository {
   Future<PostPage> getPosts({
     int page = 0,
     int size = 20,
+    PostType? type,
     String? status,
   }) async {
-    final response = await postRemoteDatasource.getPosts(page, size, status);
+    final authorization = await _readAuthorization();
+    final response = await postRemoteDatasource.getPosts(
+      authorization,
+      page,
+      size,
+      type,
+      status,
+    );
     return response.toEntity();
   }
 
@@ -48,6 +57,7 @@ class PostRepositoryImpl implements PostRepository {
       authorization,
       payload.title,
       payload.contentMarkdown,
+      payload.type,
       payload.summary,
       payload.authorId,
       payload.authorNickname,
@@ -62,8 +72,10 @@ class PostRepositoryImpl implements PostRepository {
   @override
   Future<Post> getPost({
     required String postId,
+    required PostType type,
   }) async {
-    final response = await postRemoteDatasource.getPost(postId);
+    final authorization = await _readAuthorization();
+    final response = await postRemoteDatasource.getPost(authorization, postId);
     return response.toEntity();
   }
 
@@ -80,6 +92,7 @@ class PostRepositoryImpl implements PostRepository {
     final response = await postRemoteDatasource.patchPost(
       authorization,
       postId,
+      payload.type,
       payload.title,
       payload.contentMarkdown,
       payload.summary,
@@ -108,6 +121,7 @@ class PostRepositoryImpl implements PostRepository {
         null,
         null,
         null,
+        null,
         'Deleted',
         const <PostAuthor>[],
         null,
@@ -119,21 +133,31 @@ class PostRepositoryImpl implements PostRepository {
   Future<PostPage> getDraftPosts({
     int page = 0,
     int size = 20,
+    PostType? type,
   }) async {
     final authorization = await _resolveAuthorization();
     final response = await postRemoteDatasource.getDraftPosts(
       authorization,
       page,
       size,
+      type,
     );
     return response.toEntity();
   }
 
   Future<String> _resolveAuthorization() async {
+    final authorization = await _readAuthorization();
+    if (authorization == null || authorization.isEmpty) {
+      throw Exception('로그인이 필요합니다.');
+    }
+    return authorization;
+  }
+
+  Future<String?> _readAuthorization() async {
     final token = await localAuthDatasource.getUserToken();
     final normalizedToken = token?.trim();
     if (normalizedToken == null || normalizedToken.isEmpty) {
-      throw Exception('로그인이 필요합니다.');
+      return null;
     }
     if (normalizedToken.toLowerCase().startsWith('bearer ')) {
       return normalizedToken;
@@ -176,6 +200,7 @@ extension on PostResponseDto {
   Post toEntity() {
     return Post(
       id: id,
+      type: postTypeFromApiValue(type),
       title: title,
       contentMarkdown: contentMarkdown,
       summary: summary,

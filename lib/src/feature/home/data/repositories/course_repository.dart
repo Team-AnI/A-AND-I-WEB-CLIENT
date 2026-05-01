@@ -1,6 +1,7 @@
+import 'package:aandi_api_endpoints/aandi_api_endpoints.dart';
 import 'package:dio/dio.dart' hide Headers;
 import 'package:retrofit/retrofit.dart';
-import '../entities/course.dart';
+import '../dtos/course_response_dto.dart';
 
 part 'course_repository.g.dart';
 
@@ -15,20 +16,17 @@ part 'course_repository.g.dart';
 abstract class CourseRepository {
   factory CourseRepository(Dio dio, {String baseUrl}) = _CourseRepository;
 
-  @GET("/v1/course/{courseSlug}")
-  Future<Course> getCourseBySlug(
+  @GET(AandiApiEndpointTemplate.courseBySlug)
+  Future<CourseDetailResponseDto> getCourseBySlugFromCourses(
     @Header("Authorization") String authorization,
     @Path("courseSlug") String courseSlug,
   );
 
-  @GET("/v1/courses/{courseSlug}")
-  Future<Course> getCourseBySlugFromCourses(
+  @GET(AandiApiEndpointTemplate.courses)
+  Future<CourseListResponseDto> getCourses(
     @Header("Authorization") String authorization,
-    @Path("courseSlug") String courseSlug,
-  );
-
-  @GET("/v1/courses")
-  Future<List<Course>> getCourses(
-    @Header("Authorization") String authorization,
+    @Query("status") String? status,
+    @Query("phase") String? phase,
+    @Query("track") String? track,
   );
 }

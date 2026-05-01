@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/collaborator_lookup_user.dart';
@@ -12,7 +13,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ArticleConfirmView extends ConsumerStatefulWidget {
-  const ArticleConfirmView({super.key});
+  const ArticleConfirmView({
+    super.key,
+    this.postType = PostType.blog,
+    this.listPath = '/articles',
+  });
+
+  final PostType postType;
+  final String listPath;
 
   @override
   ConsumerState<ArticleConfirmView> createState() => ArticleConfirmViewState();
@@ -28,6 +36,11 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
   @override
   void initState() {
     super.initState();
+    Future<void>.microtask(() {
+      ref.read(articleWriteViewModelProvider.notifier).prepareForRoute(
+            widget.postType,
+          );
+    });
     final composeState = ref.read(articleWriteViewModelProvider);
     summaryController = TextEditingController(text: composeState.summary);
     collaboratorCodeController = TextEditingController();
@@ -53,12 +66,18 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
       );
     }
 
+    final composeState = ref.watch(articleWriteViewModelProvider);
     final canManageArticles = canManageArticlesWithRole(userState.resolvedRole);
-    if (!canManageArticles) {
-      return const _ArticleConfirmPermissionDeniedView();
+    final currentUserId = userState.userId?.trim();
+    final isEditingOwnPost = composeState.postId.trim().isNotEmpty &&
+        currentUserId != null &&
+        currentUserId.isNotEmpty &&
+        currentUserId == composeState.editingAuthorId.trim();
+    if (!canManageArticles && !isEditingOwnPost) {
+      return _ArticleConfirmPermissionDeniedView(listPath: widget.listPath);
     }
 
-    final composeState = ref.watch(articleWriteViewModelProvider);
+    final currentPostType = composeState.postType;
     final isEditingPublished = composeState.postId.trim().isNotEmpty &&
         composeState.editingPostStatus.trim().toLowerCase() == 'published';
     final width = MediaQuery.of(context).size.width;
@@ -68,6 +87,10 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
     final outerHorizontal = isMobile ? 14.0 : (isTablet ? 22.0 : 32.0);
     final contentHorizontal = isMobile ? 6.0 : (isTablet ? 10.0 : 20.0);
     final topBottom = isMobile ? 18.0 : (isTablet ? 30.0 : 40.0);
+    final contentLabel = currentPostType == PostType.lecture ? '강의자료' : '포스트';
+    final settingsLabel = currentPostType == PostType.lecture
+        ? 'LECTURE SETTINGS'
+        : 'PUBLISH SETTINGS';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -87,7 +110,9 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                       Column(
                         children: [
                           Text(
-                            isEditingPublished ? '포스트 수정 설정' : '포스트 출간 설정',
+                            isEditingPublished
+                                ? '$contentLabel 수정 설정'
+                                : '$contentLabel 출간 설정',
                             style: TextStyle(
                               fontSize: isMobile ? 28 : (isTablet ? 32 : 34),
                               fontWeight: FontWeight.w800,
@@ -97,7 +122,7 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'PUBLISH SETTINGS',
+                            settingsLabel,
                             style: TextStyle(
                               fontSize: 11,
                               color: Color(0xFF9CA3AF),
@@ -108,6 +133,14 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                         ],
                       ),
                       SizedBox(height: isMobile ? 26 : (isTablet ? 40 : 56)),
+                      _PostTypeSelectorSection(
+                        selectedType: currentPostType,
+                        isMobile: isMobile,
+                        onChanged: (type) => ref
+                            .read(articleWriteViewModelProvider.notifier)
+                            .setPostType(type),
+                      ),
+                      SizedBox(height: isMobile ? 24 : 30),
                       ConfirmPreviewSection(
                         summaryController: summaryController,
                         collaboratorCodeController: collaboratorCodeController,
@@ -141,7 +174,8 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                               : CrossAxisAlignment.center,
                           children: [
                             TextButton(
-                              onPressed: () => context.go('/articles/write'),
+                              onPressed: () =>
+                                  context.go(currentPostType.writePath),
                               style: TextButton.styleFrom(
                                 backgroundColor: const Color(0xFFF3F4F6),
                                 foregroundColor: const Color(0xFF6B7280),
@@ -270,14 +304,14 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
   }
 
   Future<void> onTapPublish(BuildContext context) async {
-    ref
-        .read(articleWriteViewModelProvider.notifier)
-        .setSummary(summaryController.text);
+    final summary = summaryController.text;
+    ref.read(articleWriteViewModelProvider.notifier).setSummary(summary);
     final composeState = ref.read(articleWriteViewModelProvider);
     final success =
         await ref.read(articleWriteViewModelProvider.notifier).publish(
               title: composeState.title,
               contentMarkdown: composeState.contentMarkdown,
+              summary: summary,
             );
 
     if (!context.mounted) {
@@ -294,18 +328,18 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
     }
 
     _showMessage(context, nextState.successMsg);
-    context.go('/articles');
+    context.go(nextState.postType.listPath);
   }
 
   Future<void> onTapSaveDraft(BuildContext context) async {
-    ref
-        .read(articleWriteViewModelProvider.notifier)
-        .setSummary(summaryController.text);
+    final summary = summaryController.text;
+    ref.read(articleWriteViewModelProvider.notifier).setSummary(summary);
     final composeState = ref.read(articleWriteViewModelProvider);
     final success =
         await ref.read(articleWriteViewModelProvider.notifier).saveDraft(
               title: composeState.title,
               contentMarkdown: composeState.contentMarkdown,
+              summary: summary,
             );
 
     if (!context.mounted) {
@@ -800,6 +834,89 @@ class ConfirmPreviewSection extends StatelessWidget {
   }
 }
 
+class _PostTypeSelectorSection extends StatelessWidget {
+  const _PostTypeSelectorSection({
+    required this.selectedType,
+    required this.isMobile,
+    required this.onChanged,
+  });
+
+  final PostType selectedType;
+  final bool isMobile;
+  final ValueChanged<PostType> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const ConfirmSectionTitle(
+          title: '00. 게시글 종류',
+        ),
+        SizedBox(height: isMobile ? 16 : 20),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: PostType.values
+                .map(
+                  (type) => Expanded(
+                    child: _PostTypeSelectorButton(
+                      label: type.label,
+                      selected: selectedType == type,
+                      onTap: () => onChanged(type),
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PostTypeSelectorButton extends StatelessWidget {
+  const _PostTypeSelectorButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: selected
+              ? Border.all(color: const Color(0xFFE5E7EB))
+              : Border.all(color: Colors.transparent),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: selected ? const Color(0xFF111827) : const Color(0xFF6B7280),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CollaboratorAvatar extends StatelessWidget {
   const _CollaboratorAvatar({
     required this.profileImageUrl,
@@ -886,7 +1003,11 @@ class ConfirmSectionTitle extends StatelessWidget {
 }
 
 class _ArticleConfirmPermissionDeniedView extends StatelessWidget {
-  const _ArticleConfirmPermissionDeniedView();
+  const _ArticleConfirmPermissionDeniedView({
+    required this.listPath,
+  });
+
+  final String listPath;
 
   @override
   Widget build(BuildContext context) {
@@ -907,7 +1028,7 @@ class _ArticleConfirmPermissionDeniedView extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: () => context.go('/articles'),
+                onPressed: () => context.go(listPath),
                 child: const Text('목록으로 이동'),
               ),
             ],

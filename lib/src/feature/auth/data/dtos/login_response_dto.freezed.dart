@@ -309,7 +309,6 @@ class _LoginResponseDto implements LoginResponseDto {
   factory _LoginResponseDto.fromJson(Map<String, dynamic> json) =>
       _$LoginResponseDtoFromJson(json);
 
-  /// 인증에 성공하여 발급된 액세스 토큰 (JWT 등)
   @override
   final bool success;
   @override
@@ -448,7 +447,7 @@ mixin _$LoginDataDto {
   String get accessToken;
   String get refreshToken;
   int get expiresIn;
-  String get tokenType;
+  String? get tokenType;
   bool get forcePasswordChange;
   LoginUserDto get user;
 
@@ -502,7 +501,7 @@ abstract mixin class $LoginDataDtoCopyWith<$Res> {
       {String accessToken,
       String refreshToken,
       int expiresIn,
-      String tokenType,
+      String? tokenType,
       bool forcePasswordChange,
       LoginUserDto user});
 
@@ -524,7 +523,7 @@ class _$LoginDataDtoCopyWithImpl<$Res> implements $LoginDataDtoCopyWith<$Res> {
     Object? accessToken = null,
     Object? refreshToken = null,
     Object? expiresIn = null,
-    Object? tokenType = null,
+    Object? tokenType = freezed,
     Object? forcePasswordChange = null,
     Object? user = null,
   }) {
@@ -541,10 +540,10 @@ class _$LoginDataDtoCopyWithImpl<$Res> implements $LoginDataDtoCopyWith<$Res> {
           ? _self.expiresIn
           : expiresIn // ignore: cast_nullable_to_non_nullable
               as int,
-      tokenType: null == tokenType
+      tokenType: freezed == tokenType
           ? _self.tokenType
           : tokenType // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       forcePasswordChange: null == forcePasswordChange
           ? _self.forcePasswordChange
           : forcePasswordChange // ignore: cast_nullable_to_non_nullable
@@ -661,7 +660,7 @@ extension LoginDataDtoPatterns on LoginDataDto {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(String accessToken, String refreshToken, int expiresIn,
-            String tokenType, bool forcePasswordChange, LoginUserDto user)?
+            String? tokenType, bool forcePasswordChange, LoginUserDto user)?
         $default, {
     required TResult orElse(),
   }) {
@@ -691,7 +690,7 @@ extension LoginDataDtoPatterns on LoginDataDto {
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
     TResult Function(String accessToken, String refreshToken, int expiresIn,
-            String tokenType, bool forcePasswordChange, LoginUserDto user)
+            String? tokenType, bool forcePasswordChange, LoginUserDto user)
         $default,
   ) {
     final _that = this;
@@ -719,7 +718,7 @@ extension LoginDataDtoPatterns on LoginDataDto {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(String accessToken, String refreshToken, int expiresIn,
-            String tokenType, bool forcePasswordChange, LoginUserDto user)?
+            String? tokenType, bool forcePasswordChange, LoginUserDto user)?
         $default,
   ) {
     final _that = this;
@@ -740,8 +739,8 @@ class _LoginDataDto implements LoginDataDto {
       {required this.accessToken,
       required this.refreshToken,
       required this.expiresIn,
-      required this.tokenType,
-      required this.forcePasswordChange,
+      this.tokenType,
+      this.forcePasswordChange = false,
       required this.user});
   factory _LoginDataDto.fromJson(Map<String, dynamic> json) =>
       _$LoginDataDtoFromJson(json);
@@ -753,8 +752,9 @@ class _LoginDataDto implements LoginDataDto {
   @override
   final int expiresIn;
   @override
-  final String tokenType;
+  final String? tokenType;
   @override
+  @JsonKey()
   final bool forcePasswordChange;
   @override
   final LoginUserDto user;
@@ -815,7 +815,7 @@ abstract mixin class _$LoginDataDtoCopyWith<$Res>
       {String accessToken,
       String refreshToken,
       int expiresIn,
-      String tokenType,
+      String? tokenType,
       bool forcePasswordChange,
       LoginUserDto user});
 
@@ -839,7 +839,7 @@ class __$LoginDataDtoCopyWithImpl<$Res>
     Object? accessToken = null,
     Object? refreshToken = null,
     Object? expiresIn = null,
-    Object? tokenType = null,
+    Object? tokenType = freezed,
     Object? forcePasswordChange = null,
     Object? user = null,
   }) {
@@ -856,10 +856,10 @@ class __$LoginDataDtoCopyWithImpl<$Res>
           ? _self.expiresIn
           : expiresIn // ignore: cast_nullable_to_non_nullable
               as int,
-      tokenType: null == tokenType
+      tokenType: freezed == tokenType
           ? _self.tokenType
           : tokenType // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       forcePasswordChange: null == forcePasswordChange
           ? _self.forcePasswordChange
           : forcePasswordChange // ignore: cast_nullable_to_non_nullable
@@ -887,6 +887,7 @@ mixin _$LoginUserDto {
   String get id;
   String get username;
   String get role;
+  String? get publicCode;
 
   /// Create a copy of LoginUserDto
   /// with the given fields replaced by the non-null parameter values.
@@ -907,16 +908,18 @@ mixin _$LoginUserDto {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.username, username) ||
                 other.username == username) &&
-            (identical(other.role, role) || other.role == role));
+            (identical(other.role, role) || other.role == role) &&
+            (identical(other.publicCode, publicCode) ||
+                other.publicCode == publicCode));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, username, role);
+  int get hashCode => Object.hash(runtimeType, id, username, role, publicCode);
 
   @override
   String toString() {
-    return 'LoginUserDto(id: $id, username: $username, role: $role)';
+    return 'LoginUserDto(id: $id, username: $username, role: $role, publicCode: $publicCode)';
   }
 }
 
@@ -926,7 +929,7 @@ abstract mixin class $LoginUserDtoCopyWith<$Res> {
           LoginUserDto value, $Res Function(LoginUserDto) _then) =
       _$LoginUserDtoCopyWithImpl;
   @useResult
-  $Res call({String id, String username, String role});
+  $Res call({String id, String username, String role, String? publicCode});
 }
 
 /// @nodoc
@@ -944,6 +947,7 @@ class _$LoginUserDtoCopyWithImpl<$Res> implements $LoginUserDtoCopyWith<$Res> {
     Object? id = null,
     Object? username = null,
     Object? role = null,
+    Object? publicCode = freezed,
   }) {
     return _then(_self.copyWith(
       id: null == id
@@ -958,6 +962,10 @@ class _$LoginUserDtoCopyWithImpl<$Res> implements $LoginUserDtoCopyWith<$Res> {
           ? _self.role
           : role // ignore: cast_nullable_to_non_nullable
               as String,
+      publicCode: freezed == publicCode
+          ? _self.publicCode
+          : publicCode // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -1055,13 +1063,15 @@ extension LoginUserDtoPatterns on LoginUserDto {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(String id, String username, String role)? $default, {
+    TResult Function(
+            String id, String username, String role, String? publicCode)?
+        $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _LoginUserDto() when $default != null:
-        return $default(_that.id, _that.username, _that.role);
+        return $default(_that.id, _that.username, _that.role, _that.publicCode);
       case _:
         return orElse();
     }
@@ -1082,12 +1092,14 @@ extension LoginUserDtoPatterns on LoginUserDto {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(String id, String username, String role) $default,
+    TResult Function(
+            String id, String username, String role, String? publicCode)
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _LoginUserDto():
-        return $default(_that.id, _that.username, _that.role);
+        return $default(_that.id, _that.username, _that.role, _that.publicCode);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -1107,12 +1119,14 @@ extension LoginUserDtoPatterns on LoginUserDto {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(String id, String username, String role)? $default,
+    TResult? Function(
+            String id, String username, String role, String? publicCode)?
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _LoginUserDto() when $default != null:
-        return $default(_that.id, _that.username, _that.role);
+        return $default(_that.id, _that.username, _that.role, _that.publicCode);
       case _:
         return null;
     }
@@ -1123,7 +1137,10 @@ extension LoginUserDtoPatterns on LoginUserDto {
 @JsonSerializable()
 class _LoginUserDto implements LoginUserDto {
   const _LoginUserDto(
-      {required this.id, required this.username, required this.role});
+      {required this.id,
+      required this.username,
+      required this.role,
+      this.publicCode});
   factory _LoginUserDto.fromJson(Map<String, dynamic> json) =>
       _$LoginUserDtoFromJson(json);
 
@@ -1133,6 +1150,8 @@ class _LoginUserDto implements LoginUserDto {
   final String username;
   @override
   final String role;
+  @override
+  final String? publicCode;
 
   /// Create a copy of LoginUserDto
   /// with the given fields replaced by the non-null parameter values.
@@ -1157,16 +1176,18 @@ class _LoginUserDto implements LoginUserDto {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.username, username) ||
                 other.username == username) &&
-            (identical(other.role, role) || other.role == role));
+            (identical(other.role, role) || other.role == role) &&
+            (identical(other.publicCode, publicCode) ||
+                other.publicCode == publicCode));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, username, role);
+  int get hashCode => Object.hash(runtimeType, id, username, role, publicCode);
 
   @override
   String toString() {
-    return 'LoginUserDto(id: $id, username: $username, role: $role)';
+    return 'LoginUserDto(id: $id, username: $username, role: $role, publicCode: $publicCode)';
   }
 }
 
@@ -1178,7 +1199,7 @@ abstract mixin class _$LoginUserDtoCopyWith<$Res>
       __$LoginUserDtoCopyWithImpl;
   @override
   @useResult
-  $Res call({String id, String username, String role});
+  $Res call({String id, String username, String role, String? publicCode});
 }
 
 /// @nodoc
@@ -1197,6 +1218,7 @@ class __$LoginUserDtoCopyWithImpl<$Res>
     Object? id = null,
     Object? username = null,
     Object? role = null,
+    Object? publicCode = freezed,
   }) {
     return _then(_LoginUserDto(
       id: null == id
@@ -1211,14 +1233,20 @@ class __$LoginUserDtoCopyWithImpl<$Res>
           ? _self.role
           : role // ignore: cast_nullable_to_non_nullable
               as String,
+      publicCode: freezed == publicCode
+          ? _self.publicCode
+          : publicCode // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
 
 /// @nodoc
 mixin _$ApiErrorDto {
-  String? get code;
+  int? get code;
   String? get message;
+  String? get value;
+  String? get alert;
 
   /// Create a copy of ApiErrorDto
   /// with the given fields replaced by the non-null parameter values.
@@ -1236,16 +1264,18 @@ mixin _$ApiErrorDto {
         (other.runtimeType == runtimeType &&
             other is ApiErrorDto &&
             (identical(other.code, code) || other.code == code) &&
-            (identical(other.message, message) || other.message == message));
+            (identical(other.message, message) || other.message == message) &&
+            (identical(other.value, value) || other.value == value) &&
+            (identical(other.alert, alert) || other.alert == alert));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, code, message);
+  int get hashCode => Object.hash(runtimeType, code, message, value, alert);
 
   @override
   String toString() {
-    return 'ApiErrorDto(code: $code, message: $message)';
+    return 'ApiErrorDto(code: $code, message: $message, value: $value, alert: $alert)';
   }
 }
 
@@ -1255,7 +1285,7 @@ abstract mixin class $ApiErrorDtoCopyWith<$Res> {
           ApiErrorDto value, $Res Function(ApiErrorDto) _then) =
       _$ApiErrorDtoCopyWithImpl;
   @useResult
-  $Res call({String? code, String? message});
+  $Res call({int? code, String? message, String? value, String? alert});
 }
 
 /// @nodoc
@@ -1272,15 +1302,25 @@ class _$ApiErrorDtoCopyWithImpl<$Res> implements $ApiErrorDtoCopyWith<$Res> {
   $Res call({
     Object? code = freezed,
     Object? message = freezed,
+    Object? value = freezed,
+    Object? alert = freezed,
   }) {
     return _then(_self.copyWith(
       code: freezed == code
           ? _self.code
           : code // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as int?,
       message: freezed == message
           ? _self.message
           : message // ignore: cast_nullable_to_non_nullable
+              as String?,
+      value: freezed == value
+          ? _self.value
+          : value // ignore: cast_nullable_to_non_nullable
+              as String?,
+      alert: freezed == alert
+          ? _self.alert
+          : alert // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }
@@ -1379,13 +1419,14 @@ extension ApiErrorDtoPatterns on ApiErrorDto {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(String? code, String? message)? $default, {
+    TResult Function(int? code, String? message, String? value, String? alert)?
+        $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _ApiErrorDto() when $default != null:
-        return $default(_that.code, _that.message);
+        return $default(_that.code, _that.message, _that.value, _that.alert);
       case _:
         return orElse();
     }
@@ -1406,12 +1447,13 @@ extension ApiErrorDtoPatterns on ApiErrorDto {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(String? code, String? message) $default,
+    TResult Function(int? code, String? message, String? value, String? alert)
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ApiErrorDto():
-        return $default(_that.code, _that.message);
+        return $default(_that.code, _that.message, _that.value, _that.alert);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -1431,12 +1473,13 @@ extension ApiErrorDtoPatterns on ApiErrorDto {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(String? code, String? message)? $default,
+    TResult? Function(int? code, String? message, String? value, String? alert)?
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ApiErrorDto() when $default != null:
-        return $default(_that.code, _that.message);
+        return $default(_that.code, _that.message, _that.value, _that.alert);
       case _:
         return null;
     }
@@ -1446,14 +1489,18 @@ extension ApiErrorDtoPatterns on ApiErrorDto {
 /// @nodoc
 @JsonSerializable()
 class _ApiErrorDto implements ApiErrorDto {
-  const _ApiErrorDto({this.code, this.message});
+  const _ApiErrorDto({this.code, this.message, this.value, this.alert});
   factory _ApiErrorDto.fromJson(Map<String, dynamic> json) =>
       _$ApiErrorDtoFromJson(json);
 
   @override
-  final String? code;
+  final int? code;
   @override
   final String? message;
+  @override
+  final String? value;
+  @override
+  final String? alert;
 
   /// Create a copy of ApiErrorDto
   /// with the given fields replaced by the non-null parameter values.
@@ -1476,16 +1523,18 @@ class _ApiErrorDto implements ApiErrorDto {
         (other.runtimeType == runtimeType &&
             other is _ApiErrorDto &&
             (identical(other.code, code) || other.code == code) &&
-            (identical(other.message, message) || other.message == message));
+            (identical(other.message, message) || other.message == message) &&
+            (identical(other.value, value) || other.value == value) &&
+            (identical(other.alert, alert) || other.alert == alert));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, code, message);
+  int get hashCode => Object.hash(runtimeType, code, message, value, alert);
 
   @override
   String toString() {
-    return 'ApiErrorDto(code: $code, message: $message)';
+    return 'ApiErrorDto(code: $code, message: $message, value: $value, alert: $alert)';
   }
 }
 
@@ -1497,7 +1546,7 @@ abstract mixin class _$ApiErrorDtoCopyWith<$Res>
       __$ApiErrorDtoCopyWithImpl;
   @override
   @useResult
-  $Res call({String? code, String? message});
+  $Res call({int? code, String? message, String? value, String? alert});
 }
 
 /// @nodoc
@@ -1514,16 +1563,779 @@ class __$ApiErrorDtoCopyWithImpl<$Res> implements _$ApiErrorDtoCopyWith<$Res> {
   $Res call({
     Object? code = freezed,
     Object? message = freezed,
+    Object? value = freezed,
+    Object? alert = freezed,
   }) {
     return _then(_ApiErrorDto(
       code: freezed == code
           ? _self.code
           : code // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as int?,
       message: freezed == message
           ? _self.message
           : message // ignore: cast_nullable_to_non_nullable
               as String?,
+      value: freezed == value
+          ? _self.value
+          : value // ignore: cast_nullable_to_non_nullable
+              as String?,
+      alert: freezed == alert
+          ? _self.alert
+          : alert // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+mixin _$RefreshTokenResponseDto {
+  bool get success;
+  RefreshTokenDataDto? get data;
+  ApiErrorDto? get error;
+  String? get timestamp;
+
+  /// Create a copy of RefreshTokenResponseDto
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $RefreshTokenResponseDtoCopyWith<RefreshTokenResponseDto> get copyWith =>
+      _$RefreshTokenResponseDtoCopyWithImpl<RefreshTokenResponseDto>(
+          this as RefreshTokenResponseDto, _$identity);
+
+  /// Serializes this RefreshTokenResponseDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is RefreshTokenResponseDto &&
+            (identical(other.success, success) || other.success == success) &&
+            (identical(other.data, data) || other.data == data) &&
+            (identical(other.error, error) || other.error == error) &&
+            (identical(other.timestamp, timestamp) ||
+                other.timestamp == timestamp));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, success, data, error, timestamp);
+
+  @override
+  String toString() {
+    return 'RefreshTokenResponseDto(success: $success, data: $data, error: $error, timestamp: $timestamp)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $RefreshTokenResponseDtoCopyWith<$Res> {
+  factory $RefreshTokenResponseDtoCopyWith(RefreshTokenResponseDto value,
+          $Res Function(RefreshTokenResponseDto) _then) =
+      _$RefreshTokenResponseDtoCopyWithImpl;
+  @useResult
+  $Res call(
+      {bool success,
+      RefreshTokenDataDto? data,
+      ApiErrorDto? error,
+      String? timestamp});
+
+  $RefreshTokenDataDtoCopyWith<$Res>? get data;
+  $ApiErrorDtoCopyWith<$Res>? get error;
+}
+
+/// @nodoc
+class _$RefreshTokenResponseDtoCopyWithImpl<$Res>
+    implements $RefreshTokenResponseDtoCopyWith<$Res> {
+  _$RefreshTokenResponseDtoCopyWithImpl(this._self, this._then);
+
+  final RefreshTokenResponseDto _self;
+  final $Res Function(RefreshTokenResponseDto) _then;
+
+  /// Create a copy of RefreshTokenResponseDto
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? success = null,
+    Object? data = freezed,
+    Object? error = freezed,
+    Object? timestamp = freezed,
+  }) {
+    return _then(_self.copyWith(
+      success: null == success
+          ? _self.success
+          : success // ignore: cast_nullable_to_non_nullable
+              as bool,
+      data: freezed == data
+          ? _self.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as RefreshTokenDataDto?,
+      error: freezed == error
+          ? _self.error
+          : error // ignore: cast_nullable_to_non_nullable
+              as ApiErrorDto?,
+      timestamp: freezed == timestamp
+          ? _self.timestamp
+          : timestamp // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+
+  /// Create a copy of RefreshTokenResponseDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $RefreshTokenDataDtoCopyWith<$Res>? get data {
+    if (_self.data == null) {
+      return null;
+    }
+
+    return $RefreshTokenDataDtoCopyWith<$Res>(_self.data!, (value) {
+      return _then(_self.copyWith(data: value));
+    });
+  }
+
+  /// Create a copy of RefreshTokenResponseDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ApiErrorDtoCopyWith<$Res>? get error {
+    if (_self.error == null) {
+      return null;
+    }
+
+    return $ApiErrorDtoCopyWith<$Res>(_self.error!, (value) {
+      return _then(_self.copyWith(error: value));
+    });
+  }
+}
+
+/// Adds pattern-matching-related methods to [RefreshTokenResponseDto].
+extension RefreshTokenResponseDtoPatterns on RefreshTokenResponseDto {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_RefreshTokenResponseDto value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenResponseDto() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_RefreshTokenResponseDto value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenResponseDto():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_RefreshTokenResponseDto value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenResponseDto() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(bool success, RefreshTokenDataDto? data,
+            ApiErrorDto? error, String? timestamp)?
+        $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenResponseDto() when $default != null:
+        return $default(
+            _that.success, _that.data, _that.error, _that.timestamp);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(bool success, RefreshTokenDataDto? data,
+            ApiErrorDto? error, String? timestamp)
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenResponseDto():
+        return $default(
+            _that.success, _that.data, _that.error, _that.timestamp);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(bool success, RefreshTokenDataDto? data,
+            ApiErrorDto? error, String? timestamp)?
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenResponseDto() when $default != null:
+        return $default(
+            _that.success, _that.data, _that.error, _that.timestamp);
+      case _:
+        return null;
+    }
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _RefreshTokenResponseDto implements RefreshTokenResponseDto {
+  const _RefreshTokenResponseDto(
+      {required this.success, this.data, this.error, this.timestamp});
+  factory _RefreshTokenResponseDto.fromJson(Map<String, dynamic> json) =>
+      _$RefreshTokenResponseDtoFromJson(json);
+
+  @override
+  final bool success;
+  @override
+  final RefreshTokenDataDto? data;
+  @override
+  final ApiErrorDto? error;
+  @override
+  final String? timestamp;
+
+  /// Create a copy of RefreshTokenResponseDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$RefreshTokenResponseDtoCopyWith<_RefreshTokenResponseDto> get copyWith =>
+      __$RefreshTokenResponseDtoCopyWithImpl<_RefreshTokenResponseDto>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$RefreshTokenResponseDtoToJson(
+      this,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _RefreshTokenResponseDto &&
+            (identical(other.success, success) || other.success == success) &&
+            (identical(other.data, data) || other.data == data) &&
+            (identical(other.error, error) || other.error == error) &&
+            (identical(other.timestamp, timestamp) ||
+                other.timestamp == timestamp));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, success, data, error, timestamp);
+
+  @override
+  String toString() {
+    return 'RefreshTokenResponseDto(success: $success, data: $data, error: $error, timestamp: $timestamp)';
+  }
+}
+
+/// @nodoc
+abstract mixin class _$RefreshTokenResponseDtoCopyWith<$Res>
+    implements $RefreshTokenResponseDtoCopyWith<$Res> {
+  factory _$RefreshTokenResponseDtoCopyWith(_RefreshTokenResponseDto value,
+          $Res Function(_RefreshTokenResponseDto) _then) =
+      __$RefreshTokenResponseDtoCopyWithImpl;
+  @override
+  @useResult
+  $Res call(
+      {bool success,
+      RefreshTokenDataDto? data,
+      ApiErrorDto? error,
+      String? timestamp});
+
+  @override
+  $RefreshTokenDataDtoCopyWith<$Res>? get data;
+  @override
+  $ApiErrorDtoCopyWith<$Res>? get error;
+}
+
+/// @nodoc
+class __$RefreshTokenResponseDtoCopyWithImpl<$Res>
+    implements _$RefreshTokenResponseDtoCopyWith<$Res> {
+  __$RefreshTokenResponseDtoCopyWithImpl(this._self, this._then);
+
+  final _RefreshTokenResponseDto _self;
+  final $Res Function(_RefreshTokenResponseDto) _then;
+
+  /// Create a copy of RefreshTokenResponseDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? success = null,
+    Object? data = freezed,
+    Object? error = freezed,
+    Object? timestamp = freezed,
+  }) {
+    return _then(_RefreshTokenResponseDto(
+      success: null == success
+          ? _self.success
+          : success // ignore: cast_nullable_to_non_nullable
+              as bool,
+      data: freezed == data
+          ? _self.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as RefreshTokenDataDto?,
+      error: freezed == error
+          ? _self.error
+          : error // ignore: cast_nullable_to_non_nullable
+              as ApiErrorDto?,
+      timestamp: freezed == timestamp
+          ? _self.timestamp
+          : timestamp // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+
+  /// Create a copy of RefreshTokenResponseDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $RefreshTokenDataDtoCopyWith<$Res>? get data {
+    if (_self.data == null) {
+      return null;
+    }
+
+    return $RefreshTokenDataDtoCopyWith<$Res>(_self.data!, (value) {
+      return _then(_self.copyWith(data: value));
+    });
+  }
+
+  /// Create a copy of RefreshTokenResponseDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ApiErrorDtoCopyWith<$Res>? get error {
+    if (_self.error == null) {
+      return null;
+    }
+
+    return $ApiErrorDtoCopyWith<$Res>(_self.error!, (value) {
+      return _then(_self.copyWith(error: value));
+    });
+  }
+}
+
+/// @nodoc
+mixin _$RefreshTokenDataDto {
+  String get accessToken;
+  int get expiresIn;
+
+  /// Create a copy of RefreshTokenDataDto
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $RefreshTokenDataDtoCopyWith<RefreshTokenDataDto> get copyWith =>
+      _$RefreshTokenDataDtoCopyWithImpl<RefreshTokenDataDto>(
+          this as RefreshTokenDataDto, _$identity);
+
+  /// Serializes this RefreshTokenDataDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is RefreshTokenDataDto &&
+            (identical(other.accessToken, accessToken) ||
+                other.accessToken == accessToken) &&
+            (identical(other.expiresIn, expiresIn) ||
+                other.expiresIn == expiresIn));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, accessToken, expiresIn);
+
+  @override
+  String toString() {
+    return 'RefreshTokenDataDto(accessToken: $accessToken, expiresIn: $expiresIn)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $RefreshTokenDataDtoCopyWith<$Res> {
+  factory $RefreshTokenDataDtoCopyWith(
+          RefreshTokenDataDto value, $Res Function(RefreshTokenDataDto) _then) =
+      _$RefreshTokenDataDtoCopyWithImpl;
+  @useResult
+  $Res call({String accessToken, int expiresIn});
+}
+
+/// @nodoc
+class _$RefreshTokenDataDtoCopyWithImpl<$Res>
+    implements $RefreshTokenDataDtoCopyWith<$Res> {
+  _$RefreshTokenDataDtoCopyWithImpl(this._self, this._then);
+
+  final RefreshTokenDataDto _self;
+  final $Res Function(RefreshTokenDataDto) _then;
+
+  /// Create a copy of RefreshTokenDataDto
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? accessToken = null,
+    Object? expiresIn = null,
+  }) {
+    return _then(_self.copyWith(
+      accessToken: null == accessToken
+          ? _self.accessToken
+          : accessToken // ignore: cast_nullable_to_non_nullable
+              as String,
+      expiresIn: null == expiresIn
+          ? _self.expiresIn
+          : expiresIn // ignore: cast_nullable_to_non_nullable
+              as int,
+    ));
+  }
+}
+
+/// Adds pattern-matching-related methods to [RefreshTokenDataDto].
+extension RefreshTokenDataDtoPatterns on RefreshTokenDataDto {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_RefreshTokenDataDto value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenDataDto() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_RefreshTokenDataDto value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenDataDto():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_RefreshTokenDataDto value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenDataDto() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(String accessToken, int expiresIn)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenDataDto() when $default != null:
+        return $default(_that.accessToken, _that.expiresIn);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(String accessToken, int expiresIn) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenDataDto():
+        return $default(_that.accessToken, _that.expiresIn);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(String accessToken, int expiresIn)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _RefreshTokenDataDto() when $default != null:
+        return $default(_that.accessToken, _that.expiresIn);
+      case _:
+        return null;
+    }
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _RefreshTokenDataDto implements RefreshTokenDataDto {
+  const _RefreshTokenDataDto(
+      {required this.accessToken, required this.expiresIn});
+  factory _RefreshTokenDataDto.fromJson(Map<String, dynamic> json) =>
+      _$RefreshTokenDataDtoFromJson(json);
+
+  @override
+  final String accessToken;
+  @override
+  final int expiresIn;
+
+  /// Create a copy of RefreshTokenDataDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$RefreshTokenDataDtoCopyWith<_RefreshTokenDataDto> get copyWith =>
+      __$RefreshTokenDataDtoCopyWithImpl<_RefreshTokenDataDto>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$RefreshTokenDataDtoToJson(
+      this,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _RefreshTokenDataDto &&
+            (identical(other.accessToken, accessToken) ||
+                other.accessToken == accessToken) &&
+            (identical(other.expiresIn, expiresIn) ||
+                other.expiresIn == expiresIn));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, accessToken, expiresIn);
+
+  @override
+  String toString() {
+    return 'RefreshTokenDataDto(accessToken: $accessToken, expiresIn: $expiresIn)';
+  }
+}
+
+/// @nodoc
+abstract mixin class _$RefreshTokenDataDtoCopyWith<$Res>
+    implements $RefreshTokenDataDtoCopyWith<$Res> {
+  factory _$RefreshTokenDataDtoCopyWith(_RefreshTokenDataDto value,
+          $Res Function(_RefreshTokenDataDto) _then) =
+      __$RefreshTokenDataDtoCopyWithImpl;
+  @override
+  @useResult
+  $Res call({String accessToken, int expiresIn});
+}
+
+/// @nodoc
+class __$RefreshTokenDataDtoCopyWithImpl<$Res>
+    implements _$RefreshTokenDataDtoCopyWith<$Res> {
+  __$RefreshTokenDataDtoCopyWithImpl(this._self, this._then);
+
+  final _RefreshTokenDataDto _self;
+  final $Res Function(_RefreshTokenDataDto) _then;
+
+  /// Create a copy of RefreshTokenDataDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? accessToken = null,
+    Object? expiresIn = null,
+  }) {
+    return _then(_RefreshTokenDataDto(
+      accessToken: null == accessToken
+          ? _self.accessToken
+          : accessToken // ignore: cast_nullable_to_non_nullable
+              as String,
+      expiresIn: null == expiresIn
+          ? _self.expiresIn
+          : expiresIn // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }

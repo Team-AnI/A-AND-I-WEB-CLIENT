@@ -47,6 +47,7 @@ class HomePage extends ConsumerWidget {
               onGoIntro: () => context.go("/promotion"),
               onGoEducation: () => context.go('/course'),
               onGoPosts: () => context.go('/articles'),
+              onGoMaterials: () => context.go('/materials'),
               onGoFaq: () => context.go('/faq'),
               onGoMyAccount: () => context.go('/my-account'),
               onLogin: () => context.go('/sign-in'),
@@ -65,6 +66,7 @@ class HomePage extends ConsumerWidget {
               children: [
                 const HomeHeroSection(),
                 const HomeLatestPostsSection(),
+                if (isLoggedIn) const HomeLatestMaterialsSection(),
                 const HomeCtaSection(),
                 const HomeFooterSection(),
               ],

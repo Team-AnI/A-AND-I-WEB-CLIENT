@@ -24,8 +24,8 @@ abstract class LoginDataDto with _$LoginDataDto {
     required String accessToken,
     required String refreshToken,
     required int expiresIn,
-    required String tokenType,
-    required bool forcePasswordChange,
+    String? tokenType,
+    @Default(false) bool forcePasswordChange,
     required LoginUserDto user,
   }) = _LoginDataDto;
 
@@ -40,6 +40,7 @@ abstract class LoginUserDto with _$LoginUserDto {
     required String id,
     required String username,
     required String role,
+    String? publicCode,
   }) = _LoginUserDto;
 
   factory LoginUserDto.fromJson(Map<String, dynamic> json) =>
@@ -50,10 +51,38 @@ abstract class LoginUserDto with _$LoginUserDto {
 @freezed
 abstract class ApiErrorDto with _$ApiErrorDto {
   const factory ApiErrorDto({
-    String? code,
+    int? code,
     String? message,
+    String? value,
+    String? alert,
   }) = _ApiErrorDto;
 
   factory ApiErrorDto.fromJson(Map<String, dynamic> json) =>
       _$ApiErrorDtoFromJson(json);
+}
+
+/// v2 토큰 재발급 API의 최상위 응답 DTO입니다.
+@freezed
+abstract class RefreshTokenResponseDto with _$RefreshTokenResponseDto {
+  const factory RefreshTokenResponseDto({
+    required bool success,
+    RefreshTokenDataDto? data,
+    ApiErrorDto? error,
+    String? timestamp,
+  }) = _RefreshTokenResponseDto;
+
+  factory RefreshTokenResponseDto.fromJson(Map<String, dynamic> json) =>
+      _$RefreshTokenResponseDtoFromJson(json);
+}
+
+/// v2 토큰 재발급 API의 data 필드 DTO입니다.
+@freezed
+abstract class RefreshTokenDataDto with _$RefreshTokenDataDto {
+  const factory RefreshTokenDataDto({
+    required String accessToken,
+    required int expiresIn,
+  }) = _RefreshTokenDataDto;
+
+  factory RefreshTokenDataDto.fromJson(Map<String, dynamic> json) =>
+      _$RefreshTokenDataDtoFromJson(json);
 }

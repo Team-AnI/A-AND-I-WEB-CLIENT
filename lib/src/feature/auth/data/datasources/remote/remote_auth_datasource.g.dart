@@ -33,7 +33,7 @@ class _RemoteAuthDatasource implements RemoteAuthDatasource {
       )
           .compose(
             _dio.options,
-            '/v1/auth/login',
+            '/v2/auth/login',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -54,14 +54,14 @@ class _RemoteAuthDatasource implements RemoteAuthDatasource {
   Future<dynamic> getMyInfo(String authorization) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{r'Authorization': authorization};
+    final _headers = <String, dynamic>{r'Authenticate': authorization};
     _headers.removeWhere((k, v) => v == null);
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/v1/me',
+            '/v2/me',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -73,14 +73,16 @@ class _RemoteAuthDatasource implements RemoteAuthDatasource {
   }
 
   @override
-  Future<LoginResponseDto> refreshToken(Map<String, dynamic> body) async {
+  Future<RefreshTokenResponseDto> refreshToken(
+    Map<String, dynamic> body,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{r'Content-Type': 'application/json'};
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<LoginResponseDto>(
+    final _options = _setStreamType<RefreshTokenResponseDto>(
       Options(
         method: 'POST',
         headers: _headers,
@@ -89,16 +91,16 @@ class _RemoteAuthDatasource implements RemoteAuthDatasource {
       )
           .compose(
             _dio.options,
-            '/v1/auth/refresh',
+            '/v2/auth/refresh',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late LoginResponseDto _value;
+    late RefreshTokenResponseDto _value;
     try {
-      _value = LoginResponseDto.fromJson(_result.data!);
+      _value = RefreshTokenResponseDto.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

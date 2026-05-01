@@ -1,5 +1,6 @@
 import 'package:a_and_i_report_web_server/src/core/auth/role_policy.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/presentation/widgets/article_markdown_preview_support.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_detail_view_model.dart';
@@ -19,9 +20,17 @@ class ArticleDetailView extends ConsumerWidget {
   const ArticleDetailView({
     super.key,
     required this.id,
+    this.postType = PostType.blog,
+    this.listPath = '/articles',
+    this.listLabel = 'Articles',
+    this.showManagementActions = true,
   });
 
   final String id;
+  final PostType postType;
+  final String listPath;
+  final String listLabel;
+  final bool showManagementActions;
 
   static final SyntaxHighlighter _codeSyntaxHighlighter =
       ArticleMarkdownCodeSyntaxHighlighter();
@@ -30,6 +39,7 @@ class ArticleDetailView extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref, {
     required String postId,
+    required String listPath,
   }) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
@@ -58,7 +68,7 @@ class ArticleDetailView extends ConsumerWidget {
 
     try {
       await ref.read(postRepositoryProvider).deletePost(postId: postId);
-      ref.invalidate(articleListViewModelProvider);
+      ref.invalidate(articleListViewModelProvider(postType));
       if (!context.mounted) {
         return;
       }
@@ -67,7 +77,7 @@ class ArticleDetailView extends ConsumerWidget {
           content: Text('게시글이 삭제되었습니다.'),
         ),
       );
-      context.go('/articles');
+      context.go(listPath);
     } catch (_) {
       if (!context.mounted) {
         return;
@@ -85,9 +95,12 @@ class ArticleDetailView extends ConsumerWidget {
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
-    final canShowWriteButton =
-        isLoggedIn && canManageArticlesWithRole(userState.resolvedRole);
-    final postAsync = ref.watch(articleDetailViewModelProvider(id));
+    final canShowWriteButton = showManagementActions &&
+        isLoggedIn &&
+        canManageArticlesWithRole(userState.resolvedRole);
+    final postAsync = ref.watch(
+      articleDetailViewModelProvider((postId: id, type: postType)),
+    );
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
     final isTablet = width >= 768 && width < 1200;
@@ -113,31 +126,37 @@ class ArticleDetailView extends ConsumerWidget {
                 post: post,
                 canShowWriteButton: canShowWriteButton,
                 canShowDeleteButton: isLoggedIn &&
+                    showManagementActions &&
                     userState.userId != null &&
                     userState.userId == post.author.id,
                 canShowEditButton: isLoggedIn &&
-                    canManageArticlesWithRole(userState.resolvedRole) &&
+                    showManagementActions &&
                     userState.userId != null &&
                     userState.userId == post.author.id,
                 onDelete: () => _deletePost(
                   context,
                   ref,
                   postId: post.id,
+                  listPath: listPath,
                 ),
                 onEdit: () {
                   ref
                       .read(articleWriteViewModelProvider.notifier)
                       .startEditing(post);
-                  context.go('/articles/write');
+                  context.go('$listPath/write');
                 },
                 onWrite: () {
-                  ref.read(articleWriteViewModelProvider.notifier).reset();
-                  context.go('/articles/write');
+                  ref
+                      .read(articleWriteViewModelProvider.notifier)
+                      .reset(postType: postType);
+                  context.go('$listPath/write');
                 },
                 isMobile: isMobile,
                 isTablet: isTablet,
                 markdownStyle: createArticlePreviewMarkdownStyle(context),
                 codeSyntaxHighlighter: _codeSyntaxHighlighter,
+                listPath: listPath,
+                listLabel: listLabel,
               ),
               loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
@@ -146,8 +165,9 @@ class ArticleDetailView extends ConsumerWidget {
                 ),
               ),
               error: (_, __) => _ArticleDetailError(
-                onRetry: () =>
-                    ref.invalidate(articleDetailViewModelProvider(id)),
+                onRetry: () => ref.invalidate(
+                  articleDetailViewModelProvider((postId: id, type: postType)),
+                ),
               ),
             ),
           ),
@@ -170,6 +190,8 @@ class _ArticleDetailContent extends StatelessWidget {
     required this.isTablet,
     required this.markdownStyle,
     required this.codeSyntaxHighlighter,
+    required this.listPath,
+    required this.listLabel,
   });
 
   final Post post;
@@ -183,6 +205,8 @@ class _ArticleDetailContent extends StatelessWidget {
   final bool isTablet;
   final MarkdownStyleSheet markdownStyle;
   final SyntaxHighlighter codeSyntaxHighlighter;
+  final String listPath;
+  final String listLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -215,13 +239,13 @@ class _ArticleDetailContent extends StatelessWidget {
             ),
             const Icon(Icons.chevron_right, size: 16),
             TextButton(
-              onPressed: () => context.go('/articles'),
+              onPressed: () => context.go(listPath),
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text('Articles'),
+              child: Text(listLabel),
             ),
             const Icon(Icons.chevron_right, size: 16),
             Text(
@@ -374,8 +398,12 @@ class _ArticleDetailContent extends StatelessWidget {
           data: normalizedMarkdown,
           selectable: true,
           fitContent: false,
+          softLineBreak: true,
           styleSheet: markdownStyle,
           syntaxHighlighter: codeSyntaxHighlighter,
+          onTapLink: (text, href, title) {
+            launchArticleMarkdownLink(context, href);
+          },
           sizedImageBuilder: (config) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -401,7 +429,7 @@ class _ArticleDetailContent extends StatelessWidget {
         SizedBox(height: isMobile ? 26 : 40),
         Center(
           child: TextButton.icon(
-            onPressed: () => context.go('/articles'),
+            onPressed: () => context.go(listPath),
             icon: const Icon(Icons.arrow_back),
             label: const Text('목록으로 돌아가기'),
           ),

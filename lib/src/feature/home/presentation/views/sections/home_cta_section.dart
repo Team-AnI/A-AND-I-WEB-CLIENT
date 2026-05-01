@@ -28,7 +28,8 @@ class HomeCtaSection extends ConsumerWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1280),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(horizontal, 0, horizontal, sectionBottom),
+          padding:
+              EdgeInsets.fromLTRB(horizontal, 0, horizontal, sectionBottom),
           child: Container(
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),

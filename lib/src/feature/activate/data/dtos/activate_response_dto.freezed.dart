@@ -451,7 +451,7 @@ class __$ActivateResponseDtoCopyWithImpl<$Res>
 
 /// @nodoc
 mixin _$ActivateResponseDataDto {
-  bool get success;
+  bool get activated;
 
   /// Create a copy of ActivateResponseDataDto
   /// with the given fields replaced by the non-null parameter values.
@@ -469,16 +469,17 @@ mixin _$ActivateResponseDataDto {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is ActivateResponseDataDto &&
-            (identical(other.success, success) || other.success == success));
+            (identical(other.activated, activated) ||
+                other.activated == activated));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, success);
+  int get hashCode => Object.hash(runtimeType, activated);
 
   @override
   String toString() {
-    return 'ActivateResponseDataDto(success: $success)';
+    return 'ActivateResponseDataDto(activated: $activated)';
   }
 }
 
@@ -488,7 +489,7 @@ abstract mixin class $ActivateResponseDataDtoCopyWith<$Res> {
           $Res Function(ActivateResponseDataDto) _then) =
       _$ActivateResponseDataDtoCopyWithImpl;
   @useResult
-  $Res call({bool success});
+  $Res call({bool activated});
 }
 
 /// @nodoc
@@ -504,12 +505,12 @@ class _$ActivateResponseDataDtoCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? success = null,
+    Object? activated = null,
   }) {
     return _then(_self.copyWith(
-      success: null == success
-          ? _self.success
-          : success // ignore: cast_nullable_to_non_nullable
+      activated: null == activated
+          ? _self.activated
+          : activated // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
@@ -608,13 +609,13 @@ extension ActivateResponseDataDtoPatterns on ActivateResponseDataDto {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(bool success)? $default, {
+    TResult Function(bool activated)? $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _ActivateResponseDataDto() when $default != null:
-        return $default(_that.success);
+        return $default(_that.activated);
       case _:
         return orElse();
     }
@@ -635,12 +636,12 @@ extension ActivateResponseDataDtoPatterns on ActivateResponseDataDto {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(bool success) $default,
+    TResult Function(bool activated) $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ActivateResponseDataDto():
-        return $default(_that.success);
+        return $default(_that.activated);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -660,12 +661,12 @@ extension ActivateResponseDataDtoPatterns on ActivateResponseDataDto {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(bool success)? $default,
+    TResult? Function(bool activated)? $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ActivateResponseDataDto() when $default != null:
-        return $default(_that.success);
+        return $default(_that.activated);
       case _:
         return null;
     }
@@ -675,13 +676,13 @@ extension ActivateResponseDataDtoPatterns on ActivateResponseDataDto {
 /// @nodoc
 @JsonSerializable()
 class _ActivateResponseDataDto implements ActivateResponseDataDto {
-  const _ActivateResponseDataDto({this.success = false});
+  const _ActivateResponseDataDto({this.activated = false});
   factory _ActivateResponseDataDto.fromJson(Map<String, dynamic> json) =>
       _$ActivateResponseDataDtoFromJson(json);
 
   @override
   @JsonKey()
-  final bool success;
+  final bool activated;
 
   /// Create a copy of ActivateResponseDataDto
   /// with the given fields replaced by the non-null parameter values.
@@ -704,16 +705,17 @@ class _ActivateResponseDataDto implements ActivateResponseDataDto {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _ActivateResponseDataDto &&
-            (identical(other.success, success) || other.success == success));
+            (identical(other.activated, activated) ||
+                other.activated == activated));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, success);
+  int get hashCode => Object.hash(runtimeType, activated);
 
   @override
   String toString() {
-    return 'ActivateResponseDataDto(success: $success)';
+    return 'ActivateResponseDataDto(activated: $activated)';
   }
 }
 
@@ -725,7 +727,7 @@ abstract mixin class _$ActivateResponseDataDtoCopyWith<$Res>
       __$ActivateResponseDataDtoCopyWithImpl;
   @override
   @useResult
-  $Res call({bool success});
+  $Res call({bool activated});
 }
 
 /// @nodoc
@@ -741,12 +743,12 @@ class __$ActivateResponseDataDtoCopyWithImpl<$Res>
   @override
   @pragma('vm:prefer-inline')
   $Res call({
-    Object? success = null,
+    Object? activated = null,
   }) {
     return _then(_ActivateResponseDataDto(
-      success: null == success
-          ? _self.success
-          : success // ignore: cast_nullable_to_non_nullable
+      activated: null == activated
+          ? _self.activated
+          : activated // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
@@ -754,8 +756,10 @@ class __$ActivateResponseDataDtoCopyWithImpl<$Res>
 
 /// @nodoc
 mixin _$ActivateErrorDto {
-  String? get code;
+  int? get code;
   String? get message;
+  String? get value;
+  String? get alert;
 
   /// Create a copy of ActivateErrorDto
   /// with the given fields replaced by the non-null parameter values.
@@ -774,16 +778,18 @@ mixin _$ActivateErrorDto {
         (other.runtimeType == runtimeType &&
             other is ActivateErrorDto &&
             (identical(other.code, code) || other.code == code) &&
-            (identical(other.message, message) || other.message == message));
+            (identical(other.message, message) || other.message == message) &&
+            (identical(other.value, value) || other.value == value) &&
+            (identical(other.alert, alert) || other.alert == alert));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, code, message);
+  int get hashCode => Object.hash(runtimeType, code, message, value, alert);
 
   @override
   String toString() {
-    return 'ActivateErrorDto(code: $code, message: $message)';
+    return 'ActivateErrorDto(code: $code, message: $message, value: $value, alert: $alert)';
   }
 }
 
@@ -793,7 +799,7 @@ abstract mixin class $ActivateErrorDtoCopyWith<$Res> {
           ActivateErrorDto value, $Res Function(ActivateErrorDto) _then) =
       _$ActivateErrorDtoCopyWithImpl;
   @useResult
-  $Res call({String? code, String? message});
+  $Res call({int? code, String? message, String? value, String? alert});
 }
 
 /// @nodoc
@@ -811,15 +817,25 @@ class _$ActivateErrorDtoCopyWithImpl<$Res>
   $Res call({
     Object? code = freezed,
     Object? message = freezed,
+    Object? value = freezed,
+    Object? alert = freezed,
   }) {
     return _then(_self.copyWith(
       code: freezed == code
           ? _self.code
           : code // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as int?,
       message: freezed == message
           ? _self.message
           : message // ignore: cast_nullable_to_non_nullable
+              as String?,
+      value: freezed == value
+          ? _self.value
+          : value // ignore: cast_nullable_to_non_nullable
+              as String?,
+      alert: freezed == alert
+          ? _self.alert
+          : alert // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }
@@ -918,13 +934,14 @@ extension ActivateErrorDtoPatterns on ActivateErrorDto {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(String? code, String? message)? $default, {
+    TResult Function(int? code, String? message, String? value, String? alert)?
+        $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _ActivateErrorDto() when $default != null:
-        return $default(_that.code, _that.message);
+        return $default(_that.code, _that.message, _that.value, _that.alert);
       case _:
         return orElse();
     }
@@ -945,12 +962,13 @@ extension ActivateErrorDtoPatterns on ActivateErrorDto {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(String? code, String? message) $default,
+    TResult Function(int? code, String? message, String? value, String? alert)
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ActivateErrorDto():
-        return $default(_that.code, _that.message);
+        return $default(_that.code, _that.message, _that.value, _that.alert);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -970,12 +988,13 @@ extension ActivateErrorDtoPatterns on ActivateErrorDto {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(String? code, String? message)? $default,
+    TResult? Function(int? code, String? message, String? value, String? alert)?
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ActivateErrorDto() when $default != null:
-        return $default(_that.code, _that.message);
+        return $default(_that.code, _that.message, _that.value, _that.alert);
       case _:
         return null;
     }
@@ -985,14 +1004,18 @@ extension ActivateErrorDtoPatterns on ActivateErrorDto {
 /// @nodoc
 @JsonSerializable()
 class _ActivateErrorDto implements ActivateErrorDto {
-  const _ActivateErrorDto({this.code, this.message});
+  const _ActivateErrorDto({this.code, this.message, this.value, this.alert});
   factory _ActivateErrorDto.fromJson(Map<String, dynamic> json) =>
       _$ActivateErrorDtoFromJson(json);
 
   @override
-  final String? code;
+  final int? code;
   @override
   final String? message;
+  @override
+  final String? value;
+  @override
+  final String? alert;
 
   /// Create a copy of ActivateErrorDto
   /// with the given fields replaced by the non-null parameter values.
@@ -1015,16 +1038,18 @@ class _ActivateErrorDto implements ActivateErrorDto {
         (other.runtimeType == runtimeType &&
             other is _ActivateErrorDto &&
             (identical(other.code, code) || other.code == code) &&
-            (identical(other.message, message) || other.message == message));
+            (identical(other.message, message) || other.message == message) &&
+            (identical(other.value, value) || other.value == value) &&
+            (identical(other.alert, alert) || other.alert == alert));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, code, message);
+  int get hashCode => Object.hash(runtimeType, code, message, value, alert);
 
   @override
   String toString() {
-    return 'ActivateErrorDto(code: $code, message: $message)';
+    return 'ActivateErrorDto(code: $code, message: $message, value: $value, alert: $alert)';
   }
 }
 
@@ -1036,7 +1061,7 @@ abstract mixin class _$ActivateErrorDtoCopyWith<$Res>
       __$ActivateErrorDtoCopyWithImpl;
   @override
   @useResult
-  $Res call({String? code, String? message});
+  $Res call({int? code, String? message, String? value, String? alert});
 }
 
 /// @nodoc
@@ -1054,15 +1079,25 @@ class __$ActivateErrorDtoCopyWithImpl<$Res>
   $Res call({
     Object? code = freezed,
     Object? message = freezed,
+    Object? value = freezed,
+    Object? alert = freezed,
   }) {
     return _then(_ActivateErrorDto(
       code: freezed == code
           ? _self.code
           : code // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as int?,
       message: freezed == message
           ? _self.message
           : message // ignore: cast_nullable_to_non_nullable
+              as String?,
+      value: freezed == value
+          ? _self.value
+          : value // ignore: cast_nullable_to_non_nullable
+              as String?,
+      alert: freezed == alert
+          ? _self.alert
+          : alert // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }

@@ -1,6 +1,8 @@
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'article_list_view_model.g.dart';
@@ -9,18 +11,91 @@ part 'article_list_view_model.g.dart';
 @riverpod
 class ArticleListViewModel extends _$ArticleListViewModel {
   final Map<String, Post> _recentPublishedOverrides = <String, Post>{};
+  static const int _defaultPageSize = 20;
+  late PostType _postType;
 
   /// 초기 목록 상태를 로드합니다.
   @override
-  Future<ArticleListState> build() async {
+  Future<ArticleListState> build(PostType postType) async {
     ref.keepAlive();
-    return _fetch();
+    ref.watch(authSessionRevisionProvider);
+    _postType = postType;
+    return _fetchPage(page: 0, size: _defaultPageSize);
   }
 
   /// 목록을 다시 불러옵니다.
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = AsyncData(await _fetch());
+    state = AsyncData(
+      await _fetchPage(page: 0, size: _defaultPageSize),
+    );
+  }
+
+  /// 다음 페이지를 불러와 현재 목록 뒤에 이어 붙입니다.
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null ||
+        current.errorMsg.isNotEmpty ||
+        current.isLoadingMore ||
+        !current.hasMore) {
+      return;
+    }
+
+    final nextPage = current.page + 1;
+    state = AsyncData(
+      current.copyWith(
+        isLoadingMore: true,
+        loadMoreErrorMsg: '',
+      ),
+    );
+
+    try {
+      final response = await ref.read(getPostListUsecaseProvider).call(
+            page: nextPage,
+            size: current.size,
+            type: _postType,
+          );
+      final mergedItems = _mergeWithRecentPublished(
+        <Post>[
+          ...current.items,
+          ...response.items,
+        ],
+      );
+      final totalElements = response.totalElements < mergedItems.length
+          ? mergedItems.length
+          : response.totalElements;
+
+      state = AsyncData(
+        current.copyWith(
+          items: mergedItems,
+          page: response.page,
+          size: response.size,
+          totalElements: totalElements,
+          totalPages: _resolveTotalPages(
+            size: response.size,
+            totalElements: totalElements,
+            fallback: response.totalPages,
+          ),
+          hasMore: _hasMore(
+            page: response.page,
+            totalPages: response.totalPages,
+            totalElements: totalElements,
+            loadedItemsCount: mergedItems.length,
+          ),
+          isLoadingMore: false,
+          loadMoreErrorMsg: '',
+          errorMsg: '',
+        ),
+      );
+    } catch (e) {
+      final latest = state.valueOrNull ?? current;
+      state = AsyncData(
+        latest.copyWith(
+          isLoadingMore: false,
+          loadMoreErrorMsg: e.toString(),
+        ),
+      );
+    }
   }
 
   /// 출간된 게시글을 목록에 즉시 반영합니다.
@@ -49,19 +124,25 @@ class ArticleListViewModel extends _$ArticleListViewModel {
           totalElements: totalElements,
           fallback: current.totalPages,
         ),
+        hasMore: _hasMore(
+          page: current.page,
+          totalPages: current.totalPages,
+          totalElements: totalElements,
+          loadedItemsCount: mergedItems.length,
+        ),
         errorMsg: '',
       ),
     );
   }
 
-  Future<ArticleListState> _fetch({
-    int page = 0,
-    int size = 20,
+  Future<ArticleListState> _fetchPage({
+    required int page,
+    required int size,
   }) async {
     try {
       final response = await ref
           .read(getPostListUsecaseProvider)
-          .call(page: page, size: size);
+          .call(page: page, size: size, type: _postType);
       final mergedItems = _mergeWithRecentPublished(response.items);
       final totalElements = response.totalElements < mergedItems.length
           ? mergedItems.length
@@ -75,6 +156,12 @@ class ArticleListViewModel extends _$ArticleListViewModel {
           size: response.size,
           totalElements: totalElements,
           fallback: response.totalPages,
+        ),
+        hasMore: _hasMore(
+          page: response.page,
+          totalPages: response.totalPages,
+          totalElements: totalElements,
+          loadedItemsCount: mergedItems.length,
         ),
       );
     } catch (e) {
@@ -120,5 +207,20 @@ class ArticleListViewModel extends _$ArticleListViewModel {
       return fallback;
     }
     return calculated;
+  }
+
+  bool _hasMore({
+    required int page,
+    required int totalPages,
+    required int totalElements,
+    required int loadedItemsCount,
+  }) {
+    if (totalPages > 0) {
+      return page + 1 < totalPages;
+    }
+    if (totalElements > 0) {
+      return loadedItemsCount < totalElements;
+    }
+    return false;
   }
 }

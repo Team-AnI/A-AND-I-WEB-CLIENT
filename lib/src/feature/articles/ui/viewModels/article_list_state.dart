@@ -13,6 +13,9 @@ sealed class ArticleListState with _$ArticleListState {
     @Default(0) int size,
     @Default(0) int totalElements,
     @Default(0) int totalPages,
+    @Default(false) bool isLoadingMore,
+    @Default(true) bool hasMore,
     @Default('') String errorMsg,
+    @Default('') String loadMoreErrorMsg,
   }) = _ArticleListState;
 }

@@ -16,7 +16,11 @@ class ActivateRemoteDatasource {
   final String _baseUrl;
 
   Future<void> activate(ActivateRequestDto request) async {
-    const endpoints = <String>['/activate', '/v1/auth/activate'];
+    const endpoints = <String>[
+      '/v2/activate',
+      '/activate',
+      '/v1/auth/activate'
+    ];
     for (var i = 0; i < endpoints.length; i++) {
       final endpoint = endpoints[i];
       final isLastEndpoint = i == endpoints.length - 1;
@@ -70,7 +74,7 @@ class ActivateRemoteDatasource {
 
     final dto =
         ActivateResponseDto.fromJson(response.data as Map<String, dynamic>);
-    final isSuccess = dto.success && (dto.data?.success ?? false);
+    final isSuccess = dto.success && (dto.data?.activated ?? false);
     if (!isSuccess) {
       throw ActivateInvalidTokenException();
     }

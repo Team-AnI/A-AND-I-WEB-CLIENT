@@ -9,6 +9,8 @@ FirebaseAnalytics firebaseAnalytics(FirebaseAnalyticsRef ref) {
 }
 
 @riverpod
-FirebaseAnalyticsObserver firebaseAnalyticsObserver(FirebaseAnalyticsObserverRef ref) {
-  return FirebaseAnalyticsObserver(analytics: ref.watch(firebaseAnalyticsProvider));
+FirebaseAnalyticsObserver firebaseAnalyticsObserver(
+    FirebaseAnalyticsObserverRef ref) {
+  return FirebaseAnalyticsObserver(
+      analytics: ref.watch(firebaseAnalyticsProvider));
 }

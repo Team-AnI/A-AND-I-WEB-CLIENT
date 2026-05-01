@@ -1,3 +1,4 @@
+import 'package:a_and_i_report_web_server/src/core/theme/code_font.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/data/entities/report.dart';
 import 'package:a_and_i_report_web_server/src/feature/reports/ui/viewModel/report_submit_view_model.dart';
 import 'package:flutter/material.dart';
@@ -14,18 +15,21 @@ import 'package:re_highlight/styles/monokai-sublime.dart';
 class SourceCodeSubmitView extends HookConsumerWidget {
   final Report report;
   final bool isDarkMode;
+  final bool isSubmissionClosed;
+  final VoidCallback? onSubmitSuccess;
 
   const SourceCodeSubmitView({
     super.key,
     required this.report,
     this.isDarkMode = false,
+    this.isSubmissionClosed = false,
+    this.onSubmitSuccess,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final submitState = ref.watch(reportSubmitViewModelProvider(report.id));
-    final notifier =
-        ref.read(reportSubmitViewModelProvider(report.id).notifier);
+    final submitState = ref.watch(reportSubmitViewModelProvider(report));
+    final notifier = ref.read(reportSubmitViewModelProvider(report).notifier);
     final showValidationError = useState(false);
     final isProgrammaticUpdate = useRef(false);
 
@@ -35,7 +39,7 @@ class SourceCodeSubmitView extends HookConsumerWidget {
             submitState.selectedLanguage.template,
         const CodeLineOptions(indentSize: 4),
       ),
-      [report.id],
+      [report.id, submitState.selectedLanguage],
     );
 
     useEffect(() {
@@ -55,12 +59,29 @@ class SourceCodeSubmitView extends HookConsumerWidget {
     }, [submitState.selectedLanguage, submitState.draftCodeByLanguage]);
 
     useEffect(() {
+      final language = submitState.selectedLanguage;
+
       void listener() {
         if (isProgrammaticUpdate.value) return;
-        notifier.updateDraft(submitState.selectedLanguage, controller.text);
-        if (showValidationError.value && controller.text.trim().isNotEmpty) {
-          showValidationError.value = false;
-        }
+        final nextText = controller.text;
+
+        Future<void>(() {
+          if (!context.mounted) return;
+
+          final latestState = ref.read(reportSubmitViewModelProvider(report));
+          if (latestState.selectedLanguage != language) {
+            return;
+          }
+
+          final latestDraft = latestState.draftCodeByLanguage[language] ?? '';
+          if (latestDraft != nextText) {
+            notifier.updateDraft(language, nextText);
+          }
+
+          if (showValidationError.value && nextText.trim().isNotEmpty) {
+            showValidationError.value = false;
+          }
+        });
       }
 
       controller.addListener(listener);
@@ -95,6 +116,10 @@ class SourceCodeSubmitView extends HookConsumerWidget {
           ),
         ),
         const SizedBox(height: 20),
+        if (isSubmissionClosed) ...[
+          _DeadlineClosedNotice(isDarkMode: isDarkMode),
+          const SizedBox(height: 16),
+        ],
         _GuidelineBox(isDarkMode: isDarkMode),
         const SizedBox(height: 16),
         Wrap(
@@ -105,10 +130,16 @@ class SourceCodeSubmitView extends HookConsumerWidget {
             return ChoiceChip(
               label: Text(language.label),
               selected: selected,
-              onSelected: (_) => notifier.selectLanguage(language),
-              selectedColor: const Color(0xFFE5E7EB),
-              backgroundColor:
-                  isDarkMode ? const Color(0xFF3F3F46) : const Color(0xFFF3F4F6),
+              onSelected: isSubmissionClosed
+                  ? null
+                  : (_) => notifier.selectLanguage(language),
+              showCheckmark: false,
+              selectedColor: isDarkMode
+                  ? const Color(0xFF18181B)
+                  : const Color(0xFFE5E7EB),
+              backgroundColor: isDarkMode
+                  ? const Color(0xFF3F3F46)
+                  : const Color(0xFFF3F4F6),
               side: BorderSide(
                 color: selected
                     ? (isDarkMode
@@ -120,8 +151,13 @@ class SourceCodeSubmitView extends HookConsumerWidget {
               ),
               labelStyle: TextStyle(
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color:
-                    isDarkMode ? const Color(0xFFF5F5F5) : const Color(0xFF000000),
+                color: selected
+                    ? (isDarkMode
+                        ? const Color(0xFFF5F5F5)
+                        : const Color(0xFF111827))
+                    : (isDarkMode
+                        ? const Color(0xFFE5E7EB)
+                        : const Color(0xFF000000)),
               ),
             );
           }).toList(),
@@ -161,7 +197,9 @@ class SourceCodeSubmitView extends HookConsumerWidget {
                     ),
                     const Spacer(),
                     TextButton(
-                      onPressed: notifier.loadTemplateForCurrentLanguage,
+                      onPressed: isSubmissionClosed
+                          ? null
+                          : notifier.loadTemplateForCurrentLanguage,
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFFD1D5DB),
                         padding: const EdgeInsets.symmetric(
@@ -180,13 +218,15 @@ class SourceCodeSubmitView extends HookConsumerWidget {
               ),
               Expanded(
                 child: CodeEditor(
+                  key: ValueKey('${report.id}-${lang.key}'),
                   controller: controller,
                   wordWrap: false,
-                  autofocus: true,
+                  autofocus: false,
                   autocompleteSymbols: true,
                   style: CodeEditorStyle(
                     fontSize: 13,
-                    fontFamily: 'monospace',
+                    fontFamily: kVsCodeCodeFontFamily,
+                    fontFamilyFallback: kVsCodeCodeFontFamilyFallback,
                     backgroundColor: const Color(0xFF0B1020),
                     textColor: const Color(0xFFE5E7EB),
                     cursorColor: const Color(0xFF93C5FD),
@@ -201,17 +241,15 @@ class SourceCodeSubmitView extends HookConsumerWidget {
                         DefaultCodeLineNumber(
                           controller: editingController,
                           notifier: notifier,
-                          textStyle: const TextStyle(
+                          textStyle: vscodeCodeTextStyle(const TextStyle(
                             fontSize: 11,
                             color: Color(0xFF6B7280),
-                            fontFamily: 'monospace',
-                          ),
-                          focusedTextStyle: const TextStyle(
+                          )),
+                          focusedTextStyle: vscodeCodeTextStyle(const TextStyle(
                             fontSize: 11,
                             color: Color(0xFF9CA3AF),
                             fontWeight: FontWeight.w700,
-                            fontFamily: 'monospace',
-                          ),
+                          )),
                         ),
                         if (lang != SubmitLanguage.python)
                           DefaultCodeChunkIndicator(
@@ -254,17 +292,69 @@ class SourceCodeSubmitView extends HookConsumerWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
             ),
-            onPressed: () {
-              final success = notifier.submitCurrentDraft();
-              showValidationError.value = !success;
-            },
-            child: const Text(
-              '제출하기',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            onPressed: submitState.isSubmitting || isSubmissionClosed
+                ? null
+                : () async {
+                    final success = await notifier.submitCurrentDraft(
+                      problemId: report.problemId?.trim().isNotEmpty == true
+                          ? report.problemId
+                          : report.id,
+                      isDeadlineClosed: isSubmissionClosed,
+                    );
+                    final latestState =
+                        ref.read(reportSubmitViewModelProvider(report));
+                    if (latestState.errorMsg.isNotEmpty && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(latestState.errorMsg)),
+                      );
+                    }
+                    if (success && context.mounted) {
+                      onSubmitSuccess?.call();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('제출이 접수되었습니다. 결과 탭으로 이동합니다.'),
+                        ),
+                      );
+                    }
+                    showValidationError.value =
+                        !success && latestState.errorMsg.isEmpty;
+                  },
+            child: Text(
+              isSubmissionClosed
+                  ? '제출 마감'
+                  : (submitState.isSubmitting ? '제출 중...' : '제출하기'),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DeadlineClosedNotice extends StatelessWidget {
+  final bool isDarkMode;
+
+  const _DeadlineClosedNotice({required this.isDarkMode});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xFF3F1D1D) : const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFCA5A5)),
+      ),
+      child: Text(
+        '마감 시간이 지나 더 이상 제출할 수 없습니다.',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: isDarkMode ? const Color(0xFFFECACA) : const Color(0xFFB91C1C),
+        ),
+      ),
     );
   }
 }

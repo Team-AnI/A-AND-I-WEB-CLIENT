@@ -19,7 +19,10 @@ mixin _$ArticleListState {
   int get size;
   int get totalElements;
   int get totalPages;
+  bool get isLoadingMore;
+  bool get hasMore;
   String get errorMsg;
+  String get loadMoreErrorMsg;
 
   /// Create a copy of ArticleListState
   /// with the given fields replaced by the non-null parameter values.
@@ -41,8 +44,13 @@ mixin _$ArticleListState {
                 other.totalElements == totalElements) &&
             (identical(other.totalPages, totalPages) ||
                 other.totalPages == totalPages) &&
+            (identical(other.isLoadingMore, isLoadingMore) ||
+                other.isLoadingMore == isLoadingMore) &&
+            (identical(other.hasMore, hasMore) || other.hasMore == hasMore) &&
             (identical(other.errorMsg, errorMsg) ||
-                other.errorMsg == errorMsg));
+                other.errorMsg == errorMsg) &&
+            (identical(other.loadMoreErrorMsg, loadMoreErrorMsg) ||
+                other.loadMoreErrorMsg == loadMoreErrorMsg));
   }
 
   @override
@@ -53,11 +61,14 @@ mixin _$ArticleListState {
       size,
       totalElements,
       totalPages,
-      errorMsg);
+      isLoadingMore,
+      hasMore,
+      errorMsg,
+      loadMoreErrorMsg);
 
   @override
   String toString() {
-    return 'ArticleListState(items: $items, page: $page, size: $size, totalElements: $totalElements, totalPages: $totalPages, errorMsg: $errorMsg)';
+    return 'ArticleListState(items: $items, page: $page, size: $size, totalElements: $totalElements, totalPages: $totalPages, isLoadingMore: $isLoadingMore, hasMore: $hasMore, errorMsg: $errorMsg, loadMoreErrorMsg: $loadMoreErrorMsg)';
   }
 }
 
@@ -73,7 +84,10 @@ abstract mixin class $ArticleListStateCopyWith<$Res> {
       int size,
       int totalElements,
       int totalPages,
-      String errorMsg});
+      bool isLoadingMore,
+      bool hasMore,
+      String errorMsg,
+      String loadMoreErrorMsg});
 }
 
 /// @nodoc
@@ -94,7 +108,10 @@ class _$ArticleListStateCopyWithImpl<$Res>
     Object? size = null,
     Object? totalElements = null,
     Object? totalPages = null,
+    Object? isLoadingMore = null,
+    Object? hasMore = null,
     Object? errorMsg = null,
+    Object? loadMoreErrorMsg = null,
   }) {
     return _then(_self.copyWith(
       items: null == items
@@ -117,9 +134,21 @@ class _$ArticleListStateCopyWithImpl<$Res>
           ? _self.totalPages
           : totalPages // ignore: cast_nullable_to_non_nullable
               as int,
+      isLoadingMore: null == isLoadingMore
+          ? _self.isLoadingMore
+          : isLoadingMore // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasMore: null == hasMore
+          ? _self.hasMore
+          : hasMore // ignore: cast_nullable_to_non_nullable
+              as bool,
       errorMsg: null == errorMsg
           ? _self.errorMsg
           : errorMsg // ignore: cast_nullable_to_non_nullable
+              as String,
+      loadMoreErrorMsg: null == loadMoreErrorMsg
+          ? _self.loadMoreErrorMsg
+          : loadMoreErrorMsg // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -216,16 +245,32 @@ extension ArticleListStatePatterns on ArticleListState {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(List<Post> items, int page, int size, int totalElements,
-            int totalPages, String errorMsg)?
+    TResult Function(
+            List<Post> items,
+            int page,
+            int size,
+            int totalElements,
+            int totalPages,
+            bool isLoadingMore,
+            bool hasMore,
+            String errorMsg,
+            String loadMoreErrorMsg)?
         $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _ArticleListState() when $default != null:
-        return $default(_that.items, _that.page, _that.size,
-            _that.totalElements, _that.totalPages, _that.errorMsg);
+        return $default(
+            _that.items,
+            _that.page,
+            _that.size,
+            _that.totalElements,
+            _that.totalPages,
+            _that.isLoadingMore,
+            _that.hasMore,
+            _that.errorMsg,
+            _that.loadMoreErrorMsg);
       case _:
         return orElse();
     }
@@ -246,15 +291,31 @@ extension ArticleListStatePatterns on ArticleListState {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(List<Post> items, int page, int size, int totalElements,
-            int totalPages, String errorMsg)
+    TResult Function(
+            List<Post> items,
+            int page,
+            int size,
+            int totalElements,
+            int totalPages,
+            bool isLoadingMore,
+            bool hasMore,
+            String errorMsg,
+            String loadMoreErrorMsg)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ArticleListState():
-        return $default(_that.items, _that.page, _that.size,
-            _that.totalElements, _that.totalPages, _that.errorMsg);
+        return $default(
+            _that.items,
+            _that.page,
+            _that.size,
+            _that.totalElements,
+            _that.totalPages,
+            _that.isLoadingMore,
+            _that.hasMore,
+            _that.errorMsg,
+            _that.loadMoreErrorMsg);
     }
   }
 
@@ -272,15 +333,31 @@ extension ArticleListStatePatterns on ArticleListState {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(List<Post> items, int page, int size, int totalElements,
-            int totalPages, String errorMsg)?
+    TResult? Function(
+            List<Post> items,
+            int page,
+            int size,
+            int totalElements,
+            int totalPages,
+            bool isLoadingMore,
+            bool hasMore,
+            String errorMsg,
+            String loadMoreErrorMsg)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ArticleListState() when $default != null:
-        return $default(_that.items, _that.page, _that.size,
-            _that.totalElements, _that.totalPages, _that.errorMsg);
+        return $default(
+            _that.items,
+            _that.page,
+            _that.size,
+            _that.totalElements,
+            _that.totalPages,
+            _that.isLoadingMore,
+            _that.hasMore,
+            _that.errorMsg,
+            _that.loadMoreErrorMsg);
       case _:
         return null;
     }
@@ -296,7 +373,10 @@ class _ArticleListState implements ArticleListState {
       this.size = 0,
       this.totalElements = 0,
       this.totalPages = 0,
-      this.errorMsg = ''})
+      this.isLoadingMore = false,
+      this.hasMore = true,
+      this.errorMsg = '',
+      this.loadMoreErrorMsg = ''})
       : _items = items;
 
   final List<Post> _items;
@@ -322,7 +402,16 @@ class _ArticleListState implements ArticleListState {
   final int totalPages;
   @override
   @JsonKey()
+  final bool isLoadingMore;
+  @override
+  @JsonKey()
+  final bool hasMore;
+  @override
+  @JsonKey()
   final String errorMsg;
+  @override
+  @JsonKey()
+  final String loadMoreErrorMsg;
 
   /// Create a copy of ArticleListState
   /// with the given fields replaced by the non-null parameter values.
@@ -344,8 +433,13 @@ class _ArticleListState implements ArticleListState {
                 other.totalElements == totalElements) &&
             (identical(other.totalPages, totalPages) ||
                 other.totalPages == totalPages) &&
+            (identical(other.isLoadingMore, isLoadingMore) ||
+                other.isLoadingMore == isLoadingMore) &&
+            (identical(other.hasMore, hasMore) || other.hasMore == hasMore) &&
             (identical(other.errorMsg, errorMsg) ||
-                other.errorMsg == errorMsg));
+                other.errorMsg == errorMsg) &&
+            (identical(other.loadMoreErrorMsg, loadMoreErrorMsg) ||
+                other.loadMoreErrorMsg == loadMoreErrorMsg));
   }
 
   @override
@@ -356,11 +450,14 @@ class _ArticleListState implements ArticleListState {
       size,
       totalElements,
       totalPages,
-      errorMsg);
+      isLoadingMore,
+      hasMore,
+      errorMsg,
+      loadMoreErrorMsg);
 
   @override
   String toString() {
-    return 'ArticleListState(items: $items, page: $page, size: $size, totalElements: $totalElements, totalPages: $totalPages, errorMsg: $errorMsg)';
+    return 'ArticleListState(items: $items, page: $page, size: $size, totalElements: $totalElements, totalPages: $totalPages, isLoadingMore: $isLoadingMore, hasMore: $hasMore, errorMsg: $errorMsg, loadMoreErrorMsg: $loadMoreErrorMsg)';
   }
 }
 
@@ -378,7 +475,10 @@ abstract mixin class _$ArticleListStateCopyWith<$Res>
       int size,
       int totalElements,
       int totalPages,
-      String errorMsg});
+      bool isLoadingMore,
+      bool hasMore,
+      String errorMsg,
+      String loadMoreErrorMsg});
 }
 
 /// @nodoc
@@ -399,7 +499,10 @@ class __$ArticleListStateCopyWithImpl<$Res>
     Object? size = null,
     Object? totalElements = null,
     Object? totalPages = null,
+    Object? isLoadingMore = null,
+    Object? hasMore = null,
     Object? errorMsg = null,
+    Object? loadMoreErrorMsg = null,
   }) {
     return _then(_ArticleListState(
       items: null == items
@@ -422,9 +525,21 @@ class __$ArticleListStateCopyWithImpl<$Res>
           ? _self.totalPages
           : totalPages // ignore: cast_nullable_to_non_nullable
               as int,
+      isLoadingMore: null == isLoadingMore
+          ? _self.isLoadingMore
+          : isLoadingMore // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasMore: null == hasMore
+          ? _self.hasMore
+          : hasMore // ignore: cast_nullable_to_non_nullable
+              as bool,
       errorMsg: null == errorMsg
           ? _self.errorMsg
           : errorMsg // ignore: cast_nullable_to_non_nullable
+              as String,
+      loadMoreErrorMsg: null == loadMoreErrorMsg
+          ? _self.loadMoreErrorMsg
+          : loadMoreErrorMsg // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }

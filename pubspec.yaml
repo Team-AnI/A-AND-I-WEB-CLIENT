@@ -32,6 +32,16 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
+  aandi_api_endpoints:
+    path: packages/aandi_api_endpoints
+  aandi_auth:
+    path: packages/auth_api
+  aandi_course_api:
+    path: packages/aandi_course_api
+  aandi_oj_api:
+    path: packages/aandi_oj_api
+  aandi_tech_blog:
+    path: packages/blog_api
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -63,6 +73,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  melos: 6.3.2
   riverpod_generator: ^2.6.3
   build_runner: ^2.4.9
   custom_lint: ^0.7.0
@@ -87,6 +98,20 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/
+
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Pretendard-Bold.otf
+          weight: 700
+    - family: D2Coding
+      fonts:
+        - asset: assets/fonts/D2Coding-Ver1.3.2-20180524.ttf
+          weight: 400
+        - asset: assets/fonts/D2CodingBold-Ver1.3.2-20180524.ttf
+          weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,0 +1,10 @@
+name: aandi_api_endpoints
+description: Shared API endpoint templates for A&I web packages
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.3
+
+dev_dependencies:
+  lints: ^6.0.0

@@ -25,7 +25,7 @@ class UserProfileRemoteDatasource {
   final Dio dio;
   final String _baseUrl;
 
-  /// `/v1/me` 내 정보 수정 API를 호출한다.
+  /// `/v2/me` 내 정보 수정 API를 호출한다.
   Future<User?> updateMyProfile({
     required String authorization,
     String? nickname,
@@ -54,12 +54,12 @@ class UserProfileRemoteDatasource {
         throw UpdateMyProfileRequestException();
       }
 
-      final response = await dio.post(
-        _buildUrl('/v1/me'),
+      final response = await dio.patch(
+        _buildUrl('/v2/me'),
         data: FormData.fromMap(formDataMap),
         options: Options(
           headers: {
-            'Authorization': authorization,
+            'Authenticate': authorization,
           },
         ),
       );
@@ -80,7 +80,7 @@ class UserProfileRemoteDatasource {
     }
   }
 
-  /// `/v1/me/password` 비밀번호 변경 API를 호출한다.
+  /// `/v2/me/password` 비밀번호 변경 API를 호출한다.
   Future<void> changePassword({
     required String authorization,
     required String currentPassword,
@@ -94,15 +94,15 @@ class UserProfileRemoteDatasource {
         throw ChangePasswordRequestException();
       }
 
-      final response = await dio.post(
-        _buildUrl('/v1/me/password'),
+      final response = await dio.patch(
+        _buildUrl('/v2/me/password'),
         data: {
           'currentPassword': trimmedCurrentPassword,
           'newPassword': trimmedNewPassword,
         },
         options: Options(
           headers: {
-            'Authorization': authorization,
+            'Authenticate': authorization,
           },
         ),
       );

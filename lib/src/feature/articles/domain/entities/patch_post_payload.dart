@@ -1,11 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 
 /// 게시글 수정 요청 페이로드입니다.
 class PatchPostPayload {
   /// 게시글 수정 요청 페이로드를 생성합니다.
   const PatchPostPayload({
+    this.type,
     this.title,
     this.contentMarkdown,
     this.summary,
@@ -14,6 +16,9 @@ class PatchPostPayload {
     this.imageFileName,
     this.imageBytes,
   });
+
+  /// 게시글 종류입니다.
+  final PostType? type;
 
   /// 게시글 제목입니다.
   final String? title;

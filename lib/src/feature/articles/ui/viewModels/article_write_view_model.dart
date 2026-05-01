@@ -9,6 +9,7 @@ import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/i
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/patch_post_payload.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_author.dart';
+import 'package:a_and_i_report_web_server/src/feature/articles/domain/entities/post_type.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/providers/article_post_providers.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_list_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/articles/ui/viewModels/article_write_state.dart';
@@ -16,7 +17,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'article_write_view_model.g.dart';
 
-/// 블로그 작성/출간 상태를 관리하는 ViewModel입니다.
+/// 게시글 작성/출간 상태를 관리하는 ViewModel입니다.
 @Riverpod(keepAlive: true)
 class ArticleWriteViewModel extends _$ArticleWriteViewModel {
   String _lastSavedDraftTitle = '';
@@ -25,6 +26,32 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
   @override
   ArticleWriteState build() {
     return const ArticleWriteState();
+  }
+
+  /// 라우트에 맞는 게시글 종류를 준비합니다.
+  void prepareForRoute(PostType postType) {
+    if (state.postId.trim().isNotEmpty || state.postType == postType) {
+      return;
+    }
+
+    state = state.copyWith(
+      postType: postType,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 작성 중인 게시글 종류를 변경합니다.
+  void setPostType(PostType postType) {
+    if (state.postType == postType) {
+      return;
+    }
+
+    state = state.copyWith(
+      postType: postType,
+      errorMsg: '',
+      successMsg: '',
+    );
   }
 
   /// 작성 중인 초안의 제목/본문을 동기화합니다.
@@ -108,7 +135,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     required Uint8List bytes,
   }) async {
     try {
-      _ensureCanManageArticles();
+      _ensureCanManageCurrentPost();
       state = state.copyWith(
         isUploadingImage: true,
         errorMsg: '',
@@ -138,11 +165,13 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
   Future<bool> saveDraft({
     required String title,
     required String contentMarkdown,
+    String? summary,
   }) async {
     final isEditingPublishedPost = _isEditingPublishedPost();
     return _submit(
       title: title,
       contentMarkdown: contentMarkdown,
+      summary: summary,
       status: 'Draft',
       successMsg: isEditingPublishedPost ? '수정사항이 임시저장되었습니다.' : '임시저장되었습니다.',
     );
@@ -181,11 +210,13 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
   Future<bool> publish({
     required String title,
     required String contentMarkdown,
+    String? summary,
   }) async {
     final isEditingPublishedPost = _isEditingPublishedPost();
     return _submit(
       title: title,
       contentMarkdown: contentMarkdown,
+      summary: summary,
       status: 'Published',
       successMsg: isEditingPublishedPost ? '포스트가 수정되었습니다.' : '포스트가 출간되었습니다.',
     );
@@ -195,6 +226,8 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
   void startEditing(Post post) {
     state = state.copyWith(
       postId: post.id,
+      postType: post.type,
+      editingAuthorId: post.author.id,
       editingPostStatus: post.status,
       title: post.title,
       contentMarkdown: post.contentMarkdown,
@@ -216,8 +249,10 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
   }
 
   /// 작성 상태를 초기화합니다.
-  void reset() {
-    state = const ArticleWriteState();
+  void reset({
+    PostType postType = PostType.blog,
+  }) {
+    state = ArticleWriteState(postType: postType);
     _markDraftSaved(
       title: '',
       contentMarkdown: '',
@@ -228,7 +263,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
   Future<CollaboratorLookupUser?> lookupCollaboratorByCode({
     required String code,
   }) async {
-    _ensureCanManageArticles();
+    _ensureCanManageCurrentPost();
     final normalizedCode = code.trim();
     if (normalizedCode.isEmpty) {
       return null;
@@ -294,12 +329,13 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
   Future<bool> _submit({
     required String title,
     required String contentMarkdown,
+    String? summary,
     required String status,
     required String successMsg,
   }) async {
     final normalizedTitle = title.trim();
     final normalizedContent = contentMarkdown.trim();
-    final normalizedSummary = state.summary.trim();
+    final normalizedSummary = (summary ?? state.summary).trim();
     final summaryToUpload = normalizedSummary;
     if (normalizedTitle.isEmpty) {
       state = state.copyWith(errorMsg: '제목을 입력해주세요.', successMsg: '');
@@ -312,7 +348,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     }
 
     try {
-      _ensureCanManageArticles();
+      _ensureCanManageCurrentPost();
       final authorInfo = _resolveAuthorInfo();
       state = state.copyWith(
         isSubmitting: true,
@@ -329,6 +365,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
       if (state.postId.isEmpty) {
         final createdPost = await ref.read(postRepositoryProvider).createPost(
               payload: CreatePostPayload(
+                type: state.postType,
                 title: normalizedTitle,
                 contentMarkdown: normalizedContent,
                 summary: summaryToUpload,
@@ -344,6 +381,8 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
 
         state = state.copyWith(
           postId: createdPost.id,
+          postType: createdPost.type,
+          editingAuthorId: createdPost.author.id,
           editingPostStatus: createdPost.status,
           title: createdPost.title,
           contentMarkdown: createdPost.contentMarkdown,
@@ -356,16 +395,14 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
           title: createdPost.title,
           contentMarkdown: createdPost.contentMarkdown,
         );
-        _syncPublishedPostToList(
-          createdPost,
-          summary: summaryToUpload,
-        );
+        _refreshPostCaches();
         return true;
       }
 
       final patchedPost = await ref.read(postRepositoryProvider).patchPost(
             postId: state.postId,
             payload: PatchPostPayload(
+              type: state.postType,
               title: normalizedTitle,
               contentMarkdown: normalizedContent,
               summary: summaryToUpload,
@@ -378,6 +415,8 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
 
       state = state.copyWith(
         postId: patchedPost.id,
+        postType: patchedPost.type,
+        editingAuthorId: patchedPost.author.id,
         editingPostStatus: patchedPost.status,
         title: patchedPost.title,
         contentMarkdown: patchedPost.contentMarkdown,
@@ -390,10 +429,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
         title: patchedPost.title,
         contentMarkdown: patchedPost.contentMarkdown,
       );
-      _syncPublishedPostToList(
-        patchedPost,
-        summary: summaryToUpload,
-      );
+      _refreshPostCaches();
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -405,11 +441,23 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     }
   }
 
-  void _ensureCanManageArticles() {
-    final role = ref.read(userViewModelProvider).resolvedRole;
-    if (!canManageArticlesWithRole(role)) {
-      throw Exception('ORGANIZER 이상 권한이 필요합니다.');
+  void _ensureCanManageCurrentPost() {
+    final userState = ref.read(userViewModelProvider);
+    if (canManageArticlesWithRole(userState.resolvedRole)) {
+      return;
     }
+
+    final currentUserId = userState.userId?.trim();
+    final editingAuthorId = state.editingAuthorId.trim();
+    final isEditingOwnPost = state.postId.trim().isNotEmpty &&
+        currentUserId != null &&
+        currentUserId.isNotEmpty &&
+        currentUserId == editingAuthorId;
+    if (isEditingOwnPost) {
+      return;
+    }
+
+    throw Exception('작성자 본인 또는 ORGANIZER 이상 권한이 필요합니다.');
   }
 
   ({String id, String nickname, String? profileImageUrl}) _resolveAuthorInfo() {
@@ -430,45 +478,10 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     );
   }
 
-  void _syncPublishedPostToList(
-    Post post, {
-    required String summary,
-  }) {
-    if (post.status.trim().toLowerCase() != 'published') {
-      return;
-    }
-
-    final userState = ref.read(userViewModelProvider);
-    final userNickname = userState.nickname?.trim();
-    final userProfileImage = userState.profileImageUrl?.trim();
-    final normalizedNickname = userNickname != null && userNickname.isNotEmpty
-        ? userNickname
-        : post.author.nickname;
-    final normalizedProfileImage =
-        userProfileImage != null && userProfileImage.isNotEmpty
-            ? userProfileImage
-            : post.author.profileImage;
-
-    final normalizedPost = Post(
-      id: post.id,
-      title: post.title,
-      contentMarkdown: post.contentMarkdown,
-      summary: summary,
-      thumbnailUrl: post.thumbnailUrl,
-      author: PostAuthor(
-        id: post.author.id,
-        nickname: normalizedNickname,
-        profileImage: normalizedProfileImage,
-      ),
-      collaborators: post.collaborators,
-      status: post.status,
-      createdAt: post.createdAt,
-      updatedAt: post.updatedAt,
-    );
-
-    ref
-        .read(articleListViewModelProvider.notifier)
-        .upsertPublishedPost(normalizedPost);
+  void _refreshPostCaches() {
+    ref.invalidate(articleListViewModelProvider(PostType.blog));
+    ref.invalidate(articleListViewModelProvider(PostType.lecture));
+    ref.invalidate(myDraftPostPageProvider);
   }
 
   bool _isEditingPublishedPost() {

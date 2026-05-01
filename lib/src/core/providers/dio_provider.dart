@@ -2,10 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:a_and_i_report_web_server/src/core/constants/api_url.dart';
+import 'package:a_and_i_report_web_server/src/core/interceptors/api_interceptor.dart';
 import 'package:a_and_i_report_web_server/src/core/interceptors/auth_interceptor.dart';
 import 'package:a_and_i_report_web_server/src/core/utils/app_messenger.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/providers/local_auth_datasource_provider.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_event.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 
 part 'dio_provider.g.dart';
@@ -22,14 +25,21 @@ Dio dio(Ref ref) {
   ));
 
   dio.interceptors.add(
+    ApiInterceptor(
+      localAuthDatasource: localAuthDatasource,
+    ),
+  );
+
+  dio.interceptors.add(
     AuthInterceptor(
       localAuthDatasource: localAuthDatasource,
       dio: dio,
       onTokenExpired: (refreshToken) async {
+        final logoutDio = Dio(dio.options.copyWith());
         if (refreshToken != null && refreshToken.isNotEmpty) {
           try {
-            await dio.post(
-              '/v1/auth/logout',
+            await logoutDio.post(
+              '/v2/auth/logout',
               data: {'refreshToken': refreshToken},
               options: Options(
                 headers: {'Content-Type': 'application/json'},
@@ -44,9 +54,14 @@ Dio dio(Ref ref) {
         await localAuthDatasource.deleteRefreshToken();
         await localAuthDatasource.deleteCachedUserJson();
 
-        ref.invalidate(authViewModelProvider);
-        ref.invalidate(userViewModelProvider);
+        await ref
+            .read(userViewModelProvider.notifier)
+            .onEvent(const UserViewEvent.clear());
+        ref.read(authViewModelProvider.notifier).expireSession();
         showGlobalSnackBar('세션이 만료되어 로그아웃되었습니다. 다시 로그인해주세요.');
+      },
+      onTokenRefreshed: (_, __) async {
+        ref.read(authSessionRevisionProvider.notifier).state++;
       },
     ),
   );

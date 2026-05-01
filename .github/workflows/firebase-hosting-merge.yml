@@ -10,12 +10,18 @@ jobs:
     steps:
       - name: Clone Repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         id: flutter-action
         with:
           channel: stable
+
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+
       - run: flutter --version
 
       - name: Install dependencies
@@ -31,3 +37,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AANDI_REPORT_WEB }}
           channelId: live
           projectId: aandi-report-web
+          target: main

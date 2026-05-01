@@ -7,7 +7,7 @@ part of 'course_by_slug_view_model.dart';
 // **************************************************************************
 
 String _$courseBySlugViewModelHash() =>
-    r'8cd694bf46d4501535e7eb533710aee0eaddac8f';
+    r'05beeb67e5faea8bc071256bdb0ef82b6431e8e1';
 
 /// Copied from Dart SDK
 class _SystemHash {

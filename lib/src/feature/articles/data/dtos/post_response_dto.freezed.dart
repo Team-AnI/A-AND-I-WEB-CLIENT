@@ -15,6 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PostResponseDto {
   String get id;
+  String get type;
   String get title;
   String get contentMarkdown;
   String? get summary;
@@ -42,6 +43,7 @@ mixin _$PostResponseDto {
         (other.runtimeType == runtimeType &&
             other is PostResponseDto &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.type, type) || other.type == type) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.contentMarkdown, contentMarkdown) ||
                 other.contentMarkdown == contentMarkdown) &&
@@ -63,6 +65,7 @@ mixin _$PostResponseDto {
   int get hashCode => Object.hash(
       runtimeType,
       id,
+      type,
       title,
       contentMarkdown,
       summary,
@@ -75,7 +78,7 @@ mixin _$PostResponseDto {
 
   @override
   String toString() {
-    return 'PostResponseDto(id: $id, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PostResponseDto(id: $id, type: $type, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -87,6 +90,7 @@ abstract mixin class $PostResponseDtoCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
+      String type,
       String title,
       String contentMarkdown,
       String? summary,
@@ -114,6 +118,7 @@ class _$PostResponseDtoCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
+    Object? type = null,
     Object? title = null,
     Object? contentMarkdown = null,
     Object? summary = freezed,
@@ -128,6 +133,10 @@ class _$PostResponseDtoCopyWithImpl<$Res>
       id: null == id
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      type: null == type
+          ? _self.type
+          : type // ignore: cast_nullable_to_non_nullable
               as String,
       title: null == title
           ? _self.title
@@ -272,6 +281,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(
             String id,
+            String type,
             String title,
             String contentMarkdown,
             String? summary,
@@ -289,6 +299,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
       case _PostResponseDto() when $default != null:
         return $default(
             _that.id,
+            _that.type,
             _that.title,
             _that.contentMarkdown,
             _that.summary,
@@ -320,6 +331,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
   TResult when<TResult extends Object?>(
     TResult Function(
             String id,
+            String type,
             String title,
             String contentMarkdown,
             String? summary,
@@ -336,6 +348,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
       case _PostResponseDto():
         return $default(
             _that.id,
+            _that.type,
             _that.title,
             _that.contentMarkdown,
             _that.summary,
@@ -364,6 +377,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(
             String id,
+            String type,
             String title,
             String contentMarkdown,
             String? summary,
@@ -380,6 +394,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
       case _PostResponseDto() when $default != null:
         return $default(
             _that.id,
+            _that.type,
             _that.title,
             _that.contentMarkdown,
             _that.summary,
@@ -400,6 +415,7 @@ extension PostResponseDtoPatterns on PostResponseDto {
 class _PostResponseDto implements PostResponseDto {
   const _PostResponseDto(
       {required this.id,
+      this.type = 'Blog',
       required this.title,
       required this.contentMarkdown,
       this.summary,
@@ -416,6 +432,9 @@ class _PostResponseDto implements PostResponseDto {
 
   @override
   final String id;
+  @override
+  @JsonKey()
+  final String type;
   @override
   final String title;
   @override
@@ -463,6 +482,7 @@ class _PostResponseDto implements PostResponseDto {
         (other.runtimeType == runtimeType &&
             other is _PostResponseDto &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.type, type) || other.type == type) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.contentMarkdown, contentMarkdown) ||
                 other.contentMarkdown == contentMarkdown) &&
@@ -484,6 +504,7 @@ class _PostResponseDto implements PostResponseDto {
   int get hashCode => Object.hash(
       runtimeType,
       id,
+      type,
       title,
       contentMarkdown,
       summary,
@@ -496,7 +517,7 @@ class _PostResponseDto implements PostResponseDto {
 
   @override
   String toString() {
-    return 'PostResponseDto(id: $id, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PostResponseDto(id: $id, type: $type, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -510,6 +531,7 @@ abstract mixin class _$PostResponseDtoCopyWith<$Res>
   @useResult
   $Res call(
       {String id,
+      String type,
       String title,
       String contentMarkdown,
       String? summary,
@@ -538,6 +560,7 @@ class __$PostResponseDtoCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   $Res call({
     Object? id = null,
+    Object? type = null,
     Object? title = null,
     Object? contentMarkdown = null,
     Object? summary = freezed,
@@ -552,6 +575,10 @@ class __$PostResponseDtoCopyWithImpl<$Res>
       id: null == id
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      type: null == type
+          ? _self.type
+          : type // ignore: cast_nullable_to_non_nullable
               as String,
       title: null == title
           ? _self.title

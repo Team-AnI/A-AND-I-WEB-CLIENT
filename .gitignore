@@ -30,6 +30,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+coverage/
+pubspec_overrides.yaml
 
 # Symbolication related
 app.*.symbols
@@ -41,6 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/local.properties
 
 
 # 프로젝트 빌드 관련
@@ -57,3 +60,10 @@ QA.md
 
 .omc/
 .omx/
+
+# 기획 명세서 관련 (스크립트, 산출물)
+scripts/
+doc/screenshots/
+PRODUCT_SPEC.md
+PRODUCT_SPEC.pptx
+PRODUCT_SPEC.docx

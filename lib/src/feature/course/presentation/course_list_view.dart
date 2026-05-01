@@ -1,13 +1,24 @@
 import 'package:a_and_i_report_web_server/src/core/constants/api_url.dart';
 import 'package:a_and_i_report_web_server/src/core/providers/study_theme_provider.dart';
+import 'package:a_and_i_report_web_server/src/core/utils/api_error_mapper.dart';
+import 'package:a_and_i_report_web_server/src/feature/auth/providers/auth_session_revision_provider.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_state.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/auth_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/user_view_state.dart';
+import 'package:a_and_i_report_web_server/src/feature/course/presentation/course_access_policy.dart';
+import 'package:a_and_i_report_web_server/src/feature/home/data/entities/course.dart';
+import 'package:a_and_i_report_web_server/src/feature/home/providers/get_courses_usecase_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
+final courseListProvider =
+    FutureProvider.autoDispose<List<Course>>((ref) async {
+  ref.watch(authSessionRevisionProvider);
+  return ref.read(getCoursesUsecaseProvider).call();
+});
 
 /// 사용자 코스 목록 화면입니다.
 ///
@@ -25,6 +36,7 @@ class _CourseListViewState extends ConsumerState<CourseListView> {
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(studyDarkModeProvider);
     final palette = _CoursePalette.fromMode(isDarkMode);
+    final courseListAsync = ref.watch(courseListProvider);
     final isLoggedIn = ref.watch(authViewModelProvider).status ==
         AuthenticationStatus.authenticated;
     final userState = ref.watch(userViewModelProvider);
@@ -83,16 +95,10 @@ class _CourseListViewState extends ConsumerState<CourseListView> {
                       ),
                     ),
                     SizedBox(height: isMobile ? 24 : 32),
-                    _CourseCard(
+                    ..._buildCourseSections(
+                      context: context,
                       palette: palette,
-                      data: _activeCourse,
-                      onTapAction: () => context.go('/report'),
-                    ),
-                    const SizedBox(height: 22),
-                    _CourseCard(
-                      palette: palette,
-                      data: _lockedCourse,
-                      onTapAction: null,
+                      courseListAsync: courseListAsync,
                     ),
                     SizedBox(height: isMobile ? 72 : 108),
                     _FooterSection(palette: palette),
@@ -104,6 +110,65 @@ class _CourseListViewState extends ConsumerState<CourseListView> {
           ),
         ),
       ),
+    );
+  }
+
+  List<Widget> _buildCourseSections({
+    required BuildContext context,
+    required _CoursePalette palette,
+    required AsyncValue<List<Course>> courseListAsync,
+  }) {
+    return courseListAsync.when(
+      loading: () => <Widget>[
+        _CourseLoadingCard(palette: palette),
+      ],
+      error: (error, _) => <Widget>[
+        _CourseFeedbackCard(
+          palette: palette,
+          message: ApiErrorMapper.map(
+            error,
+            fallbackMessage: '코스 목록을 불러오지 못했습니다.',
+          ),
+        ),
+      ],
+      data: (courses) {
+        final sortedCourses = courses
+            .where((course) => isCourseVisible(course.startDate))
+            .toList()
+          ..sort(
+            (prev, curr) => prev.metadata.title.compareTo(curr.metadata.title),
+          );
+
+        if (sortedCourses.isEmpty) {
+          return <Widget>[
+            _CourseFeedbackCard(
+              palette: palette,
+              message: '표시할 코스가 없습니다.',
+            ),
+          ];
+        }
+
+        return <Widget>[
+          for (var index = 0; index < sortedCourses.length; index++) ...[
+            Builder(
+              builder: (_) {
+                final course = sortedCourses[index];
+                final cardData = _toCourseCardData(course);
+                return _CourseCard(
+                  palette: palette,
+                  data: cardData,
+                  onTapCourse: cardData.isClosed
+                      ? null
+                      : () => context.go(
+                            '/report?courseSlug=${Uri.encodeComponent(course.slug)}',
+                          ),
+                );
+              },
+            ),
+            if (index != sortedCourses.length - 1) const SizedBox(height: 22),
+          ],
+        ];
+      },
     );
   }
 }
@@ -238,14 +303,19 @@ class _TopNavAction extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: palette.textMuted,
-          ),
-        ],
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: palette.iconBackground,
+          border: Border.all(color: palette.border),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: palette.textMuted,
+        ),
       ),
     );
   }
@@ -255,98 +325,145 @@ class _CourseCard extends StatelessWidget {
   const _CourseCard({
     required this.palette,
     required this.data,
-    required this.onTapAction,
+    required this.onTapCourse,
   });
 
   final _CoursePalette palette;
   final _CourseCardData data;
-  final VoidCallback? onTapAction;
+  final VoidCallback? onTapCourse;
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
 
+    return InkWell(
+      borderRadius: BorderRadius.circular(30),
+      onTap: onTapCourse,
+      child: Container(
+        decoration: BoxDecoration(
+          color: palette.cardBackground,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: palette.border),
+          boxShadow: [
+            BoxShadow(
+              color: palette.cardShadow,
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: isMobile
+            ? Column(
+                children: [
+                  _CourseVisual(
+                    phaseStyle: data.phaseStyle,
+                  ),
+                  _CourseCardContent(
+                    palette: palette,
+                    data: data,
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  SizedBox(
+                    width: 300,
+                    child: _CourseVisual(
+                      phaseStyle: data.phaseStyle,
+                    ),
+                  ),
+                  Expanded(
+                    child: _CourseCardContent(
+                      palette: palette,
+                      data: data,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _CourseLoadingCard extends StatelessWidget {
+  const _CourseLoadingCard({required this.palette});
+
+  final _CoursePalette palette;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       decoration: BoxDecoration(
         color: palette.cardBackground,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: palette.border),
-        boxShadow: [
-          BoxShadow(
-            color: palette.cardShadow,
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
-      child: isMobile
-          ? Column(
-              children: [
-                _CourseVisual(
-                  palette: palette,
-                  icon: data.visualIcon,
-                ),
-                _CourseCardContent(
-                  palette: palette,
-                  data: data,
-                  onTapAction: onTapAction,
-                ),
-              ],
-            )
-          : Row(
-              children: [
-                SizedBox(
-                  width: 300,
-                  child: _CourseVisual(
-                    palette: palette,
-                    icon: data.visualIcon,
-                  ),
-                ),
-                Expanded(
-                  child: _CourseCardContent(
-                    palette: palette,
-                    data: data,
-                    onTapAction: onTapAction,
-                  ),
-                ),
-              ],
-            ),
+      child: const Center(
+        child: CircularProgressIndicator.adaptive(),
+      ),
+    );
+  }
+}
+
+class _CourseFeedbackCard extends StatelessWidget {
+  const _CourseFeedbackCard({
+    required this.palette,
+    required this.message,
+  });
+
+  final _CoursePalette palette;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      decoration: BoxDecoration(
+        color: palette.cardBackground,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: palette.border),
+      ),
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: palette.textMuted,
+          fontSize: 15,
+          height: 1.6,
+        ),
+      ),
     );
   }
 }
 
 class _CourseVisual extends StatelessWidget {
   const _CourseVisual({
-    required this.palette,
-    required this.icon,
+    required this.phaseStyle,
   });
 
-  final _CoursePalette palette;
-  final IconData icon;
+  final _CoursePhaseStyle phaseStyle;
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 1.35,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            bottomLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: phaseStyle.visualEnd,
           ),
-          gradient: LinearGradient(
-            colors: [palette.visualStart, palette.visualEnd],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: Icon(
-            icon,
-            size: 84,
-            color: palette.visualIcon,
+          child: Center(
+            child: Icon(
+              phaseStyle.icon,
+              size: 84,
+              color: phaseStyle.iconColor,
+            ),
           ),
         ),
       ),
@@ -358,12 +475,10 @@ class _CourseCardContent extends StatelessWidget {
   const _CourseCardContent({
     required this.palette,
     required this.data,
-    required this.onTapAction,
   });
 
   final _CoursePalette palette;
   final _CourseCardData data;
-  final VoidCallback? onTapAction;
 
   @override
   Widget build(BuildContext context) {
@@ -375,36 +490,41 @@ class _CourseCardContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: data.badgeBackground,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: data.badgeBorder),
-                ),
+              Expanded(
                 child: Text(
-                  data.badgeLabel,
+                  data.title,
                   style: TextStyle(
-                    color: data.badgeText,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.7,
+                    color: palette.textPrimary,
+                    fontSize:
+                        30 > (isMobile ? 26 : 30) ? 30 : (isMobile ? 26 : 30),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.6,
                   ),
                 ),
               ),
+              if (data.isClosed) ...[
+                const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: palette.lockedButtonBackground,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: palette.border),
+                  ),
+                  child: Text(
+                    '종료',
+                    style: TextStyle(
+                      color: palette.lockedButtonForeground,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            data.title,
-            style: TextStyle(
-              color: palette.textPrimary,
-              fontSize: 30 > (isMobile ? 26 : 30) ? 30 : (isMobile ? 26 : 30),
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.6,
-            ),
           ),
           const SizedBox(height: 10),
           Text(
@@ -415,75 +535,17 @@ class _CourseCardContent extends StatelessWidget {
               height: 1.6,
             ),
           ),
-          const SizedBox(height: 24),
-          data.isActive
-              ? _buildActiveBottom(context)
-              : _buildLockedBottom(context),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActiveBottom(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: FilledButton(
-        onPressed: onTapAction,
-        style: FilledButton.styleFrom(
-          backgroundColor: palette.actionButtonBackground,
-          foregroundColor: palette.actionButtonForeground,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-          ),
-        ),
-        child: const Text('학습하기'),
-      ),
-    );
-  }
-
-  Widget _buildLockedBottom(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Row(
-            children: [
-              Icon(Icons.lock_outline, color: palette.textMuted, size: 16),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  '이전 과정 수료 후 활성화',
-                  style: TextStyle(
-                    color: palette.textMuted,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          decoration: BoxDecoration(
-            color: palette.lockedButtonBackground,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Text(
-            '준비 중',
+          const SizedBox(height: 12),
+          Text(
+            data.period,
             style: TextStyle(
-              color: palette.lockedButtonForeground,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
+              color: palette.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -546,22 +608,28 @@ class _CourseCardData {
   const _CourseCardData({
     required this.title,
     required this.description,
-    required this.badgeLabel,
-    required this.badgeBackground,
-    required this.badgeBorder,
-    required this.badgeText,
-    required this.visualIcon,
-    required this.isActive,
+    required this.period,
+    required this.isClosed,
+    required this.phaseStyle,
   });
 
   final String title;
   final String description;
-  final String badgeLabel;
-  final Color badgeBackground;
-  final Color badgeBorder;
-  final Color badgeText;
-  final IconData visualIcon;
-  final bool isActive;
+  final String period;
+  final bool isClosed;
+  final _CoursePhaseStyle phaseStyle;
+}
+
+class _CoursePhaseStyle {
+  const _CoursePhaseStyle({
+    required this.icon,
+    required this.visualEnd,
+    required this.iconColor,
+  });
+
+  final IconData icon;
+  final Color visualEnd;
+  final Color iconColor;
 }
 
 class _CoursePalette {
@@ -576,9 +644,6 @@ class _CoursePalette {
     required this.logoBackground,
     required this.logoForeground,
     required this.iconBackground,
-    required this.visualStart,
-    required this.visualEnd,
-    required this.visualIcon,
     required this.actionButtonBackground,
     required this.actionButtonForeground,
     required this.lockedButtonBackground,
@@ -597,9 +662,6 @@ class _CoursePalette {
   final Color logoBackground;
   final Color logoForeground;
   final Color iconBackground;
-  final Color visualStart;
-  final Color visualEnd;
-  final Color visualIcon;
   final Color actionButtonBackground;
   final Color actionButtonForeground;
   final Color lockedButtonBackground;
@@ -620,9 +682,6 @@ class _CoursePalette {
         logoBackground: Color(0xFFF5F5F5),
         logoForeground: Color(0xFF111111),
         iconBackground: Color(0xFF18181B),
-        visualStart: Color(0xFF3F3F46),
-        visualEnd: Color(0xFF27272A),
-        visualIcon: Color(0x33FFFFFF),
         actionButtonBackground: Color(0xFFF5F5F5),
         actionButtonForeground: Color(0xFF111111),
         lockedButtonBackground: Color(0xFF27272A),
@@ -643,9 +702,6 @@ class _CoursePalette {
       logoBackground: Color(0xFF111111),
       logoForeground: Color(0xFFFFFFFF),
       iconBackground: Color(0xFFFFFFFF),
-      visualStart: Color(0xFFE4E4E7),
-      visualEnd: Color(0xFFD4D4D8),
-      visualIcon: Color(0x33000000),
       actionButtonBackground: Color(0xFF111111),
       actionButtonForeground: Color(0xFFFFFFFF),
       lockedButtonBackground: Color(0xFFF4F4F5),
@@ -675,24 +731,46 @@ String? _resolveProfileImageUrl(String? imagePath) {
   return Uri.parse(baseUrl).resolve(trimmedImagePath).toString();
 }
 
-const _activeCourse = _CourseCardData(
-  title: '기초 CS 과정',
-  description: '운영체제, 네트워크, 자료구조 등 개발자의 필수 소양인 컴퓨터 사이언스 기초를 다지는 과정입니다.',
-  badgeLabel: 'ACTIVE',
-  badgeBackground: Color(0xFFECFDF3),
-  badgeBorder: Color(0xFFC6F6D5),
-  badgeText: Color(0xFF16A34A),
-  visualIcon: Icons.code_rounded,
-  isActive: true,
-);
+_CourseCardData _toCourseCardData(Course course) {
+  final phaseStyle = _coursePhaseStyle(course);
+  final isClosed = isCourseClosed(course.endDate);
 
-const _lockedCourse = _CourseCardData(
-  title: 'AI 심화 과정',
-  description: '머신러닝과 딥러닝의 핵심 원리를 파악하고 실제 모델을 구현해보는 실습 위주의 교육 과정입니다.',
-  badgeLabel: 'LOCKED',
-  badgeBackground: Color(0xFFF4F4F5),
-  badgeBorder: Color(0xFFE4E4E7),
-  badgeText: Color(0xFF71717A),
-  visualIcon: Icons.smart_toy_rounded,
-  isActive: false,
-);
+  return _CourseCardData(
+    title: course.metadata.title,
+    description: course.metadata.description,
+    period: '기간: ${course.startDate} ~ ${course.endDate}',
+    isClosed: isClosed,
+    phaseStyle: phaseStyle,
+  );
+}
+
+_CoursePhaseStyle _coursePhaseStyle(Course course) {
+  final phase = (course.phase ?? course.metadata.phase).trim().toLowerCase();
+
+  switch (phase) {
+    case 'basic':
+      return const _CoursePhaseStyle(
+        icon: Icons.terminal,
+        visualEnd: Color(0xFFCFE2FF),
+        iconColor: Color(0xFF3B82F6),
+      );
+    case 'cs':
+      return const _CoursePhaseStyle(
+        icon: Icons.storage,
+        visualEnd: Color(0xFF8FBCFF),
+        iconColor: Color(0xFF2563EB),
+      );
+    case 'framework':
+      return const _CoursePhaseStyle(
+        icon: Icons.layers,
+        visualEnd: Color(0xFF3B82F6),
+        iconColor: Color(0xFF1E3A8A),
+      );
+    default:
+      return const _CoursePhaseStyle(
+        icon: Icons.auto_stories_rounded,
+        visualEnd: Color(0xFFCFCFD6),
+        iconColor: Color(0xFF52525B),
+      );
+  }
+}

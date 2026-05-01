@@ -1,6 +1,6 @@
 import 'package:a_and_i_report_web_server/src/feature/auth/domain/repositories/auth_repository.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/data/entities/course.dart';
-import 'package:a_and_i_report_web_server/src/feature/home/data/repositories/course_repository.dart';
+import 'package:aandi_course_api/aandi_course_api.dart' as course_api;
 
 /// 코스 슬러그로 코스 상세 정보를 조회하는 UseCase 인터페이스입니다.
 abstract class GetCourseBySlugUsecase {
@@ -9,13 +9,13 @@ abstract class GetCourseBySlugUsecase {
 
 /// 코스 슬러그로 코스 상세 정보를 조회하는 UseCase 구현체입니다.
 final class GetCourseBySlugUsecaseImpl implements GetCourseBySlugUsecase {
-  final CourseRepository _courseRepository;
+  final course_api.CourseApiClient _courseApiClient;
   final AuthRepository _authRepository;
 
   const GetCourseBySlugUsecaseImpl({
-    required CourseRepository courseRepository,
+    required course_api.CourseApiClient courseApiClient,
     required AuthRepository authRepository,
-  })  : _courseRepository = courseRepository,
+  })  : _courseApiClient = courseApiClient,
         _authRepository = authRepository;
 
   @override
@@ -26,7 +26,41 @@ final class GetCourseBySlugUsecaseImpl implements GetCourseBySlugUsecase {
       throw Exception('인증되지 않은 사용자입니다. 로그인이 필요합니다.');
     }
 
-    final authorization = 'Bearer $token';
-    return _courseRepository.getCourseBySlug(authorization, courseSlug);
+    try {
+      final course = await _courseApiClient.getCourseV2(
+        accessToken: token,
+        courseSlug: courseSlug,
+      );
+      return _toCourse(course);
+    } on course_api.CourseApiException catch (error) {
+      throw Exception(
+        error.alert?.trim().isNotEmpty == true ? error.alert! : error.message,
+      );
+    }
+  }
+
+  Course _toCourse(course_api.CourseSummary course) {
+    return Course(
+      id: course.id,
+      slug: course.slug,
+      fieldTag: course.targetTrack,
+      startDate: course.startDate ?? '',
+      endDate: course.endDate ?? '',
+      metadata: CourseMetadata(
+        title: course.metadata.title,
+        description: course.metadata.description ?? '',
+        phase: course.metadata.phase,
+        attributes: course.metadata.attributes,
+      ),
+      status: course.status,
+      createdAt: course.createdAt ??
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      updatedAt: course.updatedAt ??
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      title: course.metadata.title,
+      description: course.metadata.description,
+      phase: course.metadata.phase,
+      targetTrack: course.targetTrack,
+    );
   }
 }

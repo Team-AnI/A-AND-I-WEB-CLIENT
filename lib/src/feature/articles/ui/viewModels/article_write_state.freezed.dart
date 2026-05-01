@@ -15,6 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ArticleWriteState {
   String get postId;
+  PostType get postType;
+  String get editingAuthorId;
   String get editingPostStatus;
   String get title;
   String get contentMarkdown;
@@ -43,6 +45,10 @@ mixin _$ArticleWriteState {
         (other.runtimeType == runtimeType &&
             other is ArticleWriteState &&
             (identical(other.postId, postId) || other.postId == postId) &&
+            (identical(other.postType, postType) ||
+                other.postType == postType) &&
+            (identical(other.editingAuthorId, editingAuthorId) ||
+                other.editingAuthorId == editingAuthorId) &&
             (identical(other.editingPostStatus, editingPostStatus) ||
                 other.editingPostStatus == editingPostStatus) &&
             (identical(other.title, title) || other.title == title) &&
@@ -72,6 +78,8 @@ mixin _$ArticleWriteState {
   int get hashCode => Object.hash(
       runtimeType,
       postId,
+      postType,
+      editingAuthorId,
       editingPostStatus,
       title,
       contentMarkdown,
@@ -88,7 +96,7 @@ mixin _$ArticleWriteState {
 
   @override
   String toString() {
-    return 'ArticleWriteState(postId: $postId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
+    return 'ArticleWriteState(postId: $postId, postType: $postType, editingAuthorId: $editingAuthorId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
   }
 }
 
@@ -100,6 +108,8 @@ abstract mixin class $ArticleWriteStateCopyWith<$Res> {
   @useResult
   $Res call(
       {String postId,
+      PostType postType,
+      String editingAuthorId,
       String editingPostStatus,
       String title,
       String contentMarkdown,
@@ -129,6 +139,8 @@ class _$ArticleWriteStateCopyWithImpl<$Res>
   @override
   $Res call({
     Object? postId = null,
+    Object? postType = null,
+    Object? editingAuthorId = null,
     Object? editingPostStatus = null,
     Object? title = null,
     Object? contentMarkdown = null,
@@ -147,6 +159,14 @@ class _$ArticleWriteStateCopyWithImpl<$Res>
       postId: null == postId
           ? _self.postId
           : postId // ignore: cast_nullable_to_non_nullable
+              as String,
+      postType: null == postType
+          ? _self.postType
+          : postType // ignore: cast_nullable_to_non_nullable
+              as PostType,
+      editingAuthorId: null == editingAuthorId
+          ? _self.editingAuthorId
+          : editingAuthorId // ignore: cast_nullable_to_non_nullable
               as String,
       editingPostStatus: null == editingPostStatus
           ? _self.editingPostStatus
@@ -297,6 +317,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(
             String postId,
+            PostType postType,
+            String editingAuthorId,
             String editingPostStatus,
             String title,
             String contentMarkdown,
@@ -318,6 +340,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
       case _ArticleWriteState() when $default != null:
         return $default(
             _that.postId,
+            _that.postType,
+            _that.editingAuthorId,
             _that.editingPostStatus,
             _that.title,
             _that.contentMarkdown,
@@ -353,6 +377,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
   TResult when<TResult extends Object?>(
     TResult Function(
             String postId,
+            PostType postType,
+            String editingAuthorId,
             String editingPostStatus,
             String title,
             String contentMarkdown,
@@ -373,6 +399,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
       case _ArticleWriteState():
         return $default(
             _that.postId,
+            _that.postType,
+            _that.editingAuthorId,
             _that.editingPostStatus,
             _that.title,
             _that.contentMarkdown,
@@ -405,6 +433,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(
             String postId,
+            PostType postType,
+            String editingAuthorId,
             String editingPostStatus,
             String title,
             String contentMarkdown,
@@ -425,6 +455,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
       case _ArticleWriteState() when $default != null:
         return $default(
             _that.postId,
+            _that.postType,
+            _that.editingAuthorId,
             _that.editingPostStatus,
             _that.title,
             _that.contentMarkdown,
@@ -449,6 +481,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
 class _ArticleWriteState implements ArticleWriteState {
   const _ArticleWriteState(
       {this.postId = '',
+      this.postType = PostType.blog,
+      this.editingAuthorId = '',
       this.editingPostStatus = '',
       this.title = '',
       this.contentMarkdown = '',
@@ -468,6 +502,12 @@ class _ArticleWriteState implements ArticleWriteState {
   @override
   @JsonKey()
   final String postId;
+  @override
+  @JsonKey()
+  final PostType postType;
+  @override
+  @JsonKey()
+  final String editingAuthorId;
   @override
   @JsonKey()
   final String editingPostStatus;
@@ -531,6 +571,10 @@ class _ArticleWriteState implements ArticleWriteState {
         (other.runtimeType == runtimeType &&
             other is _ArticleWriteState &&
             (identical(other.postId, postId) || other.postId == postId) &&
+            (identical(other.postType, postType) ||
+                other.postType == postType) &&
+            (identical(other.editingAuthorId, editingAuthorId) ||
+                other.editingAuthorId == editingAuthorId) &&
             (identical(other.editingPostStatus, editingPostStatus) ||
                 other.editingPostStatus == editingPostStatus) &&
             (identical(other.title, title) || other.title == title) &&
@@ -560,6 +604,8 @@ class _ArticleWriteState implements ArticleWriteState {
   int get hashCode => Object.hash(
       runtimeType,
       postId,
+      postType,
+      editingAuthorId,
       editingPostStatus,
       title,
       contentMarkdown,
@@ -576,7 +622,7 @@ class _ArticleWriteState implements ArticleWriteState {
 
   @override
   String toString() {
-    return 'ArticleWriteState(postId: $postId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
+    return 'ArticleWriteState(postId: $postId, postType: $postType, editingAuthorId: $editingAuthorId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
   }
 }
 
@@ -590,6 +636,8 @@ abstract mixin class _$ArticleWriteStateCopyWith<$Res>
   @useResult
   $Res call(
       {String postId,
+      PostType postType,
+      String editingAuthorId,
       String editingPostStatus,
       String title,
       String contentMarkdown,
@@ -619,6 +667,8 @@ class __$ArticleWriteStateCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   $Res call({
     Object? postId = null,
+    Object? postType = null,
+    Object? editingAuthorId = null,
     Object? editingPostStatus = null,
     Object? title = null,
     Object? contentMarkdown = null,
@@ -637,6 +687,14 @@ class __$ArticleWriteStateCopyWithImpl<$Res>
       postId: null == postId
           ? _self.postId
           : postId // ignore: cast_nullable_to_non_nullable
+              as String,
+      postType: null == postType
+          ? _self.postType
+          : postType // ignore: cast_nullable_to_non_nullable
+              as PostType,
+      editingAuthorId: null == editingAuthorId
+          ? _self.editingAuthorId
+          : editingAuthorId // ignore: cast_nullable_to_non_nullable
               as String,
       editingPostStatus: null == editingPostStatus
           ? _self.editingPostStatus

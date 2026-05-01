@@ -12,6 +12,9 @@ sealed class Report with _$Report {
     /// 과제 고유 ID (UUID)
     required String id,
 
+    /// 채점 시스템 문제 ID입니다.
+    String? problemId,
+
     /// 과제 제목
     required String title,
 
@@ -26,6 +29,9 @@ sealed class Report with _$Report {
 
     /// 예제 입출력 케이스 목록
     required List<ExampleIO> exampleIo,
+
+    /// 언어별 기본 코드 템플릿 목록
+    required List<CodeTemplate> codeTemplates,
 
     /// 과제 유형 (CS, Algorithm 등)
     required ReportType reportType,
@@ -71,4 +77,19 @@ sealed class ExampleIO with _$ExampleIO {
 
   factory ExampleIO.fromJson(Map<String, dynamic> json) =>
       _$ExampleIOFromJson(json);
+}
+
+/// 언어별 기본 코드 템플릿을 담는 클래스입니다.
+@freezed
+sealed class CodeTemplate with _$CodeTemplate {
+  factory CodeTemplate({
+    /// 템플릿 언어입니다.
+    required String language,
+
+    /// 제출 에디터에 표시할 기본 함수 템플릿입니다.
+    required String functionTemplate,
+  }) = _CodeTemplate;
+
+  factory CodeTemplate.fromJson(Map<String, dynamic> json) =>
+      _$CodeTemplateFromJson(json);
 }

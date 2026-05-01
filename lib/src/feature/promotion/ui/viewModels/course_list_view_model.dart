@@ -13,7 +13,8 @@ class CourseListViewModel extends _$CourseListViewModel {
   }
 
   Future<void> _init() async {
-    state = state.copyWith(status: CourseListViewStatus.loading, errorMsg: null);
+    state =
+        state.copyWith(status: CourseListViewStatus.loading, errorMsg: null);
 
     try {
       final courses = await ref.read(getCoursesUsecaseProvider).call();

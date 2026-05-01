@@ -41,8 +41,8 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
                     width: 600,
                     height: 600,
                     decoration: BoxDecoration(
-                      color:
-                          const Color(0xFF1E3A8A).withOpacity(0.2), // blue-900
+                      color: const Color(0xFF1E3A8A)
+                          .withValues(alpha: 0.2), // blue-900
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -125,7 +125,7 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
                                   boxShadow: [
                                     BoxShadow(
                                       color: const Color(0xFF3B82F6)
-                                          .withOpacity(0.6),
+                                          .withValues(alpha: 0.6),
                                       blurRadius: 12,
                                     ),
                                   ],
@@ -220,10 +220,10 @@ class _PromotionCurriculumState extends State<PromotionCurriculum> {
             height: 40,
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF3B82F6).withOpacity(0.1),
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: const Color(0xFF3B82F6).withOpacity(0.2),
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -378,7 +378,7 @@ class StarFieldPainter extends CustomPainter {
 
     // Small stars
     final smallStarPaint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = Colors.white.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 50; i++) {
@@ -389,7 +389,7 @@ class StarFieldPainter extends CustomPainter {
 
     // Medium stars
     final mediumStarPaint = Paint()
-      ..color = Colors.white.withOpacity(0.5)
+      ..color = Colors.white.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 20; i++) {

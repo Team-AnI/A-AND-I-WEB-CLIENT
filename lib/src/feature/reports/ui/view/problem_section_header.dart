@@ -19,7 +19,8 @@ class ProblemSectionHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: isDarkMode ? const Color(0xFFF5F5F5) : const Color(0xFF000000),
+            color:
+                isDarkMode ? const Color(0xFFF5F5F5) : const Color(0xFF000000),
           ),
         ),
         const SizedBox(height: 16),

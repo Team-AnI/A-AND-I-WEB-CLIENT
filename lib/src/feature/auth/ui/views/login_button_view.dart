@@ -7,7 +7,6 @@ import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/login_u
 import 'package:a_and_i_report_web_server/src/feature/auth/ui/viewModels/login_ui_view_model.dart';
 import 'package:a_and_i_report_web_server/src/feature/home/presentation/views/home_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class LoginButtonView extends ConsumerWidget {
@@ -29,8 +28,8 @@ class LoginButtonView extends ConsumerWidget {
         onPressed: canSubmit
             ? () async {
                 try {
-                  final account = loginUiState.userId;
-                  final password = loginUiState.password;
+                  final Idle(:userId, :password) = loginUiState;
+                  final account = userId;
                   loginUiViewModel.onEvent(Login());
                   await authViewModel
                       .onEvent(SignIn(account: account, password: password));

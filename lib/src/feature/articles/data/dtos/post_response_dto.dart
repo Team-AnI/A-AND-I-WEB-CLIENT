@@ -10,6 +10,7 @@ sealed class PostResponseDto with _$PostResponseDto {
   /// 게시글 단건 응답 DTO를 생성합니다.
   const factory PostResponseDto({
     required String id,
+    @Default('Blog') String type,
     required String title,
     required String contentMarkdown,
     String? summary,
