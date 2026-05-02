@@ -251,6 +251,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
   String? createAuthorProfileImageUrl;
   PostType? createType;
   String? createStatus;
+  DateTime? createScheduledPublishAt;
   List<PostAuthor> createCollaborators = <PostAuthor>[];
   DioException? deleteException;
   MultipartFile? createFile;
@@ -258,6 +259,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
   String? patchContentMarkdown;
   String? patchSummary;
   String? patchStatus;
+  DateTime? patchScheduledPublishAt;
   List<PostAuthor> patchCollaborators = <PostAuthor>[];
   MultipartFile? patchFile;
 
@@ -272,6 +274,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
     String authorNickname,
     String? authorProfileImageUrl,
     String? status,
+    DateTime? scheduledPublishAt,
     List<PostAuthor> collaborators,
     MultipartFile? file,
   ) async {
@@ -284,6 +287,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
     createAuthorNickname = authorNickname;
     createAuthorProfileImageUrl = authorProfileImageUrl;
     createStatus = status;
+    createScheduledPublishAt = scheduledPublishAt;
     createCollaborators = collaborators;
     createFile = file;
     return _samplePost(status: status ?? 'Draft');
@@ -361,6 +365,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
     String? contentMarkdown,
     String? summary,
     String? status,
+    DateTime? scheduledPublishAt,
     List<PostAuthor> collaborators,
     MultipartFile? file,
   ) async {
@@ -370,6 +375,7 @@ class FakePostRemoteDatasource implements PostRemoteDatasource {
     patchContentMarkdown = contentMarkdown;
     patchSummary = summary;
     patchStatus = status;
+    patchScheduledPublishAt = scheduledPublishAt;
     patchCollaborators = collaborators;
     patchFile = file;
     return _samplePost(status: status ?? 'Draft');

@@ -20,6 +20,8 @@ sealed class ArticleWriteState with _$ArticleWriteState {
     @Default('') String summary,
     @Default(<String>[]) List<String> tags,
     @Default(<PostAuthor>[]) List<PostAuthor> collaborators,
+    @Default(false) bool isScheduledPublishEnabled,
+    DateTime? scheduledPublishAt,
     String? thumbnailUrl,
     Uint8List? thumbnailBytes,
     String? thumbnailFileName,

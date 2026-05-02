@@ -7,7 +7,7 @@ part of 'article_write_view_model.dart';
 // **************************************************************************
 
 String _$articleWriteViewModelHash() =>
-    r'1bc32208a351712f8ea6c9464b7ebbe2cc765c7f';
+    r'2e1d199b3cc826e429c89a34169aadec1efe49e0';
 
 /// 게시글 작성/출간 상태를 관리하는 ViewModel입니다.
 ///

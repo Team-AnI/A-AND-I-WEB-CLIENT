@@ -57,6 +57,7 @@ final class PostRepositoryAdapter implements PostRepository {
             payload.collaborators.map(_toBlogAuthor).toList(growable: false),
         type: _toBlogPostType(payload.type),
         status: _toBlogPostStatus(payload.status),
+        scheduledPublishAt: payload.scheduledPublishAt,
       ),
       thumbnail: _toMultipartFile(
         fileName: payload.imageFileName,
@@ -95,6 +96,7 @@ final class PostRepositoryAdapter implements PostRepository {
             payload.collaborators.map(_toBlogAuthor).toList(growable: false),
         type: _toBlogPostType(payload.type),
         status: _toBlogPostStatus(payload.status),
+        scheduledPublishAt: payload.scheduledPublishAt,
       ),
       thumbnail: _toMultipartFile(
         fileName: payload.imageFileName,
@@ -292,6 +294,8 @@ Post _toPost(blog_api.PostResponse response) {
         )
         .toList(growable: false),
     status: response.status.toApi(),
+    scheduledPublishAt: response.scheduledPublishAt,
+    publishedAt: response.publishedAt,
     createdAt: response.createdAt ??
         response.updatedAt ??
         DateTime.fromMillisecondsSinceEpoch(0),

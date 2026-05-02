@@ -22,6 +22,12 @@ _PostResponseDto _$PostResponseDtoFromJson(Map<String, dynamic> json) =>
               .toList() ??
           const <PostAuthorResponseDto>[],
       status: json['status'] as String,
+      scheduledPublishAt: json['scheduledPublishAt'] == null
+          ? null
+          : DateTime.parse(json['scheduledPublishAt'] as String),
+      publishedAt: json['publishedAt'] == null
+          ? null
+          : DateTime.parse(json['publishedAt'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -37,6 +43,8 @@ Map<String, dynamic> _$PostResponseDtoToJson(_PostResponseDto instance) =>
       'author': instance.author,
       'collaborators': instance.collaborators,
       'status': instance.status,
+      'scheduledPublishAt': instance.scheduledPublishAt?.toIso8601String(),
+      'publishedAt': instance.publishedAt?.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

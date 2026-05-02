@@ -46,6 +46,7 @@ void main() {
         '멘토',
         'https://example.com/profile.png',
         'Published',
+        null,
         const <PostAuthor>[
           PostAuthor(
             id: '22222222-2222-2222-2222-222222222222',
@@ -128,6 +129,7 @@ void main() {
         '수정 본문',
         '수정 요약',
         'Draft',
+        null,
         const <PostAuthor>[],
         null,
       );
@@ -178,6 +180,7 @@ void main() {
         '수정 본문',
         '',
         'Draft',
+        null,
         const <PostAuthor>[],
         null,
       );

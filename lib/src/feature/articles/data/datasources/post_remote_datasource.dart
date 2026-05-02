@@ -29,6 +29,7 @@ abstract class PostRemoteDatasource {
     String authorNickname,
     String? authorProfileImageUrl,
     String? status,
+    DateTime? scheduledPublishAt,
     List<PostAuthor> collaborators,
     MultipartFile? thumbnail,
   );
@@ -49,6 +50,7 @@ abstract class PostRemoteDatasource {
     String? contentMarkdown,
     String? summary,
     String? status,
+    DateTime? scheduledPublishAt,
     List<PostAuthor> collaborators,
     MultipartFile? thumbnail,
   );
@@ -120,6 +122,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     String authorNickname,
     String? authorProfileImageUrl,
     String? status,
+    DateTime? scheduledPublishAt,
     List<PostAuthor> collaborators,
     MultipartFile? thumbnail,
   ) async {
@@ -137,6 +140,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
         collaborators: collaborators.map(_toBlogAuthor).toList(),
         type: _toBlogType(type),
         status: status == null || status.isEmpty ? null : _toBlogStatus(status),
+        scheduledPublishAt: scheduledPublishAt,
       ),
       thumbnail: thumbnail,
     );
@@ -174,6 +178,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
     String? contentMarkdown,
     String? summary,
     String? status,
+    DateTime? scheduledPublishAt,
     List<PostAuthor> collaborators,
     MultipartFile? thumbnail,
   ) async {
@@ -189,6 +194,7 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
             : collaborators.map(_toBlogAuthor).toList(),
         type: _toBlogType(type),
         status: status == null || status.isEmpty ? null : _toBlogStatus(status),
+        scheduledPublishAt: scheduledPublishAt,
       ),
       thumbnail: thumbnail,
     );
@@ -347,6 +353,8 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
       author: _toPostAuthorResponseDto(post.author),
       collaborators: post.collaborators.map(_toPostAuthorResponseDto).toList(),
       status: post.status.toApi(),
+      scheduledPublishAt: post.scheduledPublishAt,
+      publishedAt: post.publishedAt,
       createdAt: post.createdAt ?? DateTime.now(),
       updatedAt: post.updatedAt ?? DateTime.now(),
     );

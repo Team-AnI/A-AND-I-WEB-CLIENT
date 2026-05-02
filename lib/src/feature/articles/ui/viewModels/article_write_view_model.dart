@@ -76,6 +76,35 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     );
   }
 
+  /// 예약 출시 사용 여부를 업데이트합니다.
+  void setScheduledPublishEnabled(bool enabled) {
+    state = state.copyWith(
+      isScheduledPublishEnabled: enabled,
+      scheduledPublishAt: enabled ? state.scheduledPublishAt : null,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 예약 출시 시각을 업데이트합니다.
+  void setScheduledPublishAt(DateTime scheduledPublishAt) {
+    state = state.copyWith(
+      isScheduledPublishEnabled: true,
+      scheduledPublishAt: scheduledPublishAt,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
+  /// 예약 출시 시각을 제거합니다.
+  void clearScheduledPublishAt() {
+    state = state.copyWith(
+      scheduledPublishAt: null,
+      errorMsg: '',
+      successMsg: '',
+    );
+  }
+
   /// 썸네일 URL을 업데이트합니다.
   void setThumbnailUrl(String? thumbnailUrl) {
     state = state.copyWith(
@@ -213,12 +242,16 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
     String? summary,
   }) async {
     final isEditingPublishedPost = _isEditingPublishedPost();
+    final isEditingExistingPost = state.postId.trim().isNotEmpty;
+    final shouldSchedule = state.isScheduledPublishEnabled;
     return _submit(
       title: title,
       contentMarkdown: contentMarkdown,
       summary: summary,
-      status: 'Published',
-      successMsg: isEditingPublishedPost ? '포스트가 수정되었습니다.' : '포스트가 출간되었습니다.',
+      status: shouldSchedule ? 'Scheduled' : 'Published',
+      successMsg: shouldSchedule
+          ? (isEditingExistingPost ? '예약 출시가 수정되었습니다.' : '예약 출시가 설정되었습니다.')
+          : (isEditingPublishedPost ? '포스트가 수정되었습니다.' : '포스트가 출간되었습니다.'),
     );
   }
 
@@ -234,6 +267,12 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
       summary: post.summary ?? '',
       tags: const <String>[],
       collaborators: post.collaborators,
+      isScheduledPublishEnabled:
+          post.status.trim().toLowerCase() == 'scheduled' &&
+              post.scheduledPublishAt != null,
+      scheduledPublishAt: post.status.trim().toLowerCase() == 'scheduled'
+          ? post.scheduledPublishAt
+          : null,
       thumbnailUrl: post.thumbnailUrl,
       thumbnailBytes: null,
       thumbnailFileName: null,
@@ -342,8 +381,25 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
       return false;
     }
     final isPublished = status.trim().toLowerCase() == 'published';
+    final isScheduled = status.trim().toLowerCase() == 'scheduled';
     if (isPublished && normalizedContent.isEmpty) {
       state = state.copyWith(errorMsg: '본문을 입력해주세요.', successMsg: '');
+      return false;
+    }
+    final scheduledPublishAt = isScheduled ? state.scheduledPublishAt : null;
+    if (isScheduled && scheduledPublishAt == null) {
+      state = state.copyWith(
+        errorMsg: '예약 출시 시간을 선택해주세요.',
+        successMsg: '',
+      );
+      return false;
+    }
+    if (scheduledPublishAt != null &&
+        !scheduledPublishAt.isAfter(DateTime.now())) {
+      state = state.copyWith(
+        errorMsg: '예약 출시 시간은 현재 시각 이후여야 합니다.',
+        successMsg: '',
+      );
       return false;
     }
 
@@ -373,6 +429,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
                 authorNickname: authorInfo.nickname,
                 authorProfileImageUrl: authorInfo.profileImageUrl,
                 status: status,
+                scheduledPublishAt: scheduledPublishAt,
                 collaborators: state.collaborators,
                 imageFileName: imageFileName,
                 imageBytes: imageBytes,
@@ -388,6 +445,13 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
           contentMarkdown: createdPost.contentMarkdown,
           summary: summaryToUpload,
           collaborators: createdPost.collaborators,
+          isScheduledPublishEnabled:
+              createdPost.status.trim().toLowerCase() == 'scheduled' &&
+                  createdPost.scheduledPublishAt != null,
+          scheduledPublishAt:
+              createdPost.status.trim().toLowerCase() == 'scheduled'
+                  ? createdPost.scheduledPublishAt
+                  : null,
           isSubmitting: false,
           successMsg: successMsg,
         );
@@ -407,6 +471,7 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
               contentMarkdown: normalizedContent,
               summary: summaryToUpload,
               status: status,
+              scheduledPublishAt: scheduledPublishAt,
               collaborators: state.collaborators,
               imageFileName: imageFileName,
               imageBytes: imageBytes,
@@ -422,6 +487,13 @@ class ArticleWriteViewModel extends _$ArticleWriteViewModel {
         contentMarkdown: patchedPost.contentMarkdown,
         summary: summaryToUpload,
         collaborators: patchedPost.collaborators,
+        isScheduledPublishEnabled:
+            patchedPost.status.trim().toLowerCase() == 'scheduled' &&
+                patchedPost.scheduledPublishAt != null,
+        scheduledPublishAt:
+            patchedPost.status.trim().toLowerCase() == 'scheduled'
+                ? patchedPost.scheduledPublishAt
+                : null,
         isSubmitting: false,
         successMsg: successMsg,
       );

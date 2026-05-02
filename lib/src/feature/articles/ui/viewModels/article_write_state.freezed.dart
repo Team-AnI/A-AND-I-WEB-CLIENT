@@ -23,6 +23,8 @@ mixin _$ArticleWriteState {
   String get summary;
   List<String> get tags;
   List<PostAuthor> get collaborators;
+  bool get isScheduledPublishEnabled;
+  DateTime? get scheduledPublishAt;
   String? get thumbnailUrl;
   Uint8List? get thumbnailBytes;
   String? get thumbnailFileName;
@@ -58,6 +60,11 @@ mixin _$ArticleWriteState {
             const DeepCollectionEquality().equals(other.tags, tags) &&
             const DeepCollectionEquality()
                 .equals(other.collaborators, collaborators) &&
+            (identical(other.isScheduledPublishEnabled,
+                    isScheduledPublishEnabled) ||
+                other.isScheduledPublishEnabled == isScheduledPublishEnabled) &&
+            (identical(other.scheduledPublishAt, scheduledPublishAt) ||
+                other.scheduledPublishAt == scheduledPublishAt) &&
             (identical(other.thumbnailUrl, thumbnailUrl) ||
                 other.thumbnailUrl == thumbnailUrl) &&
             const DeepCollectionEquality()
@@ -86,6 +93,8 @@ mixin _$ArticleWriteState {
       summary,
       const DeepCollectionEquality().hash(tags),
       const DeepCollectionEquality().hash(collaborators),
+      isScheduledPublishEnabled,
+      scheduledPublishAt,
       thumbnailUrl,
       const DeepCollectionEquality().hash(thumbnailBytes),
       thumbnailFileName,
@@ -96,7 +105,7 @@ mixin _$ArticleWriteState {
 
   @override
   String toString() {
-    return 'ArticleWriteState(postId: $postId, postType: $postType, editingAuthorId: $editingAuthorId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
+    return 'ArticleWriteState(postId: $postId, postType: $postType, editingAuthorId: $editingAuthorId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, isScheduledPublishEnabled: $isScheduledPublishEnabled, scheduledPublishAt: $scheduledPublishAt, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
   }
 }
 
@@ -116,6 +125,8 @@ abstract mixin class $ArticleWriteStateCopyWith<$Res> {
       String summary,
       List<String> tags,
       List<PostAuthor> collaborators,
+      bool isScheduledPublishEnabled,
+      DateTime? scheduledPublishAt,
       String? thumbnailUrl,
       Uint8List? thumbnailBytes,
       String? thumbnailFileName,
@@ -147,6 +158,8 @@ class _$ArticleWriteStateCopyWithImpl<$Res>
     Object? summary = null,
     Object? tags = null,
     Object? collaborators = null,
+    Object? isScheduledPublishEnabled = null,
+    Object? scheduledPublishAt = freezed,
     Object? thumbnailUrl = freezed,
     Object? thumbnailBytes = freezed,
     Object? thumbnailFileName = freezed,
@@ -192,6 +205,14 @@ class _$ArticleWriteStateCopyWithImpl<$Res>
           ? _self.collaborators
           : collaborators // ignore: cast_nullable_to_non_nullable
               as List<PostAuthor>,
+      isScheduledPublishEnabled: null == isScheduledPublishEnabled
+          ? _self.isScheduledPublishEnabled
+          : isScheduledPublishEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
+      scheduledPublishAt: freezed == scheduledPublishAt
+          ? _self.scheduledPublishAt
+          : scheduledPublishAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       thumbnailUrl: freezed == thumbnailUrl
           ? _self.thumbnailUrl
           : thumbnailUrl // ignore: cast_nullable_to_non_nullable
@@ -325,6 +346,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
             String summary,
             List<String> tags,
             List<PostAuthor> collaborators,
+            bool isScheduledPublishEnabled,
+            DateTime? scheduledPublishAt,
             String? thumbnailUrl,
             Uint8List? thumbnailBytes,
             String? thumbnailFileName,
@@ -348,6 +371,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
             _that.summary,
             _that.tags,
             _that.collaborators,
+            _that.isScheduledPublishEnabled,
+            _that.scheduledPublishAt,
             _that.thumbnailUrl,
             _that.thumbnailBytes,
             _that.thumbnailFileName,
@@ -385,6 +410,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
             String summary,
             List<String> tags,
             List<PostAuthor> collaborators,
+            bool isScheduledPublishEnabled,
+            DateTime? scheduledPublishAt,
             String? thumbnailUrl,
             Uint8List? thumbnailBytes,
             String? thumbnailFileName,
@@ -407,6 +434,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
             _that.summary,
             _that.tags,
             _that.collaborators,
+            _that.isScheduledPublishEnabled,
+            _that.scheduledPublishAt,
             _that.thumbnailUrl,
             _that.thumbnailBytes,
             _that.thumbnailFileName,
@@ -441,6 +470,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
             String summary,
             List<String> tags,
             List<PostAuthor> collaborators,
+            bool isScheduledPublishEnabled,
+            DateTime? scheduledPublishAt,
             String? thumbnailUrl,
             Uint8List? thumbnailBytes,
             String? thumbnailFileName,
@@ -463,6 +494,8 @@ extension ArticleWriteStatePatterns on ArticleWriteState {
             _that.summary,
             _that.tags,
             _that.collaborators,
+            _that.isScheduledPublishEnabled,
+            _that.scheduledPublishAt,
             _that.thumbnailUrl,
             _that.thumbnailBytes,
             _that.thumbnailFileName,
@@ -489,6 +522,8 @@ class _ArticleWriteState implements ArticleWriteState {
       this.summary = '',
       final List<String> tags = const <String>[],
       final List<PostAuthor> collaborators = const <PostAuthor>[],
+      this.isScheduledPublishEnabled = false,
+      this.scheduledPublishAt,
       this.thumbnailUrl,
       this.thumbnailBytes,
       this.thumbnailFileName,
@@ -539,6 +574,11 @@ class _ArticleWriteState implements ArticleWriteState {
   }
 
   @override
+  @JsonKey()
+  final bool isScheduledPublishEnabled;
+  @override
+  final DateTime? scheduledPublishAt;
+  @override
   final String? thumbnailUrl;
   @override
   final Uint8List? thumbnailBytes;
@@ -584,6 +624,11 @@ class _ArticleWriteState implements ArticleWriteState {
             const DeepCollectionEquality().equals(other._tags, _tags) &&
             const DeepCollectionEquality()
                 .equals(other._collaborators, _collaborators) &&
+            (identical(other.isScheduledPublishEnabled,
+                    isScheduledPublishEnabled) ||
+                other.isScheduledPublishEnabled == isScheduledPublishEnabled) &&
+            (identical(other.scheduledPublishAt, scheduledPublishAt) ||
+                other.scheduledPublishAt == scheduledPublishAt) &&
             (identical(other.thumbnailUrl, thumbnailUrl) ||
                 other.thumbnailUrl == thumbnailUrl) &&
             const DeepCollectionEquality()
@@ -612,6 +657,8 @@ class _ArticleWriteState implements ArticleWriteState {
       summary,
       const DeepCollectionEquality().hash(_tags),
       const DeepCollectionEquality().hash(_collaborators),
+      isScheduledPublishEnabled,
+      scheduledPublishAt,
       thumbnailUrl,
       const DeepCollectionEquality().hash(thumbnailBytes),
       thumbnailFileName,
@@ -622,7 +669,7 @@ class _ArticleWriteState implements ArticleWriteState {
 
   @override
   String toString() {
-    return 'ArticleWriteState(postId: $postId, postType: $postType, editingAuthorId: $editingAuthorId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
+    return 'ArticleWriteState(postId: $postId, postType: $postType, editingAuthorId: $editingAuthorId, editingPostStatus: $editingPostStatus, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, tags: $tags, collaborators: $collaborators, isScheduledPublishEnabled: $isScheduledPublishEnabled, scheduledPublishAt: $scheduledPublishAt, thumbnailUrl: $thumbnailUrl, thumbnailBytes: $thumbnailBytes, thumbnailFileName: $thumbnailFileName, isUploadingImage: $isUploadingImage, isSubmitting: $isSubmitting, errorMsg: $errorMsg, successMsg: $successMsg)';
   }
 }
 
@@ -644,6 +691,8 @@ abstract mixin class _$ArticleWriteStateCopyWith<$Res>
       String summary,
       List<String> tags,
       List<PostAuthor> collaborators,
+      bool isScheduledPublishEnabled,
+      DateTime? scheduledPublishAt,
       String? thumbnailUrl,
       Uint8List? thumbnailBytes,
       String? thumbnailFileName,
@@ -675,6 +724,8 @@ class __$ArticleWriteStateCopyWithImpl<$Res>
     Object? summary = null,
     Object? tags = null,
     Object? collaborators = null,
+    Object? isScheduledPublishEnabled = null,
+    Object? scheduledPublishAt = freezed,
     Object? thumbnailUrl = freezed,
     Object? thumbnailBytes = freezed,
     Object? thumbnailFileName = freezed,
@@ -720,6 +771,14 @@ class __$ArticleWriteStateCopyWithImpl<$Res>
           ? _self._collaborators
           : collaborators // ignore: cast_nullable_to_non_nullable
               as List<PostAuthor>,
+      isScheduledPublishEnabled: null == isScheduledPublishEnabled
+          ? _self.isScheduledPublishEnabled
+          : isScheduledPublishEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
+      scheduledPublishAt: freezed == scheduledPublishAt
+          ? _self.scheduledPublishAt
+          : scheduledPublishAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       thumbnailUrl: freezed == thumbnailUrl
           ? _self.thumbnailUrl
           : thumbnailUrl // ignore: cast_nullable_to_non_nullable

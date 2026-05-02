@@ -63,6 +63,7 @@ class PostRepositoryImpl implements PostRepository {
       payload.authorNickname,
       payload.authorProfileImageUrl,
       payload.status,
+      payload.scheduledPublishAt,
       payload.collaborators,
       imageFile,
     );
@@ -98,6 +99,7 @@ class PostRepositoryImpl implements PostRepository {
       payload.contentMarkdown,
       payload.summary,
       payload.status,
+      payload.scheduledPublishAt,
       payload.collaborators,
       imageFile,
     );
@@ -124,6 +126,7 @@ class PostRepositoryImpl implements PostRepository {
         null,
         null,
         'Deleted',
+        null,
         const <PostAuthor>[],
         null,
       );
@@ -209,6 +212,8 @@ extension on PostResponseDto {
       author: author.toEntity(),
       collaborators: collaborators.map((item) => item.toEntity()).toList(),
       status: status,
+      scheduledPublishAt: scheduledPublishAt,
+      publishedAt: publishedAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

@@ -14,6 +14,8 @@ class Post {
     required this.author,
     this.collaborators = const <PostAuthor>[],
     required this.status,
+    this.scheduledPublishAt,
+    this.publishedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -44,6 +46,12 @@ class Post {
 
   /// 게시글 상태입니다. (예: Draft, Published)
   final String status;
+
+  /// 예약 게시 시각입니다.
+  final DateTime? scheduledPublishAt;
+
+  /// 실제 게시 시각입니다.
+  final DateTime? publishedAt;
 
   /// 생성 시각입니다.
   final DateTime createdAt;

@@ -19,6 +19,8 @@ sealed class PostResponseDto with _$PostResponseDto {
     @Default(<PostAuthorResponseDto>[])
     List<PostAuthorResponseDto> collaborators,
     required String status,
+    DateTime? scheduledPublishAt,
+    DateTime? publishedAt,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _PostResponseDto;

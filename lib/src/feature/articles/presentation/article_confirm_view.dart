@@ -80,6 +80,9 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
     final currentPostType = composeState.postType;
     final isEditingPublished = composeState.postId.trim().isNotEmpty &&
         composeState.editingPostStatus.trim().toLowerCase() == 'published';
+    final isEditingScheduled = composeState.postId.trim().isNotEmpty &&
+        composeState.editingPostStatus.trim().toLowerCase() == 'scheduled';
+    final isEditingExistingPost = composeState.postId.trim().isNotEmpty;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
     final isTablet = width >= 768 && width < 1200;
@@ -112,7 +115,9 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                           Text(
                             isEditingPublished
                                 ? '$contentLabel 수정 설정'
-                                : '$contentLabel 출간 설정',
+                                : isEditingScheduled
+                                    ? '$contentLabel 예약 설정'
+                                    : '$contentLabel 출간 설정',
                             style: TextStyle(
                               fontSize: isMobile ? 28 : (isTablet ? 32 : 34),
                               fontWeight: FontWeight.w800,
@@ -157,6 +162,16 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                         onRemoveCollaborator: onTapRemoveCollaborator,
                         isMobile: isMobile,
                         isTablet: isTablet,
+                      ),
+                      SizedBox(height: isMobile ? 24 : 30),
+                      SchedulePublishSection(
+                        isScheduledPublishEnabled:
+                            composeState.isScheduledPublishEnabled,
+                        scheduledPublishAt: composeState.scheduledPublishAt,
+                        isMobile: isMobile,
+                        onToggleScheduledPublish: onToggleScheduledPublish,
+                        onPickScheduledPublishAt: onTapPickScheduledPublishAt,
+                        onClearScheduledPublishAt: onTapClearScheduledPublishAt,
                       ),
                       SizedBox(height: isMobile ? 34 : (isTablet ? 44 : 56)),
                       Container(
@@ -261,7 +276,9 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
                                 ),
                               ),
                               child: Text(
-                                isEditingPublished ? '수정 완료' : '출간하기',
+                                composeState.isScheduledPublishEnabled
+                                    ? (isEditingExistingPost ? '예약 수정' : '예약하기')
+                                    : (isEditingPublished ? '수정 완료' : '출간하기'),
                               ),
                             ),
                           ],
@@ -329,6 +346,66 @@ class ArticleConfirmViewState extends ConsumerState<ArticleConfirmView> {
 
     _showMessage(context, nextState.successMsg);
     context.go(nextState.postType.listPath);
+  }
+
+  void onToggleScheduledPublish(bool enabled) {
+    ref
+        .read(articleWriteViewModelProvider.notifier)
+        .setScheduledPublishEnabled(enabled);
+  }
+
+  Future<void> onTapPickScheduledPublishAt() async {
+    final composeState = ref.read(articleWriteViewModelProvider);
+    final now = DateTime.now();
+    final defaultDateTime = composeState.scheduledPublishAt ??
+        DateTime(
+          now.year,
+          now.month,
+          now.day,
+          now.hour,
+        ).add(const Duration(hours: 1));
+    final firstDate = DateTime(now.year, now.month, now.day);
+    final lastDate = DateTime(now.year + 2, 12, 31);
+    final initialDate =
+        defaultDateTime.isBefore(firstDate) ? firstDate : defaultDateTime;
+
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      helpText: '예약 출시 날짜 선택',
+      cancelText: '취소',
+      confirmText: '다음',
+    );
+    if (pickedDate == null || !mounted) {
+      return;
+    }
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(defaultDateTime),
+      helpText: '예약 출시 시간 선택',
+      cancelText: '취소',
+      confirmText: '확인',
+    );
+    if (pickedTime == null || !mounted) {
+      return;
+    }
+
+    ref.read(articleWriteViewModelProvider.notifier).setScheduledPublishAt(
+          DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          ),
+        );
+  }
+
+  void onTapClearScheduledPublishAt() {
+    ref.read(articleWriteViewModelProvider.notifier).clearScheduledPublishAt();
   }
 
   Future<void> onTapSaveDraft(BuildContext context) async {
@@ -834,6 +911,181 @@ class ConfirmPreviewSection extends StatelessWidget {
   }
 }
 
+class SchedulePublishSection extends StatelessWidget {
+  const SchedulePublishSection({
+    super.key,
+    required this.isScheduledPublishEnabled,
+    required this.scheduledPublishAt,
+    required this.isMobile,
+    required this.onToggleScheduledPublish,
+    required this.onPickScheduledPublishAt,
+    required this.onClearScheduledPublishAt,
+  });
+
+  final bool isScheduledPublishEnabled;
+  final DateTime? scheduledPublishAt;
+  final bool isMobile;
+  final ValueChanged<bool> onToggleScheduledPublish;
+  final VoidCallback onPickScheduledPublishAt;
+  final VoidCallback onClearScheduledPublishAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasScheduledPublishAt = scheduledPublishAt != null;
+    final isPastSchedule = scheduledPublishAt != null &&
+        !scheduledPublishAt!.isAfter(DateTime.now());
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const ConfirmSectionTitle(
+          title: '02. 예약 출시',
+        ),
+        SizedBox(height: isMobile ? 16 : 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFF3F4F6)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: isScheduledPublishEnabled,
+                    onChanged: (value) =>
+                        onToggleScheduledPublish(value ?? false),
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '예약 출시 사용',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Color(0xFF111827),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          '체크 후 날짜와 시간을 선택하면 해당 시각에 자동으로 게시됩니다.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF6B7280),
+                            height: 1.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (isScheduledPublishEnabled) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        hasScheduledPublishAt
+                            ? _formatScheduledPublishAt(scheduledPublishAt!)
+                            : '예약 시간이 아직 선택되지 않았습니다.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: hasScheduledPublishAt
+                              ? const Color(0xFF111827)
+                              : const Color(0xFF9CA3AF),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (isPastSchedule)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            '현재 시각보다 이후의 시간을 선택해주세요.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFFD97706),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: onPickScheduledPublishAt,
+                            icon: const Icon(Icons.schedule_rounded, size: 18),
+                            label: Text(
+                              hasScheduledPublishAt ? '예약 시간 변경' : '예약 시간 선택',
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          if (hasScheduledPublishAt)
+                            OutlinedButton(
+                              onPressed: onClearScheduledPublishAt,
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              child: const Text('시간 지우기'),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PostTypeSelectorSection extends StatelessWidget {
   const _PostTypeSelectorSection({
     required this.selectedType,
@@ -1000,6 +1252,14 @@ class ConfirmSectionTitle extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatScheduledPublishAt(DateTime value) {
+  final month = value.month.toString().padLeft(2, '0');
+  final day = value.day.toString().padLeft(2, '0');
+  final hour = value.hour.toString().padLeft(2, '0');
+  final minute = value.minute.toString().padLeft(2, '0');
+  return '${value.year}년 $month월 $day일 $hour:$minute';
 }
 
 class _ArticleConfirmPermissionDeniedView extends StatelessWidget {

@@ -23,6 +23,8 @@ mixin _$PostResponseDto {
   PostAuthorResponseDto get author;
   List<PostAuthorResponseDto> get collaborators;
   String get status;
+  DateTime? get scheduledPublishAt;
+  DateTime? get publishedAt;
   DateTime get createdAt;
   DateTime get updatedAt;
 
@@ -54,6 +56,10 @@ mixin _$PostResponseDto {
             const DeepCollectionEquality()
                 .equals(other.collaborators, collaborators) &&
             (identical(other.status, status) || other.status == status) &&
+            (identical(other.scheduledPublishAt, scheduledPublishAt) ||
+                other.scheduledPublishAt == scheduledPublishAt) &&
+            (identical(other.publishedAt, publishedAt) ||
+                other.publishedAt == publishedAt) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -73,12 +79,14 @@ mixin _$PostResponseDto {
       author,
       const DeepCollectionEquality().hash(collaborators),
       status,
+      scheduledPublishAt,
+      publishedAt,
       createdAt,
       updatedAt);
 
   @override
   String toString() {
-    return 'PostResponseDto(id: $id, type: $type, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PostResponseDto(id: $id, type: $type, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, scheduledPublishAt: $scheduledPublishAt, publishedAt: $publishedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -98,6 +106,8 @@ abstract mixin class $PostResponseDtoCopyWith<$Res> {
       PostAuthorResponseDto author,
       List<PostAuthorResponseDto> collaborators,
       String status,
+      DateTime? scheduledPublishAt,
+      DateTime? publishedAt,
       DateTime createdAt,
       DateTime updatedAt});
 
@@ -126,6 +136,8 @@ class _$PostResponseDtoCopyWithImpl<$Res>
     Object? author = null,
     Object? collaborators = null,
     Object? status = null,
+    Object? scheduledPublishAt = freezed,
+    Object? publishedAt = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
@@ -166,6 +178,14 @@ class _$PostResponseDtoCopyWithImpl<$Res>
           ? _self.status
           : status // ignore: cast_nullable_to_non_nullable
               as String,
+      scheduledPublishAt: freezed == scheduledPublishAt
+          ? _self.scheduledPublishAt
+          : scheduledPublishAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      publishedAt: freezed == publishedAt
+          ? _self.publishedAt
+          : publishedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       createdAt: null == createdAt
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -289,6 +309,8 @@ extension PostResponseDtoPatterns on PostResponseDto {
             PostAuthorResponseDto author,
             List<PostAuthorResponseDto> collaborators,
             String status,
+            DateTime? scheduledPublishAt,
+            DateTime? publishedAt,
             DateTime createdAt,
             DateTime updatedAt)?
         $default, {
@@ -307,6 +329,8 @@ extension PostResponseDtoPatterns on PostResponseDto {
             _that.author,
             _that.collaborators,
             _that.status,
+            _that.scheduledPublishAt,
+            _that.publishedAt,
             _that.createdAt,
             _that.updatedAt);
       case _:
@@ -339,6 +363,8 @@ extension PostResponseDtoPatterns on PostResponseDto {
             PostAuthorResponseDto author,
             List<PostAuthorResponseDto> collaborators,
             String status,
+            DateTime? scheduledPublishAt,
+            DateTime? publishedAt,
             DateTime createdAt,
             DateTime updatedAt)
         $default,
@@ -356,6 +382,8 @@ extension PostResponseDtoPatterns on PostResponseDto {
             _that.author,
             _that.collaborators,
             _that.status,
+            _that.scheduledPublishAt,
+            _that.publishedAt,
             _that.createdAt,
             _that.updatedAt);
     }
@@ -385,6 +413,8 @@ extension PostResponseDtoPatterns on PostResponseDto {
             PostAuthorResponseDto author,
             List<PostAuthorResponseDto> collaborators,
             String status,
+            DateTime? scheduledPublishAt,
+            DateTime? publishedAt,
             DateTime createdAt,
             DateTime updatedAt)?
         $default,
@@ -402,6 +432,8 @@ extension PostResponseDtoPatterns on PostResponseDto {
             _that.author,
             _that.collaborators,
             _that.status,
+            _that.scheduledPublishAt,
+            _that.publishedAt,
             _that.createdAt,
             _that.updatedAt);
       case _:
@@ -424,6 +456,8 @@ class _PostResponseDto implements PostResponseDto {
       final List<PostAuthorResponseDto> collaborators =
           const <PostAuthorResponseDto>[],
       required this.status,
+      this.scheduledPublishAt,
+      this.publishedAt,
       required this.createdAt,
       required this.updatedAt})
       : _collaborators = collaborators;
@@ -456,6 +490,10 @@ class _PostResponseDto implements PostResponseDto {
 
   @override
   final String status;
+  @override
+  final DateTime? scheduledPublishAt;
+  @override
+  final DateTime? publishedAt;
   @override
   final DateTime createdAt;
   @override
@@ -493,6 +531,10 @@ class _PostResponseDto implements PostResponseDto {
             const DeepCollectionEquality()
                 .equals(other._collaborators, _collaborators) &&
             (identical(other.status, status) || other.status == status) &&
+            (identical(other.scheduledPublishAt, scheduledPublishAt) ||
+                other.scheduledPublishAt == scheduledPublishAt) &&
+            (identical(other.publishedAt, publishedAt) ||
+                other.publishedAt == publishedAt) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -512,12 +554,14 @@ class _PostResponseDto implements PostResponseDto {
       author,
       const DeepCollectionEquality().hash(_collaborators),
       status,
+      scheduledPublishAt,
+      publishedAt,
       createdAt,
       updatedAt);
 
   @override
   String toString() {
-    return 'PostResponseDto(id: $id, type: $type, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PostResponseDto(id: $id, type: $type, title: $title, contentMarkdown: $contentMarkdown, summary: $summary, thumbnailUrl: $thumbnailUrl, author: $author, collaborators: $collaborators, status: $status, scheduledPublishAt: $scheduledPublishAt, publishedAt: $publishedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -539,6 +583,8 @@ abstract mixin class _$PostResponseDtoCopyWith<$Res>
       PostAuthorResponseDto author,
       List<PostAuthorResponseDto> collaborators,
       String status,
+      DateTime? scheduledPublishAt,
+      DateTime? publishedAt,
       DateTime createdAt,
       DateTime updatedAt});
 
@@ -568,6 +614,8 @@ class __$PostResponseDtoCopyWithImpl<$Res>
     Object? author = null,
     Object? collaborators = null,
     Object? status = null,
+    Object? scheduledPublishAt = freezed,
+    Object? publishedAt = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
@@ -608,6 +656,14 @@ class __$PostResponseDtoCopyWithImpl<$Res>
           ? _self.status
           : status // ignore: cast_nullable_to_non_nullable
               as String,
+      scheduledPublishAt: freezed == scheduledPublishAt
+          ? _self.scheduledPublishAt
+          : scheduledPublishAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      publishedAt: freezed == publishedAt
+          ? _self.publishedAt
+          : publishedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       createdAt: null == createdAt
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable

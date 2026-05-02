@@ -12,6 +12,7 @@ class PatchPostPayload {
     this.contentMarkdown,
     this.summary,
     this.status,
+    this.scheduledPublishAt,
     this.collaborators = const <PostAuthor>[],
     this.imageFileName,
     this.imageBytes,
@@ -31,6 +32,9 @@ class PatchPostPayload {
 
   /// 게시글 상태입니다. (예: Draft, Published, Deleted)
   final String? status;
+
+  /// 예약 게시 시각입니다.
+  final DateTime? scheduledPublishAt;
 
   /// 공동 작업자 목록입니다.
   final List<PostAuthor> collaborators;

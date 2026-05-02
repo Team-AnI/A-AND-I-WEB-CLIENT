@@ -66,6 +66,62 @@ void main() {
       expect(container.read(articleWriteViewModelProvider).errorMsg, isEmpty);
     });
 
+    test('예약 출시를 선택하면 Scheduled 상태와 예약 시각으로 생성한다', () async {
+      final fakeRepository = FakePostRepository();
+      final container = ProviderContainer(
+        overrides: [
+          userViewModelProvider.overrideWith(FakeUserViewModel.new),
+          postRepositoryProvider.overrideWithValue(fakeRepository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(articleWriteViewModelProvider.notifier);
+      final scheduledAt = DateTime.now().add(const Duration(hours: 2));
+      notifier.setScheduledPublishEnabled(true);
+      notifier.setScheduledPublishAt(scheduledAt);
+
+      final result = await notifier.publish(
+        title: '예약 출간 제목',
+        contentMarkdown: '예약 출간 본문',
+      );
+
+      expect(result, isTrue);
+      expect(fakeRepository.createCallCount, 1);
+      expect(fakeRepository.lastCreatePayload?.status, 'Scheduled');
+      expect(fakeRepository.lastCreatePayload?.scheduledPublishAt, scheduledAt);
+      expect(
+        container.read(articleWriteViewModelProvider).successMsg,
+        '예약 출시가 설정되었습니다.',
+      );
+    });
+
+    test('예약 출시 시간이 없으면 예약 출시에 실패한다', () async {
+      final fakeRepository = FakePostRepository();
+      final container = ProviderContainer(
+        overrides: [
+          userViewModelProvider.overrideWith(FakeUserViewModel.new),
+          postRepositoryProvider.overrideWithValue(fakeRepository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(articleWriteViewModelProvider.notifier);
+      notifier.setScheduledPublishEnabled(true);
+
+      final result = await notifier.publish(
+        title: '예약 출간 제목',
+        contentMarkdown: '예약 출간 본문',
+      );
+
+      expect(result, isFalse);
+      expect(fakeRepository.createCallCount, 0);
+      expect(
+        container.read(articleWriteViewModelProvider).errorMsg,
+        '예약 출시 시간을 선택해주세요.',
+      );
+    });
+
     test('출간은 본문이 없으면 실패한다', () async {
       final fakeRepository = FakePostRepository();
       final container = ProviderContainer(
@@ -182,6 +238,54 @@ void main() {
       );
     });
 
+    test('예약 게시글 수정 시 예약 상태와 시각을 유지해 patchPost로 수정한다', () async {
+      final fakeRepository = FakePostRepository();
+      final container = ProviderContainer(
+        overrides: [
+          userViewModelProvider.overrideWith(FakeUserViewModel.new),
+          postRepositoryProvider.overrideWithValue(fakeRepository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final scheduledAt = DateTime.now().add(const Duration(days: 1));
+      final notifier = container.read(articleWriteViewModelProvider.notifier);
+      notifier.startEditing(
+        Post(
+          id: 'post-scheduled-1',
+          type: PostType.lecture,
+          title: '예약 제목',
+          contentMarkdown: '예약 본문',
+          author: const PostAuthor(
+            id: 'user-1',
+            nickname: '멘토',
+          ),
+          status: 'Scheduled',
+          scheduledPublishAt: scheduledAt,
+          createdAt: DateTime.parse('2026-01-01T00:00:00Z'),
+          updatedAt: DateTime.parse('2026-01-01T00:00:00Z'),
+        ),
+      );
+
+      final state = container.read(articleWriteViewModelProvider);
+      expect(state.isScheduledPublishEnabled, isTrue);
+      expect(state.scheduledPublishAt, scheduledAt);
+
+      final result = await notifier.publish(
+        title: '예약 제목 수정',
+        contentMarkdown: '예약 본문 수정',
+      );
+
+      expect(result, isTrue);
+      expect(fakeRepository.patchCallCount, 1);
+      expect(fakeRepository.lastPatchPayload?.status, 'Scheduled');
+      expect(fakeRepository.lastPatchPayload?.scheduledPublishAt, scheduledAt);
+      expect(
+        container.read(articleWriteViewModelProvider).successMsg,
+        '예약 출시가 수정되었습니다.',
+      );
+    });
+
     test('자동 임시저장은 변경사항이 있을 때만 저장한다', () async {
       final fakeRepository = FakePostRepository();
       final container = ProviderContainer(
@@ -268,6 +372,10 @@ class FakePostRepository implements PostRepository {
         profileImage: payload.authorProfileImageUrl,
       ),
       status: payload.status ?? 'Draft',
+      scheduledPublishAt: payload.scheduledPublishAt,
+      publishedAt: payload.status == 'Published'
+          ? DateTime.parse('2026-01-01T00:00:00Z')
+          : null,
       createdAt: DateTime.parse('2026-01-01T00:00:00Z'),
       updatedAt: DateTime.parse('2026-01-01T00:00:00Z'),
     );
@@ -332,6 +440,10 @@ class FakePostRepository implements PostRepository {
       ),
       collaborators: payload.collaborators,
       status: payload.status ?? 'Draft',
+      scheduledPublishAt: payload.scheduledPublishAt,
+      publishedAt: payload.status == 'Published'
+          ? DateTime.parse('2026-01-02T00:00:00Z')
+          : null,
       createdAt: DateTime.parse('2026-01-01T00:00:00Z'),
       updatedAt: DateTime.parse('2026-01-02T00:00:00Z'),
     );
